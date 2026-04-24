@@ -68,8 +68,10 @@ export default function DetonationSim() {
       ctx.strokeStyle = `rgba(76, 201, 240, ${alpha * 0.2})`;
       ctx.lineWidth = 15;
       ctx.beginPath();
-      ctx.arc(cx, cy, r - 10, -Math.PI / 2.2, Math.PI / 2.2);
-      ctx.stroke();
+      if (r > 10) {
+        ctx.arc(cx, cy, r - 10, -Math.PI / 2.2, Math.PI / 2.2);
+        ctx.stroke();
+      }
     }
 
     const tgt = Math.min(cx + distance * 3, W - 30);
