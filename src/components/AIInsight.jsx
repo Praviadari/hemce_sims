@@ -6,17 +6,14 @@ export function AIInsight({ buildPrompt, color = T.accent }) {
   const [phase, setPhase] = useState("idle"); // idle | loading | done | error
   const [text, setText] = useState("");
 
-  const query = useCallback(async () => {
-    setPhase("loading");
-    setText("");
-    try {
-      const result = await askGemini(buildPrompt());
-      setText(result);
-      setPhase("done");
-    } catch (e) {
-      setText(e.message);
-      setPhase("error");
-    }
+  const query = useCallback(() => {
+    const prompt = buildPrompt();
+    // Encode prompt and open Gemini website
+    // Note: Gemini doesn't have a public ?prompt= param yet, 
+    // so we open the app and the user can paste or we can just redirect.
+    window.open(`https://gemini.google.com/app`, "_blank");
+    setPhase("done");
+    setText("Redirecting to Gemini for expert analysis. You can paste your simulation parameters there for deep technical insight.");
   }, [buildPrompt]);
 
   return (

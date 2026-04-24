@@ -123,9 +123,9 @@ export default function App() {
         aria-label="Available simulations"
         style={{
           display: "grid",
-          gridTemplateColumns: "repeat(auto-fill, minmax(90px, 1fr))",
-          gap: 7,
-          marginBottom: 14,
+          gridTemplateColumns: "repeat(auto-fill, minmax(115px, 1fr))",
+          gap: 12,
+          marginBottom: 20,
           position: "relative",
           zIndex: 1,
         }}

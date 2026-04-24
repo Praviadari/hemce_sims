@@ -20,16 +20,126 @@ export default function ScramjetSim() {
 
   const canvasRef = useCanvas((ctx, W, H) => {
     const cy = H / 2;
-    ctx.fillStyle = "#1E3A5F"; ctx.beginPath(); ctx.moveTo(20, cy - 35); ctx.lineTo(80, cy - 20); ctx.lineTo(80, cy + 20); ctx.lineTo(20, cy + 35); ctx.closePath(); ctx.fill();
-    ctx.fillStyle = "#253D5E"; ctx.fillRect(80, cy - 20, 50, 40);
-    const cg = ctx.createLinearGradient(130, 0, 250, 0); cg.addColorStop(0, "#4A1A00"); cg.addColorStop(0.5, "#8B2500"); cg.addColorStop(1, "#4A1A00");
-    ctx.fillStyle = cg; ctx.fillRect(130, cy - 25, 120, 50);
-    for (let i = 0; i < 8; i++) { ctx.fillStyle = `rgba(255,${140 + Math.random() * 80},0,${0.3 + mach / 16})`; ctx.beginPath(); ctx.arc(140 + Math.random() * 100, cy + (Math.random() - 0.5) * 30, 2 + Math.random() * 5, 0, Math.PI * 2); ctx.fill(); }
-    ctx.fillStyle = "#1E3A5F"; ctx.beginPath(); ctx.moveTo(250, cy - 25); ctx.lineTo(330, cy - 40); ctx.lineTo(330, cy + 40); ctx.lineTo(250, cy + 25); ctx.closePath(); ctx.fill();
-    for (let i = 0; i < 8; i++) { ctx.strokeStyle = `rgba(255,${100 + Math.random() * 100},0,${0.2 + Math.random() * 0.3})`; ctx.lineWidth = 1 + Math.random() * 2; ctx.beginPath(); ctx.moveTo(330, cy + (Math.random() - 0.5) * 20); ctx.lineTo(330 + Math.random() * 70, cy + (Math.random() - 0.5) * 50); ctx.stroke(); }
-    if (cooling) { ctx.strokeStyle = `${T.cyan}44`; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.strokeRect(132, cy - 27, 116, 54); ctx.setLineDash([]); ctx.font = `8px ${FONT}`; ctx.fillStyle = T.cyan; ctx.fillText("ACTIVE COOLING", 140, cy - 30); }
-    for (let i = 0; i < 3; i++) { const sx = 340 + i * 22; ctx.strokeStyle = `rgba(255,200,100,${0.3 - i * 0.08})`; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(sx, cy - 8 + i * 2); ctx.lineTo(sx + 8, cy); ctx.lineTo(sx, cy + 8 - i * 2); ctx.lineTo(sx - 8, cy); ctx.closePath(); ctx.stroke(); }
-    ctx.font = `bold 9px ${FONT}`; ctx.textAlign = "center"; ctx.fillStyle = T.cyan; ctx.fillText("INLET", 50, cy + 50); ctx.fillStyle = T.gray; ctx.fillText("ISOLATOR", 105, cy + 50); ctx.fillStyle = T.orange; ctx.fillText("COMBUSTOR", 190, cy + 50); ctx.fillStyle = T.accent; ctx.fillText("NOZZLE", 290, cy + 50); ctx.textAlign = "left";
+    
+    // Background Radial Gradient for hypersonic atmosphere
+    const bgGrad = ctx.createRadialGradient(W/2, cy, 0, W/2, cy, W);
+    bgGrad.addColorStop(0, "#0a192f");
+    bgGrad.addColorStop(1, "#050b14");
+    ctx.fillStyle = bgGrad;
+    ctx.fillRect(0, 0, W, H);
+
+    // Inlet / Cowl Structure
+    ctx.fillStyle = "#2D3748";
+    ctx.strokeStyle = `${T.accent}40`;
+    ctx.lineWidth = 1.5;
+    
+    ctx.beginPath(); 
+    ctx.moveTo(20, cy - 40); ctx.lineTo(100, cy - 20); ctx.lineTo(100, cy + 20); ctx.lineTo(20, cy + 40); 
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+
+    // Isolator & Combustor Housing
+    ctx.fillStyle = "#1A202C";
+    ctx.fillRect(100, cy - 20, 160, 40);
+    ctx.strokeRect(100, cy - 20, 160, 40);
+
+    // Aero-heating Glow (Leading Edge)
+    if (mach > 5) {
+      const heatAlpha = Math.min(1, (mach - 5) / 7);
+      ctx.shadowBlur = 15;
+      ctx.shadowColor = T.red;
+      ctx.strokeStyle = `rgba(255, 69, 58, ${heatAlpha})`;
+      ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(20, cy - 40); ctx.lineTo(25, cy - 41); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(20, cy + 40); ctx.lineTo(25, cy + 41); ctx.stroke();
+      ctx.shadowBlur = 0;
+    }
+
+    // Oblique Shock Waves (Inlet)
+    ctx.strokeStyle = `${T.cyan}${Math.floor(20 + mach * 10).toString(16)}`;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+      ctx.beginPath();
+      ctx.moveTo(20, cy - 40);
+      ctx.lineTo(60 + i * 15, cy - 10 + i * 5);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(20, cy + 40);
+      ctx.lineTo(60 + i * 15, cy + 10 - i * 5);
+      ctx.stroke();
+    }
+
+    // Supersonic Combustion Flame
+    const flameGrad = ctx.createLinearGradient(130, 0, 260, 0);
+    flameGrad.addColorStop(0, T.white);
+    flameGrad.addColorStop(0.2, T.orange);
+    flameGrad.addColorStop(1, "transparent");
+    
+    ctx.fillStyle = flameGrad;
+    ctx.globalAlpha = 0.6 + Math.random() * 0.2;
+    ctx.beginPath();
+    ctx.roundRect(130, cy - 15, 130 + mach * 5, 30, 4);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // Sparks / High-velocity particles
+    for (let i = 0; i < 12; i++) {
+      const px = 140 + Math.random() * 150;
+      const py = cy + (Math.random() - 0.5) * 25;
+      ctx.fillStyle = `rgba(255, 200, 100, ${Math.random() * 0.8})`;
+      ctx.fillRect(px, py, 4 + Math.random() * 10, 1);
+    }
+
+    // Cooling Jacket Visualization
+    if (cooling) {
+      ctx.shadowBlur = 10;
+      ctx.shadowColor = T.cyan;
+      ctx.strokeStyle = `${T.cyan}88`;
+      ctx.lineWidth = 2;
+      ctx.setLineDash([5, 5]);
+      ctx.strokeRect(100, cy - 25, 160, 50);
+      ctx.setLineDash([]);
+      ctx.shadowBlur = 0;
+      
+      ctx.font = `900 8px ${TECH_FONT}`;
+      ctx.fillStyle = T.cyan;
+      ctx.fillText("COOLANT FLOW ACTIVE", 110, cy - 28);
+    }
+
+    // Divergent Nozzle / Expansion
+    ctx.fillStyle = "#2D3748";
+    ctx.beginPath();
+    ctx.moveTo(260, cy - 20); ctx.lineTo(340, cy - 45); ctx.lineTo(340, cy + 45); ctx.lineTo(260, cy + 20);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = `${T.accent}40`;
+    ctx.stroke();
+
+    // Expansion Fan / Exhaust
+    const exhaustGrad = ctx.createLinearGradient(340, 0, 410, 0);
+    exhaustGrad.addColorStop(0, `${T.accent}44`);
+    exhaustGrad.addColorStop(1, "transparent");
+    ctx.fillStyle = exhaustGrad;
+    ctx.beginPath();
+    ctx.moveTo(340, cy - 40); ctx.lineTo(410, cy - 60); ctx.lineTo(410, cy + 60); ctx.lineTo(340, cy + 40);
+    ctx.fill();
+
+    // Labels
+    ctx.font = `900 10px ${TECH_FONT}`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = T.cyan; ctx.fillText("SUPERSONIC INLET", 60, cy + 55);
+    ctx.fillStyle = T.gray; ctx.fillText("ISOLATOR", 115, cy + 55);
+    ctx.fillStyle = T.orange; ctx.fillText("SCRAM-COMBUSTOR", 200, cy + 55);
+    ctx.fillStyle = T.accent; ctx.fillText("EXPANSION NOZZLE", 310, cy + 55);
+    ctx.textAlign = "left";
+    
+    // Mach Vector Overlay
+    ctx.strokeStyle = T.white;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(10, cy); ctx.lineTo(40, cy); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(40, cy); ctx.lineTo(35, cy-3); ctx.moveTo(40, cy); ctx.lineTo(35, cy+3); ctx.stroke();
+    ctx.font = `bold 9px ${MONO_FONT}`;
+    ctx.fillStyle = T.white;
+    ctx.fillText(`M${mach}`, 10, cy - 8);
+
   }, [mach, fuelType, cooling]);
 
   const buildPrompt = useCallback(() =>

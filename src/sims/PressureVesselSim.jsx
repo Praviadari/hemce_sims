@@ -19,45 +19,95 @@ export default function PressureVesselSim() {
 
   const canvasRef = useCanvas(
     (ctx, W, H) => {
-      const cx = W / 2, cy = H / 2, dr = 60, ww = Math.max(3, thickness * 0.6);
-      const sr = Math.min(hoop / ys, 2);
+      const cx = W / 2, cy = H / 2, p = pressure;
+      
+      // Deep technical background
+      const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, W/2);
+      bg.addColorStop(0, "#0d1b2a");
+      bg.addColorStop(1, "#050b14");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+
+      const dr = 65, ww = Math.max(4, thickness * 0.7);
+      
+      // Internal Stress Heatmap (Glow)
+      const stressP = Math.min(1.5, hoop / ys);
+      const heatGrad = ctx.createRadialGradient(cx, cy, dr - ww, cx, cy, dr + ww);
+      heatGrad.addColorStop(0, "transparent");
+      heatGrad.addColorStop(0.5, stressP > 1.0 ? T.red : stressP > 0.7 ? T.orange : T.green);
+      heatGrad.addColorStop(1, "transparent");
+      
+      ctx.globalAlpha = 0.3 * stressP;
+      ctx.fillStyle = heatGrad;
+      ctx.beginPath(); ctx.arc(cx, cy, dr + 10, 0, Math.PI * 2); ctx.fill();
+      ctx.globalAlpha = 1;
+
+      // Composite Winding Pattern / Vessel Structure
       ctx.strokeStyle = wallColor;
       ctx.lineWidth = ww;
-      ctx.beginPath();
-      ctx.arc(cx, cy, dr, 0, Math.PI * 2);
-      ctx.stroke();
-      const pn = Math.min(pressure / 20, 1);
-      for (let i = 0; i < 20; i++) {
-        const a = (i / 20) * Math.PI * 2, al = 10 + pn * 18;
-        ctx.strokeStyle = `rgba(0,180,216,${0.2 + pn * 0.4})`;
-        ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, dr, 0, Math.PI * 2); ctx.stroke();
+      
+      // Fiber Winding details
+      ctx.strokeStyle = "rgba(255,255,255,0.1)";
+      ctx.lineWidth = 0.5;
+      for(let i=0; i<36; i++) {
+        const a = (i / 36) * Math.PI * 2;
         ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(a) * (dr - ww / 2 - 5), cy + Math.sin(a) * (dr - ww / 2 - 5));
-        ctx.lineTo(cx + Math.cos(a) * (dr - ww / 2 - 5 - al), cy + Math.sin(a) * (dr - ww / 2 - 5 - al));
+        ctx.moveTo(cx + Math.cos(a) * (dr - ww/2), cy + Math.sin(a) * (dr - ww/2));
+        ctx.lineTo(cx + Math.cos(a + 0.4) * (dr + ww/2), cy + Math.sin(a + 0.4) * (dr + ww/2));
         ctx.stroke();
       }
-      [0, Math.PI / 2, Math.PI, (3 * Math.PI) / 2].forEach((a) => {
-        const sl = 10 + sr * 14,
-          mx = cx + Math.cos(a) * (dr + ww / 2 + 8),
-          my = cy + Math.sin(a) * (dr + ww / 2 + 8),
-          tx = -Math.sin(a),
-          ty = Math.cos(a);
-        ctx.strokeStyle = T.orange;
-        ctx.lineWidth = 2;
+
+      // Internal Pressure Vectors (Pulse)
+      const pulse = Math.sin(performance.now() / 200) * 0.2 + 0.8;
+      const pn = Math.min(pressure / 20, 1);
+      ctx.strokeStyle = T.accent;
+      ctx.lineWidth = 1;
+      for (let i = 0; i < 12; i++) {
+        const a = (i / 12) * Math.PI * 2, len = 10 + pn * 15 * pulse;
         ctx.beginPath();
-        ctx.moveTo(mx - tx * sl, my - ty * sl);
-        ctx.lineTo(mx + tx * sl, my + ty * sl);
+        ctx.moveTo(cx + Math.cos(a) * (dr - ww/2 - 2), cy + Math.sin(a) * (dr - ww/2 - 2));
+        ctx.lineTo(cx + Math.cos(a) * (dr - ww/2 - 2 - len), cy + Math.sin(a) * (dr - ww/2 - 2 - len));
         ctx.stroke();
-      });
-      ctx.font = `bold 10px ${FONT}`;
+      }
+
+      // Safety Valve Venting (Particle Effect)
+      if (stressP > 1.0) {
+        ctx.fillStyle = T.white;
+        for(let i=0; i<5; i++) {
+          const vx = cx + Math.random() * 10 - 5;
+          const vy = cy - dr - ww - Math.random() * 30;
+          ctx.globalAlpha = 0.4;
+          ctx.beginPath(); ctx.arc(vx, vy, 2, 0, Math.PI * 2); ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+        ctx.font = `900 8px ${MONO_FONT}`;
+        ctx.fillStyle = T.red;
+        ctx.fillText("VALVE VENTING", cx + dr, cy - dr - 10);
+      }
+
+      // Labels & HUD
+      ctx.font = `900 10px ${TECH_FONT}`;
       ctx.fillStyle = T.accent;
       ctx.textAlign = "center";
-      ctx.fillText("P", cx, cy + 4);
+      ctx.fillText("UNIT: PRESSURE VESSEL", cx, cy + 4);
+      
+      // Indicators for Hoop Stress
+      ctx.strokeStyle = T.orange;
+      ctx.lineWidth = 2;
+      const startA = -0.2, endA = 0.2;
+      ctx.beginPath(); ctx.arc(cx, cy, dr + ww + 10, startA, endA); ctx.stroke();
+      ctx.beginPath(); ctx.arc(cx, cy, dr + ww + 10, startA + Math.PI, endA + Math.PI); ctx.stroke();
+      
+      ctx.font = `bold 9px ${MONO_FONT}`;
       ctx.fillStyle = T.orange;
-      ctx.fillText("σ_h", cx + dr + 28, cy - 8);
+      ctx.fillText("STR: HOOP", cx + dr + 35, cy);
+      
       ctx.fillStyle = wallColor;
-      ctx.fillText(safe ? `✓ FoS ${fos.toFixed(1)}` : warn ? `⚠ FoS ${fos.toFixed(1)}` : "✗ YIELD", cx, H - 10);
+      ctx.font = `900 11px ${TECH_FONT}`;
+      ctx.fillText(safe ? "STATUS: STABLE" : warn ? "STATUS: MARGINAL" : "STATUS: CRITICAL", cx, H - 15);
       ctx.textAlign = "left";
+
     },
     [pressure, thickness, radius, mat, hoop, ys, fos]
   );

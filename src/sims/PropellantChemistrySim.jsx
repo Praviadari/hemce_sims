@@ -18,21 +18,84 @@ export default function PropellantChemistrySim() {
   const greenScore = (ox.green ? 70 : 20) + (binder === "gap" ? 15 : 0);
 
   const canvasRef = useCanvas((ctx, W, H) => {
-    const cx = W / 2 - 20, cy = H / 2, r = 50;
-    const oxa = Math.PI * 1.4;
-    ctx.fillStyle = oxcol[oxidizer]; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, -0.7, -0.7 + oxa); ctx.fill();
-    const ala = (alPercent / 100) * Math.PI * 2;
-    ctx.fillStyle = "#C0C0C0"; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, -0.7 + oxa, -0.7 + oxa + ala); ctx.fill();
-    ctx.fillStyle = binder === "gap" ? T.orange : "#A0522D"; ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, -0.7 + oxa + ala, -0.7 + Math.PI * 2); ctx.fill();
-    ctx.fillStyle = "#0A1628"; ctx.beginPath(); ctx.arc(cx, cy, 18, 0, Math.PI * 2); ctx.fill();
-    ctx.font = `bold 9px ${FONT}`; ctx.fillStyle = T.white; ctx.textAlign = "center"; ctx.fillText("HEM", cx, cy + 3);
-    if (nano) { for (let i = 0; i < 12; i++) { const a = Math.random() * Math.PI * 2, d = 22 + Math.random() * 26; ctx.fillStyle = `rgba(244,162,97,${0.4 + Math.random() * 0.4})`; ctx.beginPath(); ctx.arc(cx + Math.cos(a) * d, cy + Math.sin(a) * d, 1.5, 0, Math.PI * 2); ctx.fill(); } }
-    ctx.textAlign = "left"; ctx.font = `9px ${FONT}`;
-    const lx = W - 95, ly = 15;
-    [[oxcol[oxidizer], oxidizer.toUpperCase()], ["#C0C0C0", `Al ${alPercent}%`], [binder === "gap" ? T.orange : "#A0522D", binder.toUpperCase()]].forEach(([c, t], i) => {
-      ctx.fillStyle = c; ctx.fillRect(lx, ly + i * 15, 8, 8); ctx.fillStyle = T.gray; ctx.fillText(t, lx + 12, ly + 8 + i * 15);
-    });
-  }, [oxidizer, binder, alPercent, nano]);
+    // Deep technical background
+    const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
+    bg.addColorStop(0, "#0d1b2a");
+    bg.addColorStop(1, "#050b14");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = 80, cy = H / 2, r = 50;
+    
+    // Molecular Matrix Container
+    ctx.strokeStyle = `${T.accent}30`;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(20, 20, 120, H - 40);
+    
+    // Matrix Grains (Simulated Solid Matrix)
+    const grainCount = 100;
+    for(let i=0; i<grainCount; i++) {
+      const gx = 25 + (i % 10) * 11;
+      const gy = 25 + Math.floor(i / 10) * 10;
+      
+      const seed = Math.sin(i * 0.5 + performance.now() / 500);
+      let col = "#A0522D"; // Binder default
+      
+      const p = i / grainCount;
+      if (p < (ox.isp / 300)) col = oxcol[oxidizer];
+      else if (p < (ox.isp / 300) + alPercent / 50) col = "#C0C0C0";
+      
+      ctx.fillStyle = col;
+      ctx.globalAlpha = 0.6 + seed * 0.2;
+      ctx.fillRect(gx, gy, 9, 8);
+    }
+    ctx.globalAlpha = 1;
+
+    // Energy Density Spectrum (Right Side)
+    const sx = 160, sy = 30, sw = W - 180, sh = H - 60;
+    ctx.strokeStyle = `${T.accent}20`;
+    ctx.strokeRect(sx, sy, sw, sh);
+    
+    // Grid Lines
+    ctx.beginPath();
+    for(let y=sy; y<sy+sh; y+=20) { ctx.moveTo(sx, y); ctx.lineTo(sx+sw, y); }
+    ctx.stroke();
+
+    // Stability Plot
+    ctx.strokeStyle = T.accent;
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(sx, sy + sh * 0.8);
+    for(let x=0; x<sw; x+=5) {
+      const iy = Math.sin(x * 0.1 + performance.now() / 200) * 5 * (sensitivity === "HIGH" ? 3 : 1);
+      ctx.lineTo(sx + x, sy + sh * 0.8 - (totalIsp / 350) * sh * 0.5 + iy);
+    }
+    ctx.stroke();
+    
+    // Nano-Enhancement Twinkle
+    if (nano) {
+      for(let i=0; i<15; i++) {
+        const nx = 20 + Math.random() * 120;
+        const ny = 20 + Math.random() * (H-40);
+        const s = Math.sin(performance.now() / 150 + i) * 0.5 + 0.5;
+        ctx.fillStyle = T.gold;
+        ctx.globalAlpha = s;
+        ctx.beginPath(); ctx.arc(nx, ny, 1, 0, Math.PI * 2); ctx.fill();
+      }
+      ctx.globalAlpha = 1;
+    }
+
+    // HUD Text
+    ctx.font = `900 9px ${TECH_FONT}`;
+    ctx.fillStyle = T.accent;
+    ctx.fillText("MATRIX: PROP-LOAD", 20, 15);
+    ctx.fillText("ENERGY SPECTRUM (Isp)", sx, 25);
+    
+    ctx.font = `800 8px ${MONO_FONT}`;
+    ctx.fillStyle = T.dimText;
+    ctx.fillText(`MODE: ${nano ? "NANO-ENHANCED" : "STANDARD"}`, 160, H - 15);
+
+  }, [oxidizer, binder, alPercent, nano, totalIsp, sensitivity]);
 
   const buildPrompt = useCallback(() =>
     `Solid propellant chemistry formulation simulation — current parameters:

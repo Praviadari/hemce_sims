@@ -16,17 +16,109 @@ export default function HybridRocketSim() {
 
   const canvasRef = useCanvas((ctx, W, H) => {
     const cy = H / 2;
-    ctx.fillStyle = "#1A3A5A"; ctx.beginPath(); ctx.roundRect(10, cy - 25, 50, 50, 6); ctx.fill(); ctx.strokeStyle = T.accent; ctx.lineWidth = 1; ctx.stroke();
-    ctx.font = `bold 8px ${FONT}`; ctx.fillStyle = T.accent; ctx.textAlign = "center"; ctx.fillText(od.name, 35, cy + 4);
-    ctx.strokeStyle = running ? `rgba(0,180,216,.6)` : `rgba(0,180,216,.15)`; ctx.lineWidth = running ? 3 : 1; ctx.beginPath(); ctx.moveTo(60, cy); ctx.lineTo(90, cy); ctx.stroke();
-    ctx.fillStyle = "#555"; ctx.fillRect(88, cy - 12, 8, 24);
-    ctx.fillStyle = "#1E3A5F"; ctx.beginPath(); ctx.roundRect(96, cy - 28, 160, 56, 4); ctx.fill();
+    
+    // Background Radial Gradient for test stand atmosphere
+    const bg = ctx.createRadialGradient(W/2, cy, 0, W/2, cy, W);
+    bg.addColorStop(0, "#0d1b2a");
+    bg.addColorStop(1, "#050b14");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    // Oxidizer Tank (Cryogenic Look)
+    ctx.fillStyle = "#1A3A5A";
+    ctx.strokeStyle = T.accent;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.roundRect(10, cy - 30, 60, 60, 8); ctx.fill(); ctx.stroke();
+    
+    // Tank frost effect
+    ctx.strokeStyle = "rgba(255,255,255,0.05)";
+    ctx.strokeRect(12, cy - 28, 56, 56);
+
+    // Feed System / Valve
+    ctx.strokeStyle = running ? T.cyan : `${T.cyan}30`;
+    ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(70, cy); ctx.lineTo(100, cy); ctx.stroke();
+    
+    // Injector Plate
+    ctx.fillStyle = "#2D3748"; ctx.fillRect(95, cy - 15, 8, 30);
+
+    // Motor Casing (Combustor)
+    ctx.fillStyle = "#1A202C";
+    ctx.strokeStyle = `${T.accent}30`;
+    ctx.beginPath(); ctx.roundRect(103, cy - 35, 170, 70, 4); ctx.fill(); ctx.stroke();
+
+    // Solid Fuel Grain Regression Visualization
     const fc = fuel === "paraffin" ? "#F5DEB3" : fuel === "abs" ? "#8B8682" : "#A0522D";
-    ctx.fillStyle = fc; ctx.fillRect(100, cy - 26, 152, 10); ctx.fillRect(100, cy + 16, 152, 10);
-    if (running) { for (let i = 0; i < 8; i++) { ctx.fillStyle = `rgba(255,${120 + Math.random() * 80},0,${0.2 + throttle / 200})`; ctx.beginPath(); ctx.arc(105 + Math.random() * 140, cy + (Math.random() - 0.5) * 20, 2 + Math.random() * 4, 0, Math.PI * 2); ctx.fill(); } }
-    ctx.fillStyle = "#374151"; ctx.beginPath(); ctx.moveTo(256, cy - 28); ctx.lineTo(280, cy - 15); ctx.lineTo(300, cy - 30); ctx.lineTo(300, cy + 30); ctx.lineTo(280, cy + 15); ctx.lineTo(256, cy + 28); ctx.closePath(); ctx.fill();
-    if (running) { for (let i = 0; i < 6; i++) { ctx.strokeStyle = `rgba(255,180,0,${0.2 + Math.random() * 0.3 * throttle / 100})`; ctx.lineWidth = 1 + Math.random() * 2; ctx.beginPath(); ctx.moveTo(300, cy + (Math.random() - 0.5) * 15); ctx.lineTo(300 + Math.random() * 50 * throttle / 100, cy + (Math.random() - 0.5) * 40 * throttle / 100); ctx.stroke(); } }
-    ctx.textAlign = "left"; ctx.font = `bold 8px ${FONT}`; ctx.fillStyle = T.dimText; ctx.fillText("OX TANK", 12, cy - 30); ctx.fillText("FUEL GRAIN", 130, cy - 32); ctx.fillStyle = T.gray; ctx.fillText("NOZZLE", 264, cy - 34);
+    const regOffset = -2 + (throttle / 100) * 12 * Math.sin(performance.now() / 1000); // Visual flair for regression
+    const portH = 15 + (throttle / 100) * 10;
+    
+    ctx.fillStyle = fc;
+    // Top Grain
+    ctx.beginPath(); ctx.roundRect(107, cy - 30, 162, 30 - portH/2, 2); ctx.fill();
+    // Bottom Grain
+    ctx.beginPath(); ctx.roundRect(107, cy + portH/2, 162, 30 - portH/2, 2); ctx.fill();
+
+    // Flow & Combustion Core
+    if (running) {
+      // Ox Flow Pulse
+      const flowPulse = Math.sin(performance.now() / 50) * 0.5 + 0.5;
+      ctx.strokeStyle = `rgba(0, 180, 216, ${0.4 * flowPulse})`;
+      ctx.lineWidth = 4;
+      ctx.beginPath(); ctx.moveTo(70, cy); ctx.lineTo(100, cy); ctx.stroke();
+
+      // Flame Core (Purplish hybrid flame)
+      const fGrad = ctx.createLinearGradient(120, 0, 260, 0);
+      fGrad.addColorStop(0, T.white);
+      fGrad.addColorStop(0.3, T.purple);
+      fGrad.addColorStop(1, "transparent");
+      
+      ctx.fillStyle = fGrad;
+      ctx.globalAlpha = 0.5 + (throttle / 200);
+      ctx.beginPath(); 
+      ctx.roundRect(110, cy - portH/2 + 2, 150 + throttle * 0.5, portH - 4, 10);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+      
+      // Combustion Particles
+      for (let i = 0; i < 15; i++) {
+        const px = 110 + Math.random() * 150;
+        const py = cy + (Math.random() - 0.5) * portH;
+        ctx.fillStyle = `rgba(138, 43, 226, ${Math.random()})`;
+        ctx.beginPath(); ctx.arc(px, py, 1.5, 0, Math.PI * 2); ctx.fill();
+      }
+    }
+
+    // Nozzle Expansion
+    ctx.fillStyle = "#2D3748";
+    ctx.beginPath();
+    ctx.moveTo(273, cy - 15); ctx.lineTo(300, cy - 35); ctx.lineTo(300, cy + 35); ctx.lineTo(273, cy + 15);
+    ctx.closePath(); ctx.fill();
+    ctx.strokeStyle = `${T.accent}40`; ctx.stroke();
+
+    // Exhaust Plume
+    if (running) {
+      const eGrad = ctx.createLinearGradient(300, 0, 360, 0);
+      eGrad.addColorStop(0, `${T.purple}66`);
+      eGrad.addColorStop(1, "transparent");
+      ctx.fillStyle = eGrad;
+      ctx.beginPath();
+      ctx.moveTo(300, cy - 30); ctx.lineTo(360, cy - 50); ctx.lineTo(360, cy + 50); ctx.lineTo(300, cy + 30);
+      ctx.fill();
+    }
+
+    // HUD Text
+    ctx.font = `900 9px ${TECH_FONT}`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = T.accent;
+    ctx.fillText(od.name.toUpperCase(), 40, cy - 35);
+    ctx.fillStyle = T.orange;
+    ctx.fillText("COMBUSTOR: " + fuel.toUpperCase(), 188, cy - 40);
+    
+    ctx.font = `800 8px ${MONO_FONT}`;
+    ctx.fillStyle = T.dimText;
+    ctx.fillText(`THRUST VECTOR: ${running ? "STABLE" : "NULL"}`, 188, cy + 45);
+    ctx.textAlign = "left";
+
   }, [running, throttle, fuel, oxidizer]);
 
   useEffect(() => {

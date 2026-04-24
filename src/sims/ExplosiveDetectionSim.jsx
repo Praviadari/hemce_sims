@@ -52,65 +52,138 @@ export default function ExplosiveDetectionSim() {
 Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in real-world conditions, and what are the key operational considerations for deploying this detection technology in a field security scenario?`,
   [method, s, result, m]);
 
-  return (<div>
-    <div style={{
-      background: "#0D1B2A",
-      borderRadius: 10,
-      border: `1px solid ${T.accent}33`,
-      padding: 16,
-      textAlign: "center",
-      marginBottom: 14,
-    }}>
-      <div style={{
-        display: "inline-flex", width: 64, height: 64, borderRadius: "50%",
-        background: `${s.color}33`, border: `3px solid ${s.color}`,
-        alignItems: "center", justifyContent: "center",
-      }}>
-        <span style={{ fontFamily: FONT, fontSize: 12, color: s.color, fontWeight: 700 }}>{s.name}</span>
+  const canvasRef = useCanvas((ctx, W, H) => {
+    // Technical dark background
+    const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
+    bg.addColorStop(0, "#0d1b2a");
+    bg.addColorStop(1, "#050b14");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const cx = W / 2, cy = H / 2;
+    
+    // Sample Container (Suitcase/Package)
+    ctx.fillStyle = "#1A202C";
+    ctx.strokeStyle = `${T.accent}30`;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.roundRect(W/2 - 60, cy - 40, 120, 80, 8); ctx.fill(); ctx.stroke();
+    
+    // Sample Interior (The chemical signature area)
+    ctx.fillStyle = `${s.color}15`;
+    ctx.fillRect(W/2 - 50, cy - 30, 100, 60);
+
+    // Scanner Beam
+    if (scanning) {
+      const beamY = cy - 40 + scanProg * 80;
+      const beamGrad = ctx.createLinearGradient(W/2 - 60, beamY, W/2 + 60, beamY);
+      beamGrad.addColorStop(0, "transparent");
+      beamGrad.addColorStop(0.5, method === "spectroscopic" ? T.purple : T.cyan);
+      beamGrad.addColorStop(1, "transparent");
+      
+      ctx.strokeStyle = beamGrad;
+      ctx.lineWidth = 3;
+      ctx.beginPath(); ctx.moveTo(W/2 - 65, beamY); ctx.lineTo(W/2 + 65, beamY); ctx.stroke();
+      
+      // Beam Glow
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = method === "spectroscopic" ? T.purple : T.cyan;
+      ctx.fillRect(W/2 - 60, beamY - 5, 120, 10);
+      ctx.globalAlpha = 1;
+
+      // Sampling Particles (for IMS/Canine)
+      if (method === "ion_mobility" || method === "canine") {
+        for(let i=0; i<5; i++) {
+          const px = W/2 - 60 + Math.random() * 120;
+          const py = beamY + (Math.random() - 0.5) * 10;
+          ctx.fillStyle = s.color;
+          ctx.beginPath(); ctx.arc(px, py, 1, 0, Math.PI * 2); ctx.fill();
+        }
+      }
+    }
+
+    // Spectrum Analyzer (Bottom)
+    const gx = 20, gy = H - 35, gw = W - 40, gh = 25;
+    ctx.strokeStyle = `${T.accent}20`;
+    ctx.strokeRect(gx, gy, gw, gh);
+    
+    if (scanning || result) {
+      ctx.strokeStyle = scanning ? T.accent : result === "DETECTED" ? T.red : T.green;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      ctx.moveTo(gx, gy + gh);
+      for(let x=0; x<gw; x+=2) {
+        let iy = Math.sin(x * 0.2 + performance.now() / 100) * 2;
+        // Peak for detected explosive
+        if (s.det && Math.abs(x - gw/2) < 20) {
+          iy -= (scanning ? scanProg : 1) * 15 * Math.sin((x - (gw/2 - 20)) / 40 * Math.PI);
+        }
+        ctx.lineTo(gx + x, gy + gh * 0.8 + iy);
+      }
+      ctx.stroke();
+    }
+
+    // Detection HUD Overlay
+    if (result === "DETECTED") {
+      ctx.strokeStyle = T.red;
+      ctx.lineWidth = 2;
+      ctx.strokeRect(W/2 - 65, cy - 45, 130, 90);
+      
+      // Target Reticle corners
+      const rSize = 10;
+      ctx.beginPath();
+      ctx.moveTo(W/2 - 65, cy - 35); ctx.lineTo(W/2 - 65, cy - 45); ctx.lineTo(W/2 - 55, cy - 45);
+      ctx.moveTo(W/2 + 65, cy - 35); ctx.lineTo(W/2 + 65, cy - 45); ctx.lineTo(W/2 + 55, cy - 45);
+      ctx.moveTo(W/2 - 65, cy + 35); ctx.lineTo(W/2 - 65, cy + 45); ctx.lineTo(W/2 - 55, cy + 45);
+      ctx.moveTo(W/2 + 65, cy + 35); ctx.lineTo(W/2 + 65, cy + 45); ctx.lineTo(W/2 + 55, cy + 45);
+      ctx.stroke();
+
+      ctx.font = `900 10px ${T.accent}`;
+      ctx.fillStyle = T.red;
+      ctx.textAlign = "center";
+      ctx.fillText("! THREAT IDENTIFIED: " + s.name.toUpperCase(), W/2, cy - 50);
+      ctx.textAlign = "left";
+    } else if (result === "CLEAR") {
+      ctx.font = `900 10px ${T.accent}`;
+      ctx.fillStyle = T.green;
+      ctx.textAlign = "center";
+      ctx.fillText("✓ SAMPLE VERIFIED: STABLE", W/2, cy - 50);
+      ctx.textAlign = "left";
+    }
+
+    // Status / Mode Labels
+    ctx.font = `800 8px ${T.accent}`;
+    ctx.fillStyle = T.dimText;
+    ctx.fillText(`METHOD: ${method.toUpperCase()}`, 20, 15);
+    ctx.fillText(`SENSITIVITY: ${m.sensitivity.toUpperCase()}`, W - 100, 15);
+
+  }, [scanning, scanProg, result, method, sample, s, m]);
+
+  return (
+    <div>
+      <SimCanvas canvasRef={canvasRef} width={380} height={180} maxWidth={380} />
+      <PillRow>
+        <Pill active={method === "colorimetric"} onClick={() => { setResult(null); setMethod("colorimetric"); }} color={T.orange}>Colorimetric</Pill>
+        <Pill active={method === "spectroscopic"} onClick={() => { setResult(null); setMethod("spectroscopic"); }} color={T.purple}>Raman</Pill>
+        <Pill active={method === "ion_mobility"} onClick={() => { setResult(null); setMethod("ion_mobility"); }} color={T.accent}>IMS</Pill>
+        <Pill active={method === "canine"} onClick={() => { setResult(null); setMethod("canine"); }} color={T.gold}>Canine 🐕</Pill>
+      </PillRow>
+      <PillRow>
+        {Object.entries(samples).map(([k, v]) => (
+          <Pill key={k} active={sample === k} onClick={() => { setResult(null); setSample(k); }} color={v.color}>{v.name}</Pill>
+        ))}
+      </PillRow>
+      <DataRow>
+        <DataBox label="Scan Time" value={m.time} unit="s" color={T.accent} />
+        <DataBox label="Sensitivity" value={m.sensitivity} color={T.green} />
+        <DataBox label="False +" value={`${m.fp}%`} color={m.fp > 5 ? T.gold : T.green} />
+      </DataRow>
+      <div style={{ display: "flex", gap: 8 }}>
+        <ActionBtn onClick={startScan} disabled={scanning} color={T.accent}>
+          {scanning ? `SCANNING... ${(scanProg * 100).toFixed(0)}%` : "🔬 SCAN SAMPLE"}
+        </ActionBtn>
       </div>
-      <div style={{ marginTop: 12, height: 6, background: `${T.dimText}22`, borderRadius: 3, overflow: "hidden" }}>
-        <div style={{
-          height: "100%",
-          width: `${scanProg * 100}%`,
-          borderRadius: 3,
-          transition: "width .1s",
-          background: scanning ? T.accent : result === "DETECTED" ? T.red : result === "CLEAR" ? T.green : T.dimText,
-        }} />
-      </div>
-      {result && (
-        <div style={{
-          marginTop: 10, padding: "6px 18px", borderRadius: 8, display: "inline-block",
-          background: result === "DETECTED" ? `${T.red}22` : `${T.green}22`,
-          border: `1px solid ${result === "DETECTED" ? T.red : T.green}44`,
-          color: result === "DETECTED" ? T.red : T.green,
-          fontFamily: FONT, fontSize: 14, fontWeight: 800,
-        }}>
-          {result === "DETECTED" ? `⚠ ${s.name} DETECTED` : "✓ ALL CLEAR"}
-        </div>
-      )}
+      <InfoBox><strong style={{ color: T.purple }}>Detection:</strong> {method === "colorimetric" ? "HEMRL field kit — color reagents, used by police/BSF." : method === "spectroscopic" ? "Raman — laser molecular fingerprinting, ppb sensitivity." : method === "ion_mobility" ? "IMS — airport-grade screening, low false-positive." : "Canine — ppt sensitivity, gold standard for field sweeps."}</InfoBox>
+      <AIInsight buildPrompt={buildPrompt} color={T.pink} />
     </div>
-    <PillRow>
-      <Pill active={method === "colorimetric"} onClick={() => { setResult(null); setMethod("colorimetric"); }} color={T.orange}>Colorimetric</Pill>
-      <Pill active={method === "spectroscopic"} onClick={() => { setResult(null); setMethod("spectroscopic"); }} color={T.purple}>Raman</Pill>
-      <Pill active={method === "ion_mobility"} onClick={() => { setResult(null); setMethod("ion_mobility"); }} color={T.accent}>IMS</Pill>
-      <Pill active={method === "canine"} onClick={() => { setResult(null); setMethod("canine"); }} color={T.gold}>Canine 🐕</Pill>
-    </PillRow>
-    <PillRow>
-      {Object.entries(samples).map(([k, v]) => (
-        <Pill key={k} active={sample === k} onClick={() => { setResult(null); setSample(k); }} color={v.color}>{v.name}</Pill>
-      ))}
-    </PillRow>
-    <DataRow>
-      <DataBox label="Scan Time" value={m.time} unit="s" color={T.accent} />
-      <DataBox label="Sensitivity" value={m.sensitivity} color={T.green} />
-      <DataBox label="False +" value={`${m.fp}%`} color={m.fp > 5 ? T.gold : T.green} />
-    </DataRow>
-    <div style={{ display: "flex", gap: 8 }}>
-      <ActionBtn onClick={startScan} disabled={scanning} color={T.accent}>
-        {scanning ? `SCANNING... ${(scanProg * 100).toFixed(0)}%` : "🔬 SCAN SAMPLE"}
-      </ActionBtn>
-    </div>
-    <InfoBox><strong style={{ color: T.purple }}>Detection:</strong> {method === "colorimetric" ? "HEMRL field kit — color reagents, used by police/BSF." : method === "spectroscopic" ? "Raman — laser molecular fingerprinting, ppb sensitivity." : method === "ion_mobility" ? "IMS — airport-grade screening, low false-positive." : "Canine — ppt sensitivity, gold standard for field sweeps."}</InfoBox>
-    <AIInsight buildPrompt={buildPrompt} color={T.pink} />
-  </div>);
+  );
 }

@@ -16,20 +16,98 @@ export default function AdditiveManufacturingSim() {
   const partDensity = (infill * 0.01 * (process === "dmls" ? 4.43 : 1.24)).toFixed(2);
 
   const canvasRef = useCanvas((ctx, W, H) => {
-    const bx = W / 2 - 50, by = 20, bw = 100, bh = H - 40;
-    ctx.fillStyle = "#333"; ctx.fillRect(bx - 10, by + bh, bw + 20, 8);
-    ctx.strokeStyle = `${T.dimText}33`; ctx.lineWidth = 1; ctx.setLineDash([3, 3]); ctx.strokeRect(bx, by, bw, bh); ctx.setLineDash([]);
+    // Technical dark background
+    const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
+    bg.addColorStop(0, "#0d1b2a");
+    bg.addColorStop(1, "#050b14");
+    ctx.fillStyle = bg;
+    ctx.fillRect(0, 0, W, H);
+
+    const bx = W / 2 - 50, by = 30, bw = 100, bh = H - 60;
+    
+    // Build Plate / Platform
+    ctx.fillStyle = "#2D3748";
+    ctx.fillRect(bx - 15, by + bh, bw + 30, 6);
+    ctx.strokeStyle = T.accent;
+    ctx.lineWidth = 1;
+    ctx.strokeRect(bx - 15, by + bh, bw + 30, 6);
+
+    // Build Volume Guide
+    ctx.strokeStyle = `${T.accent}15`;
+    ctx.setLineDash([5, 5]);
+    ctx.strokeRect(bx, by, bw, bh);
+    ctx.setLineDash([]);
+
+    // Layers (Material deposition)
     const lh = bh / totalLayers;
     for (let i = 0; i < layer; i++) {
       const ly = by + bh - (i + 1) * lh;
-      ctx.fillStyle = process === "dmls" ? `hsl(200,40%,${30 + i * 0.5}%)` : process === "dw" ? `hsl(${15 + (i / totalLayers) * 30},70%,45%)` : `hsl(${25 + (i / totalLayers) * 30},60%,${35 + i * 0.3}%)`;
+      
+      // Thermal cooling Effect: newer layers are "hotter"
+      const age = (layer - i);
+      const heat = Math.max(0, 1 - age / 10);
+      
+      let baseCol;
+      if (process === "dmls") baseCol = 200; // Blueish metal
+      else if (process === "dw") baseCol = 30; // Orange energetic
+      else baseCol = 50; // Neutral
+      
+      ctx.fillStyle = `hsl(${baseCol}, ${30 + heat * 50}%, ${30 + heat * 40}%)`;
+      if (heat > 0.1) {
+        ctx.shadowBlur = 10 * heat;
+        ctx.shadowColor = T.gold;
+      }
+      
       const fw = bw * infill / 100, off = (bw - fw) / 2;
-      ctx.fillRect(bx + off, ly, fw, Math.max(lh - 0.5, 1));
+      ctx.fillRect(bx + off, ly, fw, Math.max(lh - 0.2, 0.5));
+      ctx.shadowBlur = 0;
     }
-    if (printing && layer < totalLayers) { const hy = by + bh - (layer + 1) * lh; ctx.fillStyle = T.accent; ctx.beginPath(); ctx.moveTo(bx + bw / 2 - 8, hy - 10); ctx.lineTo(bx + bw / 2 + 8, hy - 10); ctx.lineTo(bx + bw / 2, hy - 2); ctx.closePath(); ctx.fill(); }
-    ctx.font = `9px ${FONT}`; ctx.fillStyle = T.gray; ctx.textAlign = "center"; ctx.fillText(`${layer}/${totalLayers} layers`, W / 2, H - 4);
-    ctx.fillStyle = T.dimText; ctx.fillText(pd.n, W / 2, 14);
-    ctx.fillStyle = T.accent; ctx.fillText(part === "nozzle" ? "NOZZLE INSERT" : part === "grain" ? "FUEL GRAIN" : "MOTOR CASE", W / 2, by + bh + 22); ctx.textAlign = "left";
+
+    // Print Head / Nozzle
+    if (printing && layer < totalLayers) {
+      const hy = by + bh - (layer + 1) * lh;
+      const moveX = Math.sin(performance.now() / 100) * (bw / 2 - 5);
+      
+      // Nozzle structure
+      ctx.fillStyle = "#4A5568";
+      ctx.beginPath();
+      ctx.moveTo(bx + bw / 2 + moveX - 6, hy - 15);
+      ctx.lineTo(bx + bw / 2 + moveX + 6, hy - 15);
+      ctx.lineTo(bx + bw / 2 + moveX, hy - 3);
+      ctx.closePath();
+      ctx.fill();
+
+      // Fusion point (The hot spot)
+      const fGrad = ctx.createRadialGradient(bx+bw/2+moveX, hy, 0, bx+bw/2+moveX, hy, 8);
+      fGrad.addColorStop(0, T.white);
+      fGrad.addColorStop(0.5, T.gold);
+      fGrad.addColorStop(1, "transparent");
+      
+      ctx.fillStyle = fGrad;
+      ctx.beginPath(); ctx.arc(bx+bw/2+moveX, hy, 8, 0, Math.PI * 2); ctx.fill();
+      
+      // Sparks for DMLS / Paste extrusion for DW
+      if (process === "dmls" || process === "sls") {
+        for(let i=0; i<3; i++) {
+          ctx.fillStyle = T.gold;
+          ctx.fillRect(bx+bw/2+moveX + Math.random()*10 - 5, hy - Math.random()*10, 1, 1);
+        }
+      }
+    }
+
+    // HUD Text
+    ctx.font = `900 10px ${TECH_FONT}`;
+    ctx.textAlign = "center";
+    ctx.fillStyle = T.accent;
+    ctx.fillText(pd.n.toUpperCase() + " MANUFACTURING", W / 2, 18);
+    
+    ctx.font = `800 8px ${MONO_FONT}`;
+    ctx.fillStyle = T.gray;
+    ctx.fillText(`LAYER: ${layer}/${totalLayers}`, W / 2, H - 15);
+    ctx.fillStyle = T.accent;
+    ctx.fillText(`${part.toUpperCase()}: ${printing ? "ACTIVE" : "COMPLETE"}`, W / 2, H - 5);
+    ctx.textAlign = "left";
+
   }, [printing, layer, totalLayers, infill, process, part]);
 
   useEffect(() => {
