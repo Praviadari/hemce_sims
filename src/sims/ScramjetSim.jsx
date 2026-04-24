@@ -140,7 +140,9 @@ export default function ScramjetSim() {
     ctx.fillStyle = T.white;
     ctx.fillText(`M${mach}`, 10, cy - 8);
 
-  }, [mach, fuelType, cooling]);
+  }, [mach, fuelType, cooling],
+    { animate: true }
+  );
 
   const buildPrompt = useCallback(() =>
     `Scramjet (supersonic combustion ramjet) simulation — current parameters:

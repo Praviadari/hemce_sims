@@ -109,7 +109,8 @@ export default function PressureVesselSim() {
       ctx.textAlign = "left";
 
     },
-    [pressure, thickness, radius, mat, hoop, ys, fos]
+    [pressure, thickness, radius, mat, hoop, ys, fos],
+    { animate: true }
   );
 
   const buildPrompt = useCallback(() =>

@@ -35,8 +35,8 @@ input[type=range] {
 
 input[type=range]::-webkit-slider-thumb {
   -webkit-appearance: none;
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   cursor: pointer;
   background: currentColor;
@@ -44,8 +44,8 @@ input[type=range]::-webkit-slider-thumb {
 }
 
 input[type=range]::-moz-range-thumb {
-  width: 20px;
-  height: 20px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   cursor: pointer;
   background: currentColor;
@@ -77,6 +77,11 @@ input[type=range]::-moz-range-thumb {
   body { font-size: 14px; }
 }
 
+/* ── Landscape orientation optimization ───────── */
+@media (orientation: landscape) and (max-height: 500px) {
+  body { font-size: 13px; }
+}
+
 /* ── Focus visible ring ───────────────────────── */
 :focus-visible {
   outline: 2px solid #4CC9F0;
@@ -95,4 +100,10 @@ input[type=range]::-moz-range-thumb {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
+}
+
+/* ── Skeleton pulse animation ─────────────────── */
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }

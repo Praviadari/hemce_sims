@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, AIInsight } from "../components";
-import { T, FONT } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
 
 export default function ExplosiveDetectionSim() {
   const [method, setMethod] = useState("colorimetric");
@@ -156,7 +156,9 @@ Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in rea
     ctx.fillText(`METHOD: ${method.toUpperCase()}`, 20, 15);
     ctx.fillText(`SENSITIVITY: ${m.sensitivity.toUpperCase()}`, W - 100, 15);
 
-  }, [scanning, scanProg, result, method, sample, s, m]);
+  }, [scanning, scanProg, result, method, sample, s, m],
+    { animate: true }
+  );
 
   return (
     <div>

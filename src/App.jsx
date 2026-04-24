@@ -1,8 +1,37 @@
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import { T, FONT, TECH_FONT } from "./utils";
-import { Pill } from "./components";
+import { Pill, ErrorBoundary } from "./components";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
 import "./styles/global.css";
+
+/* Skeleton loader for lazy-loaded simulations */
+function SimSkeleton({ color }) {
+  return (
+    <div
+      style={{
+        padding: "40px 20px",
+        textAlign: "center",
+        borderRadius: 14,
+        background: `${color || T.accent}08`,
+        border: `1px solid ${color || T.accent}20`,
+        animation: "pulse 1.5s ease-in-out infinite",
+      }}
+    >
+      <div
+        style={{
+          fontFamily: TECH_FONT,
+          fontSize: 11,
+          fontWeight: 800,
+          color: color || T.accent,
+          letterSpacing: 2,
+          opacity: 0.6,
+        }}
+      >
+        LOADING SIMULATION...
+      </div>
+    </div>
+  );
+}
 
 export default function App() {
   const [activeSim, setActiveSim] = useState("rocket");
@@ -62,7 +91,7 @@ export default function App() {
       {/* Header */}
       <header style={{ textAlign: "center", marginBottom: 20, paddingTop: 8, position: "relative", zIndex: 1 }}>
         <div style={{
-          fontSize: 9,
+          fontSize: "clamp(8px, 2.5vw, 11px)",
           color: T.accent,
           letterSpacing: 3,
           fontWeight: 800,
@@ -72,7 +101,7 @@ export default function App() {
           HEMCE 2026 • THE FUTURE OF DEFENCE
         </div>
         <div style={{
-          fontSize: 22,
+          fontSize: "clamp(18px, 5.5vw, 28px)",
           fontWeight: 900,
           color: T.white,
           fontFamily: TECH_FONT,
@@ -91,7 +120,7 @@ export default function App() {
           borderRadius: 2,
           boxShadow: `0 0 10px ${T.accent}40`,
         }} />
-        <div style={{ fontSize: 9, color: T.dimText, marginTop: 6, fontWeight: 500 }}>
+        <div style={{ fontSize: "clamp(8px, 2.2vw, 10px)", color: T.dimText, marginTop: 6, fontWeight: 500 }}>
           THERMAL SYSTEMS HYD PVT. LTD. • EXHIBITION PORTAL
         </div>
       </header>
@@ -143,7 +172,7 @@ export default function App() {
               WebkitBackdropFilter: "blur(10px)",
               color: activeSim === s.id ? s.color : T.white,
               fontFamily: TECH_FONT,
-              fontSize: 10,
+              fontSize: "clamp(9px, 2.5vw, 11px)",
               fontWeight: 700,
               cursor: "pointer",
               transition: "all .25s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -167,7 +196,7 @@ export default function App() {
               filter: activeSim === s.id ? `drop-shadow(0 0 8px ${s.color}60)` : "grayscale(0.4)",
               transition: "all .25s",
             }}>{s.icon}</div>
-            <div style={{ lineHeight: 1.2, fontSize: 10 }}>{s.label}</div>
+            <div style={{ lineHeight: 1.2, fontSize: "clamp(9px, 2.5vw, 11px)" }}>{s.label}</div>
           </button>
         ))}
       </div>
@@ -175,6 +204,7 @@ export default function App() {
       {/* Active simulation panel */}
       {ActiveComp && (
         <div
+          id="active-sim"
           style={{
             background: T.card,
             backdropFilter: "blur(20px)",
@@ -190,7 +220,7 @@ export default function App() {
         >
           {/* Panel header */}
           <div style={{
-            fontSize: 15,
+            fontSize: "clamp(13px, 3.5vw, 17px)",
             fontWeight: 900,
             color: T.white,
             fontFamily: TECH_FONT,
@@ -205,13 +235,17 @@ export default function App() {
               {active.icon}
             </span>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: 9, color: active.color, letterSpacing: 2, fontWeight: 800 }}>
+              <span style={{ fontSize: "clamp(8px, 2vw, 10px)", color: active.color, letterSpacing: 2, fontWeight: 800 }}>
                 ACTIVE SIMULATION
               </span>
               {active.label}
             </div>
           </div>
-          <ActiveComp />
+          <ErrorBoundary color={active.color}>
+            <Suspense fallback={<SimSkeleton color={active.color} />}>
+              <ActiveComp />
+            </Suspense>
+          </ErrorBoundary>
         </div>
       )}
 
@@ -229,7 +263,7 @@ export default function App() {
             <span
               key={t}
               style={{
-                fontSize: 9,
+                fontSize: "clamp(8px, 2vw, 10px)",
                 padding: "4px 10px",
                 borderRadius: 20,
                 background: `${active.color}12`,
@@ -250,7 +284,7 @@ export default function App() {
       <div style={{
         textAlign: "center",
         marginTop: 28,
-        fontSize: 9,
+        fontSize: "clamp(8px, 2.2vw, 10px)",
         color: T.dimText,
         lineHeight: 1.9,
         position: "relative",

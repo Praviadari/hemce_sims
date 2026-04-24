@@ -1,19 +1,21 @@
 // ═══════════════════════════════════════
-// SIMULATION REGISTRY
-// To add a new sim: import component, add entry below. Done.
+// SIMULATION REGISTRY — Lazy-loaded for code splitting
+// To add a new sim: create component in sims/, lazy-import below, add entry. Done.
 // ═══════════════════════════════════════
 
+import { lazy } from "react";
 import { T } from "../utils";
-import SolidRocketSim from "./SolidRocketSim";
-import PressureVesselSim from "./PressureVesselSim";
-import PAUTSim from "./PAUTSim";
-import ScramjetSim from "./ScramjetSim";
-import DetonationSim from "./DetonationSim";
-import PropellantChemistrySim from "./PropellantChemistrySim";
-import GunPropellantSim from "./GunPropellantSim";
-import HybridRocketSim from "./HybridRocketSim";
-import ExplosiveDetectionSim from "./ExplosiveDetectionSim";
-import AdditiveManufacturingSim from "./AdditiveManufacturingSim";
+
+const SolidRocketSim = lazy(() => import("./SolidRocketSim"));
+const PressureVesselSim = lazy(() => import("./PressureVesselSim"));
+const PAUTSim = lazy(() => import("./PAUTSim"));
+const ScramjetSim = lazy(() => import("./ScramjetSim"));
+const DetonationSim = lazy(() => import("./DetonationSim"));
+const PropellantChemistrySim = lazy(() => import("./PropellantChemistrySim"));
+const GunPropellantSim = lazy(() => import("./GunPropellantSim"));
+const HybridRocketSim = lazy(() => import("./HybridRocketSim"));
+const ExplosiveDetectionSim = lazy(() => import("./ExplosiveDetectionSim"));
+const AdditiveManufacturingSim = lazy(() => import("./AdditiveManufacturingSim"));
 
 export const SIM_REGISTRY = [
   { id: "rocket",     icon: "🚀", label: "Solid Rocket",    cat: "propulsion",     color: T.orange,  comp: SolidRocketSim,          tags: ["solid propulsion", "combustion", "propellants"] },

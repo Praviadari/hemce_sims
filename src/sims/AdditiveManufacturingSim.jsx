@@ -108,7 +108,9 @@ export default function AdditiveManufacturingSim() {
     ctx.fillText(`${part.toUpperCase()}: ${printing ? "ACTIVE" : "COMPLETE"}`, W / 2, H - 5);
     ctx.textAlign = "left";
 
-  }, [printing, layer, totalLayers, infill, process, part]);
+  }, [printing, layer, totalLayers, infill, process, part],
+    { animate: true }
+  );
 
   useEffect(() => {
     if (!printing) return;

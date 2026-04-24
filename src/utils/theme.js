@@ -10,7 +10,7 @@ export const T = {
   glassBorder: "rgba(255, 255, 255, 0.08)",
   accent: "#4CC9F0",
   accentDark: "#4361EE",
-  orange: "#F72585", // Actually a vibrant pink/orange mix
+  orange: "#FF6B35",
   gold: "#F8961E",
   white: "#F8F9FA",
   gray: "#94A3B8",
@@ -26,4 +26,3 @@ export const T = {
 export const FONT = "'Outfit', sans-serif";
 export const TECH_FONT = "'Orbitron', sans-serif";
 export const MONO_FONT = "'JetBrains Mono', monospace";
-

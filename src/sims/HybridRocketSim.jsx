@@ -119,11 +119,11 @@ export default function HybridRocketSim() {
     ctx.fillText(`THRUST VECTOR: ${running ? "STABLE" : "NULL"}`, 188, cy + 45);
     ctx.textAlign = "left";
 
-  }, [running, throttle, fuel, oxidizer]);
+  }, [running, throttle, fuel, oxidizer],
+    { animate: true }
+  );
 
-  useEffect(() => {
-    if (running) { ivRef.current = setInterval(() => {}, 80); return () => clearInterval(ivRef.current); }
-  }, [running]);
+  // Animation is driven by useCanvas with { animate: true }
 
   const buildPrompt = useCallback(() =>
     `Hybrid rocket motor simulation — current parameters:

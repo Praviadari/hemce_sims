@@ -126,7 +126,8 @@ export default function PAUTSim() {
         ctx.fillText("VOLUMETRIC FLAW DETECTED", dx - 60, dy + 20);
       }
     },
-    [angle, focal, elems, freq, defect, mode]
+    [angle, focal, elems, freq, defect, mode],
+    { animate: true }
   );
 
   const buildPrompt = useCallback(() =>

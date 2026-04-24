@@ -95,7 +95,9 @@ export default function PropellantChemistrySim() {
     ctx.fillStyle = T.dimText;
     ctx.fillText(`MODE: ${nano ? "NANO-ENHANCED" : "STANDARD"}`, 160, H - 15);
 
-  }, [oxidizer, binder, alPercent, nano, totalIsp, sensitivity]);
+  }, [oxidizer, binder, alPercent, nano, totalIsp, sensitivity],
+    { animate: true }
+  );
 
   const buildPrompt = useCallback(() =>
     `Solid propellant chemistry formulation simulation — current parameters:
