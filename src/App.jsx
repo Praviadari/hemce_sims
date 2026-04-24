@@ -1,4 +1,5 @@
 import { useState, Suspense } from "react";
+import { Analytics } from "@vercel/analytics/react";
 import { T, FONT, TECH_FONT } from "./utils";
 import { Pill, ErrorBoundary } from "./components";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
@@ -300,6 +301,7 @@ export default function App() {
         <br />
         29 APR – 01 MAY • HIGH ENERGY MATERIALS CONFERENCE & EXHIBITION
       </div>
+      <Analytics />
     </div>
   );
 }
