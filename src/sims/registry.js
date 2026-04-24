@@ -16,6 +16,8 @@ const GunPropellantSim = lazy(() => import("./GunPropellantSim"));
 const HybridRocketSim = lazy(() => import("./HybridRocketSim"));
 const ExplosiveDetectionSim = lazy(() => import("./ExplosiveDetectionSim"));
 const AdditiveManufacturingSim = lazy(() => import("./AdditiveManufacturingSim"));
+const GreenPropellantSim = lazy(() => import("./GreenPropellantSim"));
+const CookOffTestSim = lazy(() => import("./CookOffTestSim"));
 
 export const SIM_REGISTRY = [
   { id: "rocket",     icon: "🚀", label: "Solid Rocket",    cat: "propulsion",     color: T.orange,  comp: SolidRocketSim,          tags: ["solid propulsion", "combustion", "propellants"] },
@@ -28,6 +30,8 @@ export const SIM_REGISTRY = [
   { id: "hybrid",     icon: "🔥", label: "Hybrid Rocket",   cat: "propulsion",     color: T.lime,    comp: HybridRocketSim,         tags: ["hybrid combustion", "liquid propulsion"] },
   { id: "detection",  icon: "🔬", label: "HE Detection",    cat: "safety",         color: T.pink,    comp: ExplosiveDetectionSim,   tags: ["explosive detection", "field testing"] },
   { id: "am",         icon: "🖨", label: "Additive Mfg",    cat: "manufacturing",  color: T.lime,    comp: AdditiveManufacturingSim, tags: ["additive manufacturing", "3D printing"] },
+  { id: "greenprop",  icon: "🍃", label: "Green Propellant", cat: "materials",      color: "#2ecc71", comp: GreenPropellantSim, tags: ["green energetics", "nano energetics"] },
+  { id: "im",         icon: "🛡", label: "Cook-Off Test",    cat: "safety",         color: "#3b82f6", comp: CookOffTestSim, tags: ["insensitive munitions", "safety"] },
 ];
 
 export const CATEGORIES = [
