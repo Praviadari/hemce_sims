@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useMemo } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, useAnimation } from "../utils";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
 
 export default function SolidRocketSim() {
   const [burning, setBurning] = useState(false);
@@ -23,15 +23,13 @@ export default function SolidRocketSim() {
   const canvasRef = useCanvas(
     (ctx, W, H) => {
       const p = burning ? progress : 0;
-      
-      // Background Glow
+
       const bgGlow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
       bgGlow.addColorStop(0, `${T.accent}05`);
       bgGlow.addColorStop(1, "transparent");
       ctx.fillStyle = bgGlow;
       ctx.fillRect(0, 0, W, H);
 
-      // Casing
       ctx.fillStyle = "#1E3A5F";
       ctx.strokeStyle = `${T.accent}40`;
       ctx.lineWidth = 1;
@@ -40,17 +38,15 @@ export default function SolidRocketSim() {
       ctx.fill();
       ctx.stroke();
 
-      // Inner structure
       ctx.fillStyle = "#0a192f";
       ctx.beginPath();
       ctx.roundRect(48, 38, W - 116, H - 76, 8);
       ctx.fill();
 
-      // Propellant
       const gi = 56 + p * 60,
         gw = Math.max(0, W - 132 - p * 120),
         gh = Math.max(0, H - 92 - p * 40);
-        
+
       if (gw > 0 && gh > 0) {
         const gr = ctx.createLinearGradient(gi, 0, gi + gw, 0);
         gr.addColorStop(0, "#5a3a1a");
@@ -58,13 +54,12 @@ export default function SolidRocketSim() {
         gr.addColorStop(0.5, "#A0522D");
         gr.addColorStop(0.7, "#8B4513");
         gr.addColorStop(1, "#5a3a1a");
-        
+
         ctx.fillStyle = gr;
         ctx.beginPath();
         ctx.roundRect(gi, 46 + p * 20, gw, gh, 6);
         ctx.fill();
-        
-        // Inner bore (Burning area) reflection
+
         if (burning) {
           ctx.shadowBlur = 15;
           ctx.shadowColor = T.orange;
@@ -74,11 +69,10 @@ export default function SolidRocketSim() {
           ctx.shadowBlur = 0;
         }
 
-        // Grain core cutouts
         ctx.fillStyle = "#0a192f";
         const cx = gi + gw / 2,
           cy = 46 + p * 20 + gh / 2;
-          
+
         if (grain === "star") {
           ctx.beginPath();
           for (let i = 0; i < 5; i++) {
@@ -102,7 +96,6 @@ export default function SolidRocketSim() {
         }
       }
 
-      // Nozzle (Convergent-Divergent)
       ctx.fillStyle = "#2D3748";
       ctx.beginPath();
       ctx.moveTo(W - 60, 40);
@@ -113,29 +106,26 @@ export default function SolidRocketSim() {
       ctx.lineTo(W - 60, H - 40);
       ctx.closePath();
       ctx.fill();
-      
+
       const nozzleGrad = ctx.createLinearGradient(W - 60, 0, W - 15, 0);
       nozzleGrad.addColorStop(0, "rgba(0,0,0,0.3)");
       nozzleGrad.addColorStop(1, "rgba(255,255,255,0.1)");
       ctx.fillStyle = nozzleGrad;
       ctx.fill();
 
-      // Exhaust Plume
       if (burning && p < 1) {
         const intensity = Math.min(1, elapsed / 0.5) * (1 - Math.max(0, (p - 0.9) / 0.1));
-        
-        // Mach Disks / Core
+
         const coreGrad = ctx.createLinearGradient(W - 15, 0, W + 100, 0);
         coreGrad.addColorStop(0, "rgba(255,255,255,0.9)");
         coreGrad.addColorStop(0.2, T.accent);
         coreGrad.addColorStop(1, "transparent");
-        
+
         ctx.fillStyle = coreGrad;
         ctx.beginPath();
         ctx.ellipse(W - 10, H/2, 60 * intensity, 10 * intensity, 0, 0, Math.PI * 2);
         ctx.fill();
 
-        // Particles
         for (let i = 0; i < 20; i++) {
           const fl = (50 + Math.random() * 80) * intensity,
             sp = (Math.random() - 0.5) * 40 * intensity;
@@ -150,19 +140,15 @@ export default function SolidRocketSim() {
         ctx.globalAlpha = 1;
       }
 
-      // HUD / Labels
       ctx.font = `900 10px ${TECH_FONT}`;
       ctx.fillStyle = T.accent;
       ctx.fillText("UNIT-A: COMMAND CASING", 45, 25);
-      
       ctx.fillStyle = T.orange;
       ctx.fillText("MAT: SOLID PROPELLANT", 80, H / 2 - 35);
-      
       ctx.fillStyle = T.gray;
       ctx.font = `600 9px ${TECH_FONT}`;
       ctx.fillText("CD-NOZZLE v2.0", W - 85, 16);
-      
-      // Ignition Point
+
       ctx.shadowBlur = 10;
       ctx.shadowColor = T.red;
       ctx.fillStyle = T.red;
@@ -170,7 +156,6 @@ export default function SolidRocketSim() {
       ctx.arc(48, H / 2, 4, 0, Math.PI * 2);
       ctx.fill();
       ctx.shadowBlur = 0;
-      
       ctx.font = `800 8px ${MONO_FONT}`;
       ctx.fillText("IGNITER", 20, H / 2 + 18);
     },
@@ -184,10 +169,7 @@ export default function SolidRocketSim() {
       const dt = (now - startRef.current) / 1000;
       setElapsed(dt);
       if (dt < dur) animRef.current = requestAnimationFrame(tick);
-      else {
-        setBurning(false);
-        setElapsed(dur);
-      }
+      else { setBurning(false); setElapsed(dur); }
     };
     animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
@@ -198,6 +180,18 @@ export default function SolidRocketSim() {
     setBurning(false);
     setElapsed(0);
   };
+
+  const buildPrompt = useCallback(() =>
+    `Solid rocket motor simulation — current parameters:
+- Grain geometry: ${grain} (star/tubular/end-burn)
+- Burn rate: ${burnRate} mm/s
+- Chamber pressure: ${chamberP} MPa
+- Calculated thrust: ${thrust} kN
+- Specific impulse (Isp): ${isp} s
+- Burn progress: ${(progress * 100).toFixed(0)}%
+
+Provide 2-3 sentences of expert technical insight: how do these parameters interact, what are the key performance trade-offs, and what does this mean for a practical solid rocket motor in a defense application?`,
+  [grain, burnRate, chamberP, thrust, isp, progress]);
 
   return (
     <div>
@@ -225,6 +219,7 @@ export default function SolidRocketSim() {
         {grain === "star" ? " Star bore → high initial thrust, regressive." : grain === "tubular" ? " Tubular bore → progressive thrust increase." : " End-burn → long, constant low thrust."}
         {" "}Gas exits convergent-divergent nozzle → thrust (Newton's 3rd).
       </InfoBox>
+      <AIInsight buildPrompt={buildPrompt} color={T.orange} />
     </div>
   );
 }

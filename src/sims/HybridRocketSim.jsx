@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas } from "../components";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
 import { T, FONT, useCanvas } from "../utils";
 
 export default function HybridRocketSim() {
@@ -29,7 +29,21 @@ export default function HybridRocketSim() {
     ctx.textAlign = "left"; ctx.font = `bold 8px ${FONT}`; ctx.fillStyle = T.dimText; ctx.fillText("OX TANK", 12, cy - 30); ctx.fillText("FUEL GRAIN", 130, cy - 32); ctx.fillStyle = T.gray; ctx.fillText("NOZZLE", 264, cy - 34);
   }, [running, throttle, fuel, oxidizer]);
 
-  useEffect(() => { if (running) { ivRef.current = setInterval(() => {}, 80); return () => clearInterval(ivRef.current); } }, [running]);
+  useEffect(() => {
+    if (running) { ivRef.current = setInterval(() => {}, 80); return () => clearInterval(ivRef.current); }
+  }, [running]);
+
+  const buildPrompt = useCallback(() =>
+    `Hybrid rocket motor simulation — current parameters:
+- Solid fuel: ${fuel} (regression rate base: ${fd.rate} mm/s, Isp: ${fd.isp} s)
+- Liquid oxidizer: ${od.name}
+- Throttle setting: ${throttle}%
+- Fuel regression rate at current throttle: ${regRate} mm/s
+- Net thrust: ${thrust} kN
+- Engine running: ${running ? "YES" : "NO"}
+
+Provide 2-3 sentences: how does this fuel/oxidizer combination affect throttleability, safety margins, and what are the practical advantages of this hybrid configuration for a defense or space application?`,
+  [fuel, fd, od, throttle, regRate, thrust, running]);
 
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={370} height={120} maxWidth={370} />
@@ -51,5 +65,6 @@ export default function HybridRocketSim() {
       <DataBox label="Reg Rate" value={regRate} unit="mm/s" color={T.gold} />
     </DataRow>
     <InfoBox><strong style={{ color: T.green }}>Hybrid advantage:</strong> Throttleable, restartable, inherently safer. {fuel === "paraffin" ? "Paraffin: 3× regression rate." : fuel === "abs" ? "ABS: 3D-printable grains." : "HTPB: standard baseline."} ISRO/HEMRL co-developing hybrid motors.</InfoBox>
+    <AIInsight buildPrompt={buildPrompt} color={T.lime} />
   </div>);
 }

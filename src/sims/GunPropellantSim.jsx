@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas } from "../components";
+import { useState, useRef, useEffect, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, useCanvas } from "../utils";
 
 export default function GunPropellantSim() {
@@ -25,8 +25,30 @@ export default function GunPropellantSim() {
     ctx.font = `bold 9px ${FONT}`; ctx.fillStyle = T.dimText; ctx.textAlign = "center"; ctx.fillText("CHAMBER", 60, cy + 38); ctx.fillText("BORE", W / 2, cy + 38); ctx.textAlign = "left";
   }, [running, time, grainShape, caliberMm, progress]);
 
-  useEffect(() => { if (!running) return; const s = performance.now(); const tick = (now) => { setTime((now - s) / 1000); if ((now - s) / 1000 < 1.5) animRef.current = requestAnimationFrame(tick); else { setRunning(false); setTime(1.5); } }; animRef.current = requestAnimationFrame(tick); return () => cancelAnimationFrame(animRef.current); }, [running]);
+  useEffect(() => {
+    if (!running) return;
+    const s = performance.now();
+    const tick = (now) => {
+      setTime((now - s) / 1000);
+      if ((now - s) / 1000 < 1.5) animRef.current = requestAnimationFrame(tick);
+      else { setRunning(false); setTime(1.5); }
+    };
+    animRef.current = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(animRef.current);
+  }, [running]);
+
   const reset = () => { cancelAnimationFrame(animRef.current); setRunning(false); setTime(0); };
+
+  const buildPrompt = useCallback(() =>
+    `Gun propellant interior ballistics simulation — current parameters:
+- Grain geometry: ${grainShape} (burn profile: ${sd.prog})
+- Web thickness: ${webThick} mm
+- Caliber: ${caliberMm} mm
+- Peak chamber pressure: ${peakP} MPa
+- Muzzle velocity: ${muzzleV} m/s
+
+Provide 2-3 sentences: how do grain geometry and web thickness affect the pressure-time curve, and what are the tactical implications of these ballistic parameters for this artillery/gun system?`,
+  [grainShape, sd, webThick, caliberMm, peakP, muzzleV]);
 
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={420} height={110} maxWidth={420} />
@@ -47,5 +69,6 @@ export default function GunPropellantSim() {
       <ResetBtn onClick={reset} />
     </div>
     <InfoBox><strong style={{ color: T.gold }}>Interior ballistics:</strong> Grain perforation count controls burn progressivity. 7-perf = neutral, 19-perf = progressive. Thinner web = faster burn. HEMRL + ARDE develop Pinaka/ATAGS propellants.</InfoBox>
+    <AIInsight buildPrompt={buildPrompt} color={T.gold} />
   </div>);
 }

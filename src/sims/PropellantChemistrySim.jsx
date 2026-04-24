@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas } from "../components";
+import { useState, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
 import { T, FONT, useCanvas } from "../utils";
 
 export default function PropellantChemistrySim() {
@@ -34,6 +34,19 @@ export default function PropellantChemistrySim() {
     });
   }, [oxidizer, binder, alPercent, nano]);
 
+  const buildPrompt = useCallback(() =>
+    `Solid propellant chemistry formulation simulation — current parameters:
+- Oxidizer: ${oxidizer.toUpperCase()} (Isp contribution: ${ox.isp} s, Green: ${ox.green ? "YES" : "NO"})
+- Binder: ${binder.toUpperCase()} (Isp contribution: ${bn.isp} s)
+- Aluminium fuel: ${alPercent}%
+- Nano-aluminium: ${nano ? "YES (3-5× burn rate enhancement)" : "NO"}
+- Total formulated Isp: ${totalIsp} s
+- Sensitivity level: ${sensitivity}
+- Green score: ${greenScore}%
+
+Provide 2-3 sentences: what are the key performance and safety trade-offs of this propellant formulation, and how does it compare to the best-in-class for defense applications?`,
+  [oxidizer, ox, binder, bn, alPercent, nano, totalIsp, sensitivity, greenScore]);
+
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={320} height={150} maxWidth={320} />
     <PillRow>
@@ -56,5 +69,6 @@ export default function PropellantChemistrySim() {
       <DataBox label="Green" value={`${greenScore}%`} color={greenScore > 50 ? T.green : T.orange} />
     </DataRow>
     <InfoBox><strong style={{ color: T.purple }}>Formulation:</strong> Oxidizer ({oxidizer.toUpperCase()}) + Binder ({binder.toUpperCase()}) + Al fuel. {ox.green ? "♻ Green oxidizer — reduced HCl emissions." : ""} {nano ? "Nano-Al increases burn rate 3-5× via surface area." : ""} HEMRL leads India's energetic materials synthesis.</InfoBox>
+    <AIInsight buildPrompt={buildPrompt} color={T.purple} />
   </div>);
 }

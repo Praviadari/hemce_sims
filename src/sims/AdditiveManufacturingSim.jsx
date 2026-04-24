@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas } from "../components";
+import { useState, useEffect, useRef, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, useCanvas } from "../utils";
 
 export default function AdditiveManufacturingSim() {
@@ -34,11 +34,27 @@ export default function AdditiveManufacturingSim() {
 
   useEffect(() => {
     if (!printing) return;
-    ivRef.current = setInterval(() => setLayer((l) => { if (l >= totalLayers) { setPrinting(false); return l; } return l + 1; }), 80);
+    ivRef.current = setInterval(() => setLayer((l) => {
+      if (l >= totalLayers) { setPrinting(false); return l; }
+      return l + 1;
+    }), 80);
     return () => clearInterval(ivRef.current);
   }, [printing, totalLayers]);
 
   const reset = () => { clearInterval(ivRef.current); setPrinting(false); setLayer(0); };
+
+  const buildPrompt = useCallback(() =>
+    `Additive manufacturing for defense applications simulation — current parameters:
+- Process: ${pd.n} (${process === "dmls" ? "Direct Metal Laser Sintering" : process === "sls" ? "Selective Laser Sintering" : process === "dw" ? "Direct Write (energetic paste)" : "Fused Deposition Modelling"})
+- Part: ${part} (${part === "nozzle" ? "rocket nozzle insert" : part === "grain" ? "solid fuel grain" : "motor casing"})
+- Layer resolution: ${pd.res} mm
+- Infill density: ${infill}%
+- Total layers: ${totalLayers}
+- Estimated build time: ${buildTime} min
+- Part density: ${partDensity} g/cc
+
+Provide 2-3 sentences: what are the structural or functional advantages of using ${pd.n} for this ${part}, and what quality/certification challenges must DRDO overcome for operational deployment?`,
+  [pd, process, part, infill, totalLayers, buildTime, partDensity]);
 
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={240} height={200} maxWidth={240} />
@@ -61,9 +77,12 @@ export default function AdditiveManufacturingSim() {
       <DataBox label="Density" value={partDensity} unit="g/cc" color={T.green} />
     </DataRow>
     <div style={{ display: "flex", gap: 8 }}>
-      <ActionBtn onClick={() => { if (!printing) { setLayer(0); setPrinting(true); } }} disabled={printing} color={T.green}>{printing ? `PRINTING ${Math.round(layer / totalLayers * 100)}%` : "🖨 START PRINT"}</ActionBtn>
+      <ActionBtn onClick={() => { if (!printing) { setLayer(0); setPrinting(true); } }} disabled={printing} color={T.green}>
+        {printing ? `PRINTING ${Math.round(layer / totalLayers * 100)}%` : "🖨 START PRINT"}
+      </ActionBtn>
       <ResetBtn onClick={reset} />
     </div>
     <InfoBox><strong style={{ color: T.accent }}>AM for HEM:</strong> {process === "dmls" ? "DMLS: Ti-6Al-4V nozzles with complex cooling channels." : process === "dw" ? "Direct-Write: Energetic paste extrusion for custom grains." : process === "sls" ? "SLS: Sintered nylon/metal for rapid prototyping." : "FDM: ABS/PEEK fuel grains with tailored ports."} DRDO actively adopting AM.</InfoBox>
+    <AIInsight buildPrompt={buildPrompt} color={T.lime} />
   </div>);
 }

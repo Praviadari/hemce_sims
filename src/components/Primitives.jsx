@@ -1,9 +1,11 @@
 import React from "react";
 import { T, FONT, TECH_FONT, MONO_FONT } from "../utils/theme";
 
-export const Pill = ({ active, onClick, children, color = T.accent }) => (
+export const Pill = ({ active, onClick, children, color = T.accent, label }) => (
   <button
     onClick={onClick}
+    aria-label={label ?? (typeof children === "string" ? children : undefined)}
+    aria-pressed={active}
     style={{
       padding: "7px 13px",
       borderRadius: 24,
@@ -32,22 +34,26 @@ export const Pill = ({ active, onClick, children, color = T.accent }) => (
   </button>
 );
 
-export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", color = T.accent }) => (
+export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", color = T.accent }) => {
+  const id = `slider-${label.replace(/\s+/g, "-").toLowerCase()}`;
+  return (
   <div style={{ marginBottom: 16 }}>
     <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-      <span style={{ color: T.gray, fontSize: 11, fontWeight: 500 }}>{label}</span>
-      <span style={{ color, fontSize: 13, fontWeight: 800, fontFamily: MONO_FONT }}>
+      <label htmlFor={id} style={{ color: T.gray, fontSize: 11, fontWeight: 500 }}>{label}</label>
+      <span style={{ color, fontSize: 13, fontWeight: 800, fontFamily: MONO_FONT }} aria-live="polite">
         {typeof value === "number" ? (Number.isInteger(value) ? value : value.toFixed(1)) : value}
         <span style={{ fontSize: 10, opacity: 0.8, marginLeft: 2 }}>{unit}</span>
       </span>
     </div>
     <div style={{ position: "relative", height: 8, display: "flex", alignItems: "center" }}>
       <input
+        id={id}
         type="range"
         min={min}
         max={max}
         step={step}
         value={value}
+        aria-label={`${label}: ${value}${unit}`}
         onChange={(e) => onChange(Number(e.target.value))}
         style={{
           width: "100%",
@@ -61,7 +67,8 @@ export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", 
       />
     </div>
   </div>
-);
+  );
+};
 
 export const DataBox = ({ label, value, unit, color = T.accent }) => (
   <div
@@ -124,10 +131,12 @@ export const DataRow = ({ children }) => (
   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "14px 0" }}>{children}</div>
 );
 
-export const ActionBtn = ({ onClick, disabled, color, children }) => (
+export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
   <button
     onClick={onClick}
     disabled={disabled}
+    aria-label={label ?? (typeof children === "string" ? children : undefined)}
+    aria-disabled={disabled}
     style={{
       flex: 1,
       padding: "13px 0",
@@ -160,6 +169,7 @@ export const ActionBtn = ({ onClick, disabled, color, children }) => (
 export const ResetBtn = ({ onClick }) => (
   <button
     onClick={onClick}
+    aria-label="Reset simulation"
     style={{
       padding: "13px 16px",
       borderRadius: 12,
@@ -186,8 +196,11 @@ export const ResetBtn = ({ onClick }) => (
   </button>
 );
 
-export const SimCanvas = ({ canvasRef, width, height, maxWidth }) => (
-  <div style={{
+export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulation visualization" }) => (
+  <div
+    role="img"
+    aria-label={label}
+    style={{
     position: "relative",
     margin: "0 auto 14px",
     width: "100%",

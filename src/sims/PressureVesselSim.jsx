@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas } from "../components";
+import { useState, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
 import { T, FONT, useCanvas } from "../utils";
 
 export default function PressureVesselSim() {
@@ -62,6 +62,21 @@ export default function PressureVesselSim() {
     [pressure, thickness, radius, mat, hoop, ys, fos]
   );
 
+  const buildPrompt = useCallback(() =>
+    `Pressure vessel structural integrity simulation — current parameters:
+- Material: ${mat} (yield strength: ${ys} MPa)
+- Internal pressure: ${pressure} MPa
+- Wall thickness: ${thickness} mm
+- Inner radius: ${radius} mm
+- Hoop stress (σ_h): ${hoop.toFixed(0)} MPa
+- Axial stress: ${axial.toFixed(0)} MPa
+- Factor of Safety: ${fos.toFixed(2)}
+- Burst pressure: ${burst} MPa
+- Status: ${!safe && !warn ? "YIELDED" : warn ? "CAUTION" : "SAFE"}
+
+Provide 2-3 sentences: what does this stress state mean for the vessel's structural integrity, and what design changes would improve safety for a propulsion or ordnance application?`,
+  [mat, ys, pressure, thickness, radius, hoop, axial, fos, burst, safe, warn]);
+
   return (
     <div>
       <SimCanvas canvasRef={canvasRef} width={280} height={200} maxWidth={280} />
@@ -82,6 +97,7 @@ export default function PressureVesselSim() {
       <InfoBox>
         <strong style={{ color: T.accent }}>σ_hoop = P×r/t.</strong> Orange arrows = circumferential stress. ASME requires FoS ≥ 1.5. Wall color: <span style={{ color: T.green }}>safe</span> / <span style={{ color: T.gold }}>caution</span> / <span style={{ color: T.red }}>yield exceeded</span>.
       </InfoBox>
+      <AIInsight buildPrompt={buildPrompt} color={T.accent} />
     </div>
   );
 }

@@ -1,5 +1,5 @@
-import { useState, useMemo } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas } from "../components";
+import { useState, useMemo, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
 import { T, FONT, useCanvas } from "../utils";
 
 export default function ScramjetSim() {
@@ -32,6 +32,19 @@ export default function ScramjetSim() {
     ctx.font = `bold 9px ${FONT}`; ctx.textAlign = "center"; ctx.fillStyle = T.cyan; ctx.fillText("INLET", 50, cy + 50); ctx.fillStyle = T.gray; ctx.fillText("ISOLATOR", 105, cy + 50); ctx.fillStyle = T.orange; ctx.fillText("COMBUSTOR", 190, cy + 50); ctx.fillStyle = T.accent; ctx.fillText("NOZZLE", 290, cy + 50); ctx.textAlign = "left";
   }, [mach, fuelType, cooling]);
 
+  const buildPrompt = useCallback(() =>
+    `Scramjet (supersonic combustion ramjet) simulation — current parameters:
+- Flight Mach number: ${mach}
+- Fuel type: ${fuelType}
+- Altitude: ${altitude} km
+- Active regenerative cooling: ${cooling ? "YES" : "NO"}
+- Stagnation temperature: ${temp} K
+- Net thrust: ${thrustN} kN
+- Combustor wall temperature: ${wallT} K
+
+Provide 2-3 sentences: how do these conditions affect scramjet operability, material selection, and flight envelope in a hypersonic defense vehicle?`,
+  [mach, fuelType, altitude, cooling, temp, thrustN, wallT]);
+
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={420} height={130} maxWidth={420} />
     <PillRow>
@@ -48,5 +61,6 @@ export default function ScramjetSim() {
       <DataBox label="Wall T" value={wallT} unit="K" color={wallT > 800 ? T.red : T.cyan} />
     </DataRow>
     <InfoBox><strong style={{ color: T.cyan }}>Scramjet:</strong> Air-breathing, supersonic combustion at Mach 5+. Uses atmospheric O₂. {cooling ? "Active cooling circulates endothermic fuel through walls before combustion." : "⚠ Without cooling, walls exceed material limits above Mach 7."} DRDL tested 12-min full-scale run in Jan 2026.</InfoBox>
+    <AIInsight buildPrompt={buildPrompt} color={T.cyan} />
   </div>);
 }
