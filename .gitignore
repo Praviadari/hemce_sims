@@ -1,0 +1,6 @@
+node_modules
+dist
+.claude
+build_full_log.txt
+.DS_Store
+.env
