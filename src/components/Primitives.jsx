@@ -1,9 +1,9 @@
 import React from "react";
-import { T, FONT, TECH_FONT, MONO_FONT } from "../utils/theme";
+import { T, FONT, TECH_FONT, MONO_FONT, haptics } from "../utils";
 
 export const Pill = ({ active, onClick, children, color = T.accent, label }) => (
   <button
-    onClick={onClick}
+    onClick={(e) => { haptics.light(); onClick && onClick(e); }}
     aria-label={label ?? (typeof children === "string" ? children : undefined)}
     aria-pressed={active}
     style={{
@@ -54,7 +54,7 @@ export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", 
         step={step}
         value={value}
         aria-label={`${label}: ${value}${unit}`}
-        onChange={(e) => onChange(Number(e.target.value))}
+        onChange={(e) => { haptics.light(); onChange(Number(e.target.value)); }}
         style={{
           width: "100%",
           accentColor: color,
@@ -133,7 +133,7 @@ export const DataRow = ({ children }) => (
 
 export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
   <button
-    onClick={onClick}
+    onClick={(e) => { haptics.heavy(); onClick && onClick(e); }}
     disabled={disabled}
     aria-label={label ?? (typeof children === "string" ? children : undefined)}
     aria-disabled={disabled}
@@ -168,7 +168,7 @@ export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
 
 export const ResetBtn = ({ onClick }) => (
   <button
-    onClick={onClick}
+    onClick={(e) => { haptics.medium(); onClick && onClick(e); }}
     aria-label="Reset simulation"
     style={{
       padding: "13px 16px",
@@ -228,6 +228,7 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
       borderRadius: 12,
       boxShadow: `inset 0 0 20px ${T.accent}10`,
       border: `1px solid ${T.accent}15`,
+      animation: "radarPulse 4s infinite ease-in-out",
     }} />
   </div>
 );

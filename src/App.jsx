@@ -1,4 +1,4 @@
-import { useState, Suspense } from "react";
+import React, { useState, Suspense, useRef } from "react";
 import { Analytics } from "@vercel/analytics/react";
 import { T, FONT, TECH_FONT } from "./utils";
 import { Pill, ErrorBoundary } from "./components";
@@ -46,8 +46,48 @@ export default function App() {
   const active = SIM_REGISTRY.find((s) => s.id === activeSim);
   const ActiveComp = active?.comp;
 
+  // Swipe gestures
+  const [touchStart, setTouchStart] = useState(null);
+  const onTouchStart = (e) => setTouchStart(e.targetTouches[0].clientX);
+  const onTouchEnd = (e) => {
+    if (touchStart === null) return;
+    const touchEnd = e.changedTouches[0].clientX;
+    const dir = touchStart - touchEnd;
+    if (Math.abs(dir) > 50) {
+      const idx = filtered.findIndex((s) => s.id === activeSim);
+      if (dir > 0 && idx < filtered.length - 1) setActiveSim(filtered[idx + 1].id);
+      if (dir < 0 && idx > 0) setActiveSim(filtered[idx - 1].id);
+    }
+    setTouchStart(null);
+  };
+
+  // Exhibition Mode (Fullscreen + Wake Lock)
+  const [exhibition, setExhibition] = useState(false);
+  const wakeLockRef = useRef(null);
+
+  const toggleExhibition = async () => {
+    try {
+      if (!exhibition) {
+        if (document.documentElement.requestFullscreen) await document.documentElement.requestFullscreen();
+        if ("wakeLock" in navigator) wakeLockRef.current = await navigator.wakeLock.request("screen");
+        setExhibition(true);
+      } else {
+        if (document.exitFullscreen) await document.exitFullscreen();
+        if (wakeLockRef.current) {
+          await wakeLockRef.current.release();
+          wakeLockRef.current = null;
+        }
+        setExhibition(false);
+      }
+    } catch (err) {
+      console.warn("Exhibition mode fully permitted only upon user gesture.", err);
+    }
+  };
+
   return (
     <div
+      onTouchStart={onTouchStart}
+      onTouchEnd={onTouchEnd}
       style={{
         minHeight: "100vh",
         background: `radial-gradient(circle at 50% 0%, #0a192f 0%, ${T.bg} 100%)`,
@@ -91,6 +131,21 @@ export default function App() {
 
       {/* Header */}
       <header style={{ textAlign: "center", marginBottom: 20, paddingTop: 8, position: "relative", zIndex: 1 }}>
+        <button
+          onClick={toggleExhibition}
+          style={{
+            position: "absolute", top: 0, right: 0,
+            background: exhibition ? `${T.red}20` : T.glass,
+            border: `1px solid ${exhibition ? T.red : T.glassBorder}`,
+            color: exhibition ? T.red : T.gray,
+            padding: "5px 10px", borderRadius: 8,
+            fontFamily: TECH_FONT, fontSize: 8, fontWeight: 800,
+            cursor: "pointer", touchAction: "manipulation",
+            letterSpacing: 1
+          }}
+        >
+          {exhibition ? "EXIT EXHIBIT MODE" : "ENTER EXHIBIT MODE"}
+        </button>
         <div style={{
           fontSize: "clamp(8px, 2.5vw, 11px)",
           color: T.accent,
@@ -99,7 +154,7 @@ export default function App() {
           textTransform: "uppercase",
           textShadow: `0 0 10px ${T.accent}30`,
         }}>
-          HEMCE 2026 • THE FUTURE OF DEFENCE
+          HEMCE-2026 • 15TH INTERNATIONAL CONFERENCE & EXHIBITS
         </div>
         <div style={{
           fontSize: "clamp(18px, 5.5vw, 28px)",
@@ -122,7 +177,7 @@ export default function App() {
           boxShadow: `0 0 10px ${T.accent}40`,
         }} />
         <div style={{ fontSize: "clamp(8px, 2.2vw, 10px)", color: T.dimText, marginTop: 6, fontWeight: 500 }}>
-          THERMAL SYSTEMS HYD PVT. LTD. • EXHIBITION PORTAL
+          ORGANISED BY HEMSI IN ASSOCIATION WITH DRDO & ISRO
         </div>
       </header>
 
@@ -281,6 +336,43 @@ export default function App() {
         </div>
       )}
 
+      {/* About TSPL */}
+      <div style={{
+        marginTop: 40,
+        padding: "24px 16px",
+        borderRadius: 16,
+        background: `linear-gradient(135deg, ${T.card}, ${T.bg})`,
+        border: `1px solid ${T.glassBorder}`,
+        position: "relative",
+        zIndex: 1,
+        textAlign: "center"
+      }}>
+        <div style={{ color: T.accent, fontFamily: TECH_FONT, fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>
+          TECHNOLOGY PARTNER
+        </div>
+        <div style={{ color: T.white, fontSize: 16, fontWeight: 700, marginBottom: 14 }}>
+          Thermal Systems Hyderabad Pvt. Ltd. (TSPL)
+        </div>
+        <p style={{ color: T.gray, fontSize: 12, lineHeight: 1.6, maxWidth: 600, margin: "0 auto", marginBottom: 16 }}>
+          With nearly four decades of expertise, TSPL is a global leader in designing, engineering, and delivering turnkey Waste Heat Recovery Solutions. Having successfully executed over 400+ projects across 40 countries, they specialize in high-energy thermal management and complex boilers for the world's most demanding continuous process operations.
+        </p>
+        <a href="https://www.thermalindia.com" target="_blank" rel="noopener noreferrer" style={{
+          display: "inline-block",
+          padding: "8px 16px",
+          borderRadius: 20,
+          background: `${T.accent}15`,
+          border: `1px solid ${T.accent}40`,
+          color: T.accent,
+          fontFamily: TECH_FONT,
+          fontSize: 10,
+          fontWeight: 700,
+          textDecoration: "none",
+          letterSpacing: 1
+        }}>
+          EXPLORE THERMALINDIA.COM
+        </a>
+      </div>
+
       {/* Footer */}
       <div style={{
         textAlign: "center",
@@ -297,9 +389,13 @@ export default function App() {
         }} />
         SCAN QR AT BOOTH • INTERACT ON MOBILE
         <br />
-        <strong style={{ color: T.gray }}>HEMCE 2026</strong> • THERMAL SYSTEMS HYD PVT. LTD.
+        <strong style={{ color: T.gray }}>HEMCE-2026</strong> • APRIL 29 – MAY 1, 2026
         <br />
-        29 APR – 01 MAY • HIGH ENERGY MATERIALS CONFERENCE & EXHIBITION
+        LEONIA HOLISTIC DESTINATION • SHAMIRPET, HYDERABAD
+        <br />
+        <a href="https://www.hemsindia.co.in/hemce2026" target="_blank" rel="noopener noreferrer" style={{ color: T.accent, textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+          WWW.HEMSINDIA.CO.IN/HEMCE2026
+        </a>
       </div>
       <Analytics />
     </div>

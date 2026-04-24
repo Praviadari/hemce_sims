@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { askGemini } from "../utils/gemini";
-import { T, TECH_FONT, MONO_FONT } from "../utils/theme";
+import { T, TECH_FONT, MONO_FONT, haptics } from "../utils";
 
 export function AIInsight({ buildPrompt, color = T.accent }) {
   const [phase, setPhase] = useState("idle"); // idle | loading | done | error
@@ -24,7 +24,7 @@ export function AIInsight({ buildPrompt, color = T.accent }) {
   return (
     <div style={{ marginTop: 14 }}>
       <button
-        onClick={query}
+        onClick={() => { haptics.medium(); query(); }}
         disabled={phase === "loading"}
         style={{
           width: "100%",
@@ -108,7 +108,7 @@ export function AIInsight({ buildPrompt, color = T.accent }) {
             }}>
               <span>gemini-2.0-flash</span>
               <button
-                onClick={query}
+                onClick={() => { haptics.light(); query(); }}
                 style={{
                   background: "none",
                   border: "none",
