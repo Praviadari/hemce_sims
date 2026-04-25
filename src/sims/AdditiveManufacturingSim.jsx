@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ExportBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function AdditiveManufacturingSim() {
@@ -172,5 +172,6 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
     </div>
     <InfoBox><strong style={{ color: T.accent }}>AM for HEM:</strong> {process === "dmls" ? "DMLS: Ti-6Al-4V nozzles with complex cooling channels." : process === "dw" ? "Direct-Write: Energetic paste extrusion for custom grains." : process === "sls" ? "SLS: Sintered nylon/metal for rapid prototyping." : "FDM: ABS/PEEK fuel grains with tailored ports."} DRDO actively adopting AM.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.lime} />
+    <ExportBtn simId="additive_manufacturing" getData={() => ({ process, part, infill, totalLayers, buildTime, partDensity, printing })} color={T.lime} />
   </div>);
 }

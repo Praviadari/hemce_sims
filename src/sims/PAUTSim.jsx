@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ExportBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PAUTSim() {
@@ -148,7 +148,7 @@ export default function PAUTSim() {
         ctx.fillText("VOLUMETRIC FLAW DETECTED", dx - 60, dy + 20);
       }
     },
-    [angle, focal, elems, freq, defect, mode, distance, heMat, charge],
+    [angle, focal, elems, freq, defect, mode],
     { animate: true }
   );
 
@@ -192,6 +192,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
         <strong style={{ color: T.accent }}>PAUT:</strong> Electronic phasing steers beam without moving probe. {mode === "sector" ? "Sector scan sweeps angles." : "Linear scan shifts laterally."} {defect ? "Red echo = defect reflection!" : ""} Higher freq = finer resolution, less penetration.
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.green} />
+      <ExportBtn simId="paut" getData={() => ({ mode, angle, focal, elems, freq, defect, res })} color={T.green} />
     </div>
   );
 }

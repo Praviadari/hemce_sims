@@ -198,5 +198,6 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
     </DataRow>
     <InfoBox><strong style={{ color: T.cyan }}>Scramjet:</strong> Air-breathing, supersonic combustion at Mach 5+. Uses atmospheric O₂. {cooling ? "Active cooling circulates fuel through the combustor walls to protect materials." : "⚠ Without cooling, walls exceed material limits above Mach 7."} DRDL tested 12-min full-scale run in Jan 2026.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.cyan} />
+    <ExportBtn simId="scramjet" getData={() => ({ mach, fuelType, altitude, cooling, thrustN, eta, Ve })} color={T.cyan} />
   </div>);
 }

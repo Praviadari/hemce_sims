@@ -226,5 +226,6 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
     </div>
     <InfoBox><strong style={{ color: T.orange }}>Hopkinson-Cranz scaling:</strong> Z = R/W^(1/3). CL-20 is ~2× TNT equivalent — HEMRL's indigenous development. Overpressure &gt;1 bar causes structural damage.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.red} />
+    <ExportBtn simId="detonation" getData={() => ({ heMat, charge, distance, peakOP: peakOPDisplay, impulse, arrivalMs })} color={T.red} />
   </div>);
 }

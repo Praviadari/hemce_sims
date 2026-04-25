@@ -9,7 +9,6 @@ export default function SolidRocketSim() {
   const [chamberP, setChamberP] = useState(7);
   const [grain, setGrain] = useState("star");
   const [thrustHistory, setThrustHistory] = useState([]);
-  const [thrustHistory, setThrustHistory] = useState([]);
   const animRef = useRef(null);
   const startRef = useRef(null);
   const dur = 8;

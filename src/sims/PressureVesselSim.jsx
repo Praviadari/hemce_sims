@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ExportBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PressureVesselSim() {
@@ -157,6 +157,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
         <strong style={{ color: T.accent }}>σ_hoop = P×r/t.</strong> Orange arrows = circumferential stress. ASME requires FoS ≥ 1.5. Wall color: <span style={{ color: T.green }}>safe</span> / <span style={{ color: T.gold }}>caution</span> / <span style={{ color: T.red }}>yield exceeded</span>.
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.accent} />
+      <ExportBtn simId="pressure_vessel" getData={() => ({ mat, pressure, thickness, radius, hoop: hoop.toFixed(0), axial: axial.toFixed(0), fos: fos.toFixed(2) })} color={T.accent} />
     </div>
   );
 }

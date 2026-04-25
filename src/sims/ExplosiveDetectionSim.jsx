@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, SimCanvas, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ExportBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function ExplosiveDetectionSim() {
@@ -194,6 +194,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
       </div>
       <InfoBox><strong style={{ color: T.purple }}>Detection:</strong> {method === "colorimetric" ? "HEMRL field kit — color reagents, used by police/BSF." : method === "spectroscopic" ? "Raman — laser molecular fingerprinting, ppb sensitivity." : method === "ion_mobility" ? "IMS — airport-grade screening, low false-positive." : "Canine — ppt sensitivity, gold standard for field sweeps."}</InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.pink} />
+      <ExportBtn simId="explosive_detection" getData={() => ({ method, sample, scanning, result, scanProg, sensitivity: samples[sample].sensitivity })} color={T.pink} />
     </div>
   );
 }

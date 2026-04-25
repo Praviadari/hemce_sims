@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ExportBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PropellantChemistrySim() {
@@ -146,5 +146,6 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
     </DataRow>
     <InfoBox><strong style={{ color: T.purple }}>Formulation:</strong> Oxidizer ({oxidizer.toUpperCase()}) + Binder ({binder.toUpperCase()}) + Al fuel. {ox.green ? "♻ Green oxidizer — reduced HCl emissions." : ""} {nano ? "Nano-Al increases burn rate 3-5× via surface area." : ""} HEMRL leads India's energetic materials synthesis.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.purple} />
+    <ExportBtn simId="propellant_chemistry" getData={() => ({ oxidizer, binder, alPercent, nano, totalIsp, density })} color={T.purple} />
   </div>);
 }

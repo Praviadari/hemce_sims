@@ -47,11 +47,16 @@ export default function App() {
   });
 
   const currentTheme = THEMES[theme];
+  const [compareMode, setCompareMode] = useState(false);
 
   useEffect(() => {
     document.body.dataset.theme = theme;
     window.localStorage.setItem("theme", theme);
   }, [theme]);
+
+  useEffect(() => {
+    setCompareMode(false);
+  }, [activeSim]);
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
@@ -166,6 +171,22 @@ export default function App() {
           >
             {theme === "dark" ? "LIGHT MODE" : "DARK MODE"}
           </button>
+          {ActiveComp && (
+            <button
+              type="button"
+              onClick={() => setCompareMode((prev) => !prev)}
+              style={{
+                padding: "6px 12px", borderRadius: 8,
+                border: `1px solid ${currentTheme.glassBorder}`,
+                background: compareMode ? `${currentTheme.accent}20` : currentTheme.glass,
+                color: compareMode ? currentTheme.accent : currentTheme.gray,
+                fontFamily: TECH_FONT, fontSize: 9, fontWeight: 700,
+                cursor: "pointer", letterSpacing: 1,
+              }}
+            >
+              {compareMode ? "✕ SINGLE" : "⇄ COMPARE"}
+            </button>
+          )}
           <button
             type="button"
             onClick={toggleExhibition}
@@ -338,7 +359,24 @@ export default function App() {
           </div>
           <ErrorBoundary color={active.color}>
             <Suspense fallback={<SimSkeleton color={active.color} />}>
-              <ActiveComp />
+              {compareMode ? (
+                <div style={{ display: "grid", gridTemplateColumns: typeof window !== "undefined" && window.innerWidth < 600 ? "1fr" : "1fr 1fr", gap: 12 }}>
+                  <div style={{ borderRight: typeof window !== "undefined" && window.innerWidth < 600 ? "none" : `1px solid ${currentTheme.glassBorder}`, paddingRight: 8 }}>
+                    <div style={{ fontSize: 9, color: currentTheme.accent, fontFamily: TECH_FONT, marginBottom: 6, textAlign: "center" }}>
+                      CONFIG A
+                    </div>
+                    <ActiveComp key={`${activeSim}-a`} />
+                  </div>
+                  <div style={{ paddingLeft: 8 }}>
+                    <div style={{ fontSize: 9, color: currentTheme.green, fontFamily: TECH_FONT, marginBottom: 6, textAlign: "center" }}>
+                      CONFIG B
+                    </div>
+                    <ActiveComp key={`${activeSim}-b`} />
+                  </div>
+                </div>
+              ) : (
+                <ActiveComp />
+              )}
             </Suspense>
           </ErrorBoundary>
         </div>
