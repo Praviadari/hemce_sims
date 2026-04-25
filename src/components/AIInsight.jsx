@@ -22,6 +22,7 @@ export function AIInsight({ buildPrompt, color = T.accent }) {
   return (
     <div style={{ marginTop: 14 }}>
       <button
+        type="button"
         onClick={query}
         style={{
           width: "100%",

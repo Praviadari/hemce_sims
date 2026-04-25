@@ -45,7 +45,41 @@ export const THEMES = {
   },
 };
 
-export const T = THEMES.dark;
+export function getCurrentThemeKey() {
+  if (typeof window === "undefined" || typeof document === "undefined") return "dark";
+  return document.body.dataset.theme === "light" ? "light" : "dark";
+}
+
+export function getCanvasTheme(themeKey = getCurrentThemeKey()) {
+  if (themeKey === "light") {
+    return {
+      bgStart: "rgba(247, 250, 255, 1)",
+      bgEnd: "rgba(226, 232, 240, 0.95)",
+      canvasBackground: "rgba(247, 250, 255, 1)",
+      canvasSurface: "rgba(226, 232, 240, 0.95)",
+      panelFill: "rgba(255, 255, 255, 0.95)",
+      panelStroke: "rgba(148, 163, 184, 0.18)",
+      detail: "rgba(15, 23, 42, 0.12)",
+    };
+  }
+  return {
+    bgStart: "#0d1b2a",
+    bgEnd: "#050b14",
+    canvasBackground: "#0d1b2a",
+    canvasSurface: "#050b14",
+    panelFill: "rgba(13, 27, 42, 0.95)",
+    panelStroke: "rgba(255, 255, 255, 0.08)",
+    detail: "rgba(255, 255, 255, 0.1)",
+  };
+}
+
+export const T = new Proxy({}, {
+  get(_, prop) {
+    const theme = THEMES[getCurrentThemeKey()];
+    return theme[prop];
+  },
+});
+
 export const FONT = "'Outfit', sans-serif";
 export const TECH_FONT = "'Orbitron', sans-serif";
 export const MONO_FONT = "'JetBrains Mono', monospace";

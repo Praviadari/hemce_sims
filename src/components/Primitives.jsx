@@ -3,6 +3,7 @@ import { T, FONT, TECH_FONT, MONO_FONT, haptics } from "../utils";
 
 export const Pill = ({ active, onClick, children, color = T.accent, label }) => (
   <button
+    type="button"
     onClick={(e) => { haptics.light(); onClick && onClick(e); }}
     aria-label={label ?? (typeof children === "string" ? children : undefined)}
     aria-pressed={active}
@@ -133,6 +134,7 @@ export const DataRow = ({ children }) => (
 
 export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
   <button
+    type="button"
     onClick={(e) => { haptics.heavy(); onClick && onClick(e); }}
     disabled={disabled}
     aria-label={label ?? (typeof children === "string" ? children : undefined)}
@@ -168,6 +170,7 @@ export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
 
 export const ResetBtn = ({ onClick }) => (
   <button
+    type="button"
     onClick={(e) => { haptics.medium(); onClick && onClick(e); }}
     aria-label="Reset simulation"
     style={{
@@ -205,6 +208,9 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
     margin: "0 auto 14px",
     width: "100%",
     maxWidth: maxWidth ?? width,
+    minHeight: 220,
+    display: "grid",
+    placeItems: "center",
   }}>
     <canvas
       ref={canvasRef}

@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function ScramjetSim() {
   const [mach, setMach] = useState(6);
@@ -22,9 +22,10 @@ export default function ScramjetSim() {
     const cy = H / 2;
     
     // Background Radial Gradient for hypersonic atmosphere
+    const theme = getCanvasTheme();
     const bgGrad = ctx.createRadialGradient(W/2, cy, 0, W/2, cy, W);
-    bgGrad.addColorStop(0, "#0a192f");
-    bgGrad.addColorStop(1, "#050b14");
+    bgGrad.addColorStop(0, theme.canvasBackground);
+    bgGrad.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 

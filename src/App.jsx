@@ -152,6 +152,7 @@ export default function App() {
       <header style={{ textAlign: "center", marginBottom: 20, paddingTop: 8, position: "relative", zIndex: 1 }}>
         <div style={{ position: "absolute", top: 0, right: 0, display: "flex", gap: 8 }}>
           <button
+            type="button"
             onClick={toggleTheme}
             style={{
               background: currentTheme.glass,
@@ -166,6 +167,7 @@ export default function App() {
             {theme === "dark" ? "LIGHT MODE" : "DARK MODE"}
           </button>
           <button
+            type="button"
             onClick={toggleExhibition}
             style={{
               background: exhibition ? `${currentTheme.red}20` : currentTheme.glass,
@@ -251,6 +253,9 @@ export default function App() {
       >
         {filtered.map((s) => (
           <button
+            type="button"
+            role="listitem"
+            aria-current={activeSim === s.id ? "true" : undefined}
             key={s.id}
             onClick={() => setActiveSim(s.id)}
             style={{

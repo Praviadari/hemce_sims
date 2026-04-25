@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PressureVesselSim() {
   const [pressure, setPressure] = useState(5);
@@ -20,11 +20,12 @@ export default function PressureVesselSim() {
   const canvasRef = useCanvas(
     (ctx, W, H) => {
       const cx = W / 2, cy = H / 2, p = pressure;
+      const canvasTheme = getCanvasTheme();
       
       // Deep technical background
       const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, W/2);
-      bg.addColorStop(0, "#0d1b2a");
-      bg.addColorStop(1, "#050b14");
+      bg.addColorStop(0, canvasTheme.bgStart);
+      bg.addColorStop(1, canvasTheme.bgEnd);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
 

@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function SolidRocketSim() {
   const [burning, setBurning] = useState(false);
@@ -24,9 +24,12 @@ export default function SolidRocketSim() {
     (ctx, W, H) => {
       const p = burning ? progress : 0;
 
+      const canvasTheme = getCanvasTheme();
       const bgGlow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
       bgGlow.addColorStop(0, `${T.accent}05`);
       bgGlow.addColorStop(1, "transparent");
+      ctx.fillStyle = canvasTheme.panelFill;
+      ctx.fillRect(0, 0, W, H);
       ctx.fillStyle = bgGlow;
       ctx.fillRect(0, 0, W, H);
 

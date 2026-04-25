@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function AdditiveManufacturingSim() {
   const [process, setProcess] = useState("fdm");
@@ -16,10 +16,12 @@ export default function AdditiveManufacturingSim() {
   const partDensity = (infill * 0.01 * (process === "dmls" ? 4.43 : 1.24)).toFixed(2);
 
   const canvasRef = useCanvas((ctx, W, H) => {
-    // Technical dark background
+    const theme = getCanvasTheme();
+
+    // Technical background
     const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
-    bg.addColorStop(0, "#0d1b2a");
-    bg.addColorStop(1, "#050b14");
+    bg.addColorStop(0, theme.canvasBackground);
+    bg.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PAUTSim() {
   const [angle, setAngle] = useState(0);
@@ -13,7 +13,11 @@ export default function PAUTSim() {
 
   const canvasRef = useCanvas(
     (ctx, W, H) => {
+      const theme = getCanvasTheme();
       const pw = Math.min(elems * 3, W - 60), px = (W - pw) / 2, py = 25, ph = 14, ew = pw / elems;
+
+      ctx.fillStyle = theme.canvasBackground;
+      ctx.fillRect(0, 0, W, H);
 
       ctx.fillStyle = "#2D3748";
       ctx.beginPath();
@@ -41,8 +45,8 @@ export default function PAUTSim() {
 
       const my = py + ph + 8, mh = H - my - 12;
       const specGrad = ctx.createLinearGradient(0, my, 0, my + mh);
-      specGrad.addColorStop(0, "#0a192f");
-      specGrad.addColorStop(1, "#050b14");
+      specGrad.addColorStop(0, theme.canvasBackground);
+      specGrad.addColorStop(1, theme.canvasSurface);
       ctx.fillStyle = specGrad;
       ctx.roundRect(20, my, W - 40, mh, 8);
       ctx.fill();

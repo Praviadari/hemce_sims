@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function DetonationSim() {
   const [running, setRunning] = useState(false);
@@ -18,10 +18,11 @@ export default function DetonationSim() {
 
   const canvasRef = useCanvas((ctx, W, H) => {
     const cy = H / 2, cx = 60;
+    const theme = getCanvasTheme();
 
     const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W);
-    bgGrad.addColorStop(0, "#0D1B2A");
-    bgGrad.addColorStop(1, "#050B14");
+    bgGrad.addColorStop(0, theme.canvasBackground);
+    bgGrad.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 

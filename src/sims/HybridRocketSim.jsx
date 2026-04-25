@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function HybridRocketSim() {
   const [throttle, setThrottle] = useState(50);
@@ -16,11 +16,12 @@ export default function HybridRocketSim() {
 
   const canvasRef = useCanvas((ctx, W, H) => {
     const cy = H / 2;
+    const theme = getCanvasTheme();
     
-    // Background Radial Gradient for test stand atmosphere
+    // Background for test stand atmosphere
     const bg = ctx.createRadialGradient(W/2, cy, 0, W/2, cy, W);
-    bg.addColorStop(0, "#0d1b2a");
-    bg.addColorStop(1, "#050b14");
+    bg.addColorStop(0, theme.canvasBackground);
+    bg.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 

@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PropellantChemistrySim() {
   const [oxidizer, setOxidizer] = useState("ap");
@@ -18,10 +18,12 @@ export default function PropellantChemistrySim() {
   const greenScore = (ox.green ? 70 : 20) + (binder === "gap" ? 15 : 0);
 
   const canvasRef = useCanvas((ctx, W, H) => {
-    // Deep technical background
+    const theme = getCanvasTheme();
+
+    // Background for chemistry scene
     const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
-    bg.addColorStop(0, "#0d1b2a");
-    bg.addColorStop(1, "#050b14");
+    bg.addColorStop(0, theme.canvasBackground);
+    bg.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
