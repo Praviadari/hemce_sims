@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
 
 export default function PropellantChemistrySim() {
   const [oxidizer, setOxidizer] = useState("ap");

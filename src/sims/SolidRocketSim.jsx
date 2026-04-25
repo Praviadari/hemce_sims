@@ -114,30 +114,37 @@ export default function SolidRocketSim() {
       ctx.fill();
 
       if (burning && p < 1) {
-        const intensity = Math.min(1, elapsed / 0.5) * (1 - Math.max(0, (p - 0.9) / 0.1));
+        const intensity = Math.max(
+          0,
+          Math.min(1, elapsed / 0.5) * (1 - Math.max(0, (p - 0.9) / 0.1))
+        );
+        const flameRadiusX = Math.max(0, 60 * intensity);
+        const flameRadiusY = Math.max(0, 10 * intensity);
 
-        const coreGrad = ctx.createLinearGradient(W - 15, 0, W + 100, 0);
-        coreGrad.addColorStop(0, "rgba(255,255,255,0.9)");
-        coreGrad.addColorStop(0.2, T.accent);
-        coreGrad.addColorStop(1, "transparent");
+        if (flameRadiusX > 0 && flameRadiusY > 0) {
+          const coreGrad = ctx.createLinearGradient(W - 15, 0, W + 100, 0);
+          coreGrad.addColorStop(0, "rgba(255,255,255,0.9)");
+          coreGrad.addColorStop(0.2, T.accent);
+          coreGrad.addColorStop(1, "transparent");
 
-        ctx.fillStyle = coreGrad;
-        ctx.beginPath();
-        ctx.ellipse(W - 10, H/2, 60 * intensity, 10 * intensity, 0, 0, Math.PI * 2);
-        ctx.fill();
-
-        for (let i = 0; i < 20; i++) {
-          const fl = (50 + Math.random() * 80) * intensity,
-            sp = (Math.random() - 0.5) * 40 * intensity;
-          ctx.strokeStyle = i < 8 ? T.white : i < 15 ? T.accent : T.pink;
-          ctx.globalAlpha = 0.4 + Math.random() * 0.4;
-          ctx.lineWidth = 1 + Math.random() * 3;
+          ctx.fillStyle = coreGrad;
           ctx.beginPath();
-          ctx.moveTo(W - 15, H / 2 + (Math.random() - 0.5) * 10);
-          ctx.lineTo(W - 15 + fl, H / 2 + sp);
-          ctx.stroke();
+          ctx.ellipse(W - 10, H / 2, flameRadiusX, flameRadiusY, 0, 0, Math.PI * 2);
+          ctx.fill();
+
+          for (let i = 0; i < 20; i++) {
+            const fl = (50 + Math.random() * 80) * intensity,
+              sp = (Math.random() - 0.5) * 40 * intensity;
+            ctx.strokeStyle = i < 8 ? T.white : i < 15 ? T.accent : T.pink;
+            ctx.globalAlpha = 0.4 + Math.random() * 0.4;
+            ctx.lineWidth = 1 + Math.random() * 3;
+            ctx.beginPath();
+            ctx.moveTo(W - 15, H / 2 + (Math.random() - 0.5) * 10);
+            ctx.lineTo(W - 15 + fl, H / 2 + sp);
+            ctx.stroke();
+          }
+          ctx.globalAlpha = 1;
         }
-        ctx.globalAlpha = 1;
       }
 
       ctx.font = `900 10px ${TECH_FONT}`;

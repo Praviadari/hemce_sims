@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
 
 export default function ExplosiveDetectionSim() {
@@ -137,13 +137,13 @@ Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in rea
       ctx.moveTo(W/2 + 65, cy + 35); ctx.lineTo(W/2 + 65, cy + 45); ctx.lineTo(W/2 + 55, cy + 45);
       ctx.stroke();
 
-      ctx.font = `900 10px ${T.accent}`;
+      ctx.font = `900 10px ${TECH_FONT}`;
       ctx.fillStyle = T.red;
       ctx.textAlign = "center";
       ctx.fillText("! THREAT IDENTIFIED: " + s.name.toUpperCase(), W/2, cy - 50);
       ctx.textAlign = "left";
     } else if (result === "CLEAR") {
-      ctx.font = `900 10px ${T.accent}`;
+      ctx.font = `900 10px ${TECH_FONT}`;
       ctx.fillStyle = T.green;
       ctx.textAlign = "center";
       ctx.fillText("✓ SAMPLE VERIFIED: STABLE", W/2, cy - 50);
@@ -151,7 +151,7 @@ Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in rea
     }
 
     // Status / Mode Labels
-    ctx.font = `800 8px ${T.accent}`;
+    ctx.font = `800 8px ${TECH_FONT}`;
     ctx.fillStyle = T.dimText;
     ctx.fillText(`METHOD: ${method.toUpperCase()}`, 20, 15);
     ctx.fillText(`SENSITIVITY: ${m.sensitivity.toUpperCase()}`, W - 100, 15);

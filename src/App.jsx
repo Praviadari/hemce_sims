@@ -101,13 +101,15 @@ export default function App() {
     }
   };
 
+  const appBgStart = theme === "dark" ? "#0a192f" : currentTheme.cardAlt;
+
   return (
     <div
       onTouchStart={onTouchStart}
       onTouchEnd={onTouchEnd}
       style={{
         minHeight: "100vh",
-        background: `radial-gradient(circle at 50% 0%, #0a192f 0%, ${currentTheme.bg} 100%)`,
+        background: `radial-gradient(circle at 50% 0%, ${appBgStart} 0%, ${currentTheme.bg} 100%)`,
         color: currentTheme.white,
         fontFamily: FONT,
         padding: "14px 10px 48px",

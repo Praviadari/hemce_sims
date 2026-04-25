@@ -213,11 +213,11 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
       style={{
         width: "100%",
         height: "auto",
-        background: "radial-gradient(circle at center, #0D1B2A, #050B14)",
+        background: "radial-gradient(circle at center, var(--sim-bg-from), var(--card))",
         borderRadius: 12,
-        border: `1px solid ${T.glassBorder}`,
+        border: "1px solid var(--glass-border)",
         display: "block",
-        boxShadow: "inset 0 0 40px rgba(0,0,0,0.5), 0 10px 30px rgba(0,0,0,0.3)",
+        boxShadow: "inset 0 0 40px rgba(0,0,0,0.15), 0 10px 30px rgba(0,0,0,0.16)",
         touchAction: "none",
       }}
     />
@@ -226,8 +226,8 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
       top: 0, left: 0, right: 0, bottom: 0,
       pointerEvents: "none",
       borderRadius: 12,
-      boxShadow: `inset 0 0 20px ${T.accent}10`,
-      border: `1px solid ${T.accent}15`,
+      boxShadow: "inset 0 0 20px rgba(var(--accent-rgb), 0.12)",
+      border: "1px solid rgba(var(--accent-rgb), 0.16)",
       animation: "radarPulse 4s infinite ease-in-out",
     }} />
   </div>
