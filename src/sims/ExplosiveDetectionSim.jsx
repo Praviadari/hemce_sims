@@ -42,14 +42,20 @@ export default function ExplosiveDetectionSim() {
 
   const buildPrompt = useCallback(() =>
     `Explosive detection simulation — current parameters:
-- Detection method: ${method} (${method === "colorimetric" ? "HEMRL field kit" : method === "spectroscopic" ? "Raman spectroscopy" : method === "ion_mobility" ? "Ion Mobility Spectrometry" : "Canine olfaction"})
-- Sample type: ${s.name}
-- Detection achieved: ${result ?? "not yet scanned"}
-- Method sensitivity: ${m.sensitivity}
-- False positive rate: ${m.fp}%
-- Scan time: ${m.time} s
+ROLE: "You are an expert in explosive detection. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in real-world conditions, and what are the key operational considerations for deploying this detection technology in a field security scenario?`,
+PARAMETERS (numbered):
+1. Detection method: ${method} (${method === "colorimetric" ? "HEMRL field kit" : method === "spectroscopic" ? "Raman spectroscopy" : method === "ion_mobility" ? "Ion Mobility Spectrometry" : "Canine olfaction"})
+2. Sample type: ${s.name}
+3. Detection achieved: ${result ?? "not yet scanned"}
+4. Method sensitivity: ${m.sensitivity}
+5. False positive rate: ${m.fp}%
+6. Scan time: ${m.time} s
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [method, s, result, m]);
 
   const canvasRef = useCanvas((ctx, W, H) => {

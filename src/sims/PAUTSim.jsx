@@ -44,36 +44,54 @@ export default function PAUTSim() {
       }
 
       const my = py + ph + 8, mh = H - my - 12;
-      const specGrad = ctx.createLinearGradient(0, my, 0, my + mh);
-      specGrad.addColorStop(0, theme.canvasBackground);
-      specGrad.addColorStop(1, theme.canvasSurface);
-      ctx.fillStyle = specGrad;
-      ctx.roundRect(20, my, W - 40, mh, 8);
-      ctx.fill();
-      ctx.strokeStyle = `${T.accent}20`;
+      const bscanX = 20, bscanY = py + ph + 10;
+      const bscanW = W - 40, bscanH = H - bscanY - 10;
+      const imgData = ctx.createImageData(bscanW, bscanH);
+      const data = imgData.data;
+      const wallDepth = 0.85;
+      for (let y = 0; y < bscanH; y++) {
+        for (let x = 0; x < bscanW; x++) {
+          const idx = (y * bscanW + x) * 4;
+          const normY = y / bscanH;
+          const noise = Math.sin(x * 7.13 + y * 3.37) * 10 + 5;
+          const surfaceEcho = normY < 0.05 ? 200 * (1 - normY / 0.05) : 0;
+          const distToWall = Math.abs(normY - wallDepth);
+          const wallEcho = distToWall < 0.02 ? 180 * (1 - distToWall / 0.02) : 0;
+          let defectEcho = 0;
+          if (defect) {
+            const defectNormX = 0.65;
+            const defectNormY = 0.45;
+            const dx = (x / bscanW) - defectNormX;
+            const dy = normY - defectNormY;
+            const distToDefect = Math.sqrt(dx * dx * 4 + dy * dy * 16);
+            if (distToDefect < 0.08) {
+              defectEcho = 255 * (1 - distToDefect / 0.08);
+            }
+          }
+          const beamCenter = mode === "sector"
+            ? 0.5 + Math.sin(angle * Math.PI / 180) * 0.3
+            : (0.5 + angle * 0.01);
+          const beamDist = Math.abs((x / bscanW) - beamCenter);
+          const beamIntensity = beamDist < 0.15 ? 1.2 : 0.8;
+          const intensity = Math.min(255, (noise + surfaceEcho + wallEcho + defectEcho) * beamIntensity);
+          data[idx] = intensity * 0.8;
+          data[idx + 1] = intensity * 0.85;
+          data[idx + 2] = intensity;
+          data[idx + 3] = 255;
+        }
+      }
+      ctx.putImageData(imgData, bscanX, bscanY);
+      ctx.strokeStyle = `${T.accent}30`;
       ctx.lineWidth = 1;
-      ctx.stroke();
-
-      ctx.strokeStyle = `${T.accent}08`;
-      ctx.lineWidth = 0.5;
-      for (let x = 20; x < W - 40; x += 30) {
-        ctx.beginPath(); ctx.moveTo(x, my); ctx.lineTo(x, my + mh); ctx.stroke();
-      }
-
-      const dx = W / 2 + 50, dy = my + mh * 0.6;
-      if (defect) {
-        const pulse = Math.sin(performance.now() / 200) * 0.2 + 0.8;
-        ctx.shadowBlur = 15 * pulse;
-        ctx.shadowColor = T.red;
-        ctx.fillStyle = `rgba(255, 77, 109, ${0.4 * pulse})`;
-        ctx.beginPath();
-        ctx.ellipse(dx, dy, 14, 4, 0.1, 0, Math.PI * 2);
-        ctx.fill();
-        ctx.strokeStyle = T.red;
-        ctx.lineWidth = 1.5;
-        ctx.stroke();
-        ctx.shadowBlur = 0;
-      }
+      ctx.strokeRect(bscanX, bscanY, bscanW, bscanH);
+      ctx.font = `600 7px ${TECH_FONT}`;
+      ctx.fillStyle = T.dimText;
+      ctx.textAlign = "right";
+      ctx.fillText("0mm", bscanX - 2, bscanY + 8);
+      ctx.fillText(`${focal}mm`, bscanX - 2, bscanY + bscanH);
+      ctx.fillStyle = T.accent;
+      ctx.textAlign = "left";
+      ctx.fillText("B-SCAN", bscanX + 4, bscanY + 10);
 
       const bcx = W / 2, rad = (angle * Math.PI) / 180;
       ctx.lineCap = "round";
@@ -130,21 +148,27 @@ export default function PAUTSim() {
         ctx.fillText("VOLUMETRIC FLAW DETECTED", dx - 60, dy + 20);
       }
     },
-    [angle, focal, elems, freq, defect, mode],
+    [angle, focal, elems, freq, defect, mode, distance, heMat, charge],
     { animate: true }
   );
 
   const buildPrompt = useCallback(() =>
     `Phased Array Ultrasonic Testing (PAUT) simulation — current parameters:
-- Scan mode: ${mode === "sector" ? "Sector scan (angular sweep)" : "Linear scan (lateral shift)"}
-- Beam angle: ${angle}°
-- Focal depth: ${focal} mm
-- Array elements: ${elems}
-- Frequency: ${freq} MHz
-- Calculated axial resolution: ${res} mm
-- Defect present: ${defect ? "YES — volumetric flaw in Ti-6Al-4V substrate" : "NO — clean specimen"}
+ROLE: "You are an expert in NDT ultrasonics. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: what do these NDT parameters reveal about inspection quality, and what are the implications for qualifying this aerospace/defense component?`,
+PARAMETERS (numbered):
+1. Scan mode: ${mode === "sector" ? "Sector scan (angular sweep)" : "Linear scan (lateral shift)"}
+2. Beam angle: ${angle}°
+3. Focal depth: ${focal} mm
+4. Array elements: ${elems}
+5. Frequency: ${freq} MHz
+6. Calculated axial resolution: ${res} mm
+7. Defect present: ${defect ? "YES — volumetric flaw in Ti-6Al-4V substrate" : "NO — clean specimen"}
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [mode, angle, focal, elems, freq, res, defect]);
 
   return (

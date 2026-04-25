@@ -103,15 +103,24 @@ export default function PropellantChemistrySim() {
 
   const buildPrompt = useCallback(() =>
     `Solid propellant chemistry formulation simulation — current parameters:
-- Oxidizer: ${oxidizer.toUpperCase()} (Isp contribution: ${ox.isp} s, Green: ${ox.green ? "YES" : "NO"})
-- Binder: ${binder.toUpperCase()} (Isp contribution: ${bn.isp} s)
-- Aluminium fuel: ${alPercent}%
-- Nano-aluminium: ${nano ? "YES (3-5× burn rate enhancement)" : "NO"}
-- Total formulated Isp: ${totalIsp} s
-- Sensitivity level: ${sensitivity}
-- Green score: ${greenScore}%
+ROLE: "You are an expert in energetic materials chemistry. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: what are the key performance and safety trade-offs of this propellant formulation, and how does it compare to the best-in-class for defense applications?`,
+PARAMETERS (numbered):
+1. Oxidizer: ${oxidizer.toUpperCase()}
+2. Oxidizer Isp contribution: ${ox.isp} s
+3. Oxidizer green chemistry: ${ox.green ? "YES" : "NO"}
+4. Binder: ${binder.toUpperCase()}
+5. Binder Isp contribution: ${bn.isp} s
+6. Aluminium fuel: ${alPercent}%
+7. Nano-aluminium: ${nano ? "YES (3-5× burn rate enhancement)" : "NO"}
+8. Total formulated Isp: ${totalIsp} s
+9. Sensitivity level: ${sensitivity}
+10. Green score: ${greenScore}%
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [oxidizer, ox, binder, bn, alPercent, nano, totalIsp, sensitivity, greenScore]);
 
   return (<div>

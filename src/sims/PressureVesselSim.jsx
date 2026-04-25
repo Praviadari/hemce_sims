@@ -116,17 +116,24 @@ export default function PressureVesselSim() {
 
   const buildPrompt = useCallback(() =>
     `Pressure vessel structural integrity simulation — current parameters:
-- Material: ${mat} (yield strength: ${ys} MPa)
-- Internal pressure: ${pressure} MPa
-- Wall thickness: ${thickness} mm
-- Inner radius: ${radius} mm
-- Hoop stress (σ_h): ${hoop.toFixed(0)} MPa
-- Axial stress: ${axial.toFixed(0)} MPa
-- Factor of Safety: ${fos.toFixed(2)}
-- Burst pressure: ${burst} MPa
-- Status: ${!safe && !warn ? "YIELDED" : warn ? "CAUTION" : "SAFE"}
+ROLE: "You are an expert in structural safety. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: what does this stress state mean for the vessel's structural integrity, and what design changes would improve safety for a propulsion or ordnance application?`,
+PARAMETERS (numbered):
+1. Material: ${mat}
+2. Yield strength: ${ys} MPa
+3. Internal pressure: ${pressure} MPa
+4. Wall thickness: ${thickness} mm
+5. Inner radius: ${radius} mm
+6. Hoop stress (σ_h): ${hoop.toFixed(0)} MPa
+7. Axial stress: ${axial.toFixed(0)} MPa
+8. Factor of Safety: ${fos.toFixed(2)}
+9. Burst pressure: ${burst} MPa
+10. Status: ${!safe && !warn ? "YIELDED" : warn ? "CAUTION" : "SAFE"}
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [mat, ys, pressure, thickness, radius, hoop, axial, fos, burst, safe, warn]);
 
   return (

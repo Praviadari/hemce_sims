@@ -5,6 +5,8 @@ export {
   InfoBox,
   PillRow,
   DataRow,
+  StripChart,
+  ExportBtn,
   ActionBtn,
   ResetBtn,
   SimCanvas,

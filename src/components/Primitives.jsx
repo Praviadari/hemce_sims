@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useRef, useEffect } from "react";
 import { T, FONT, TECH_FONT, MONO_FONT, haptics } from "../utils";
 
 export const Pill = ({ active, onClick, children, color = T.accent, label }) => (
@@ -132,6 +132,92 @@ export const PillRow = ({ children }) => (
 export const DataRow = ({ children }) => (
   <div style={{ display: "flex", gap: 8, flexWrap: "wrap", margin: "14px 0" }}>{children}</div>
 );
+
+export const StripChart = ({ data = [], color = T.accent, label = "", height = 50, maxVal = 100 }) => {
+  const canvasRef = useRef(null);
+
+  useEffect(() => {
+    const c = canvasRef.current;
+    if (!c || data.length === 0) return;
+    const ctx = c.getContext("2d");
+    const W = c.width, H = c.height;
+
+    ctx.clearRect(0, 0, W, H);
+    ctx.fillStyle = T.glass;
+    ctx.fillRect(0, 0, W, H);
+
+    ctx.strokeStyle = `${T.glassBorder}`;
+    ctx.lineWidth = 0.5;
+    for (let y = 0; y <= 4; y += 1) {
+      const yy = (y / 4) * H;
+      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+    }
+
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    const max = maxVal || Math.max(...data, 1);
+    data.forEach((v, i) => {
+      const x = (i / (data.length - 1)) * W;
+      const y = H - (v / max) * (H - 4) - 2;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    ctx.font = `700 8px 'Orbitron', sans-serif`;
+    ctx.fillStyle = color;
+    ctx.textAlign = "left";
+    ctx.fillText(label, 4, 10);
+  }, [data, color, label, maxVal]);
+
+  return (
+    <canvas
+      ref={canvasRef}
+      width={300}
+      height={height}
+      style={{
+        width: "100%", height,
+        borderRadius: 8,
+        border: `1px solid ${T.glassBorder}`,
+        marginTop: 8,
+      }}
+    />
+  );
+};
+
+export const ExportBtn = ({ getData, simId, color = T.accent }) => {
+  const handleExport = () => {
+    haptics.medium();
+    const data = getData();
+    const json = JSON.stringify({ simId, timestamp: new Date().toISOString(), params: data }, null, 2);
+    const blob = new Blob([json], { type: "application/json" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `hemce_${simId}_${Date.now()}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  return (
+    <button
+      type="button"
+      onClick={handleExport}
+      style={{
+        padding: "8px 12px", borderRadius: 8,
+        border: `1px solid ${color}30`,
+        background: `${color}10`,
+        color: color, fontFamily: TECH_FONT,
+        fontSize: 9, fontWeight: 700,
+        letterSpacing: 1, cursor: "pointer",
+        touchAction: "manipulation",
+        WebkitTapHighlightColor: "transparent",
+      }}
+    >
+      ⬇ EXPORT JSON
+    </button>
+  );
+};
 
 export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
   <button

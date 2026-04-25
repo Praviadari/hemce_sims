@@ -1,18 +1,28 @@
 import { useState, useMemo, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ExportBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function ScramjetSim() {
   const [mach, setMach] = useState(6);
-  const [fuelType, setFuelType] = useState("endothermic");
+  const [fuelType, setFuelType] = useState("hydrogen");
   const [altitude, setAltitude] = useState(25);
   const [cooling, setCooling] = useState(true);
 
   const temp = useMemo(() => Math.round(288 * (1 + 0.2 * mach * mach)), [mach]);
-  const thrustN = useMemo(() => {
-    const m = fuelType === "endothermic" ? 1.2 : fuelType === "hydrogen" ? 1.35 : 1.0;
-    return Math.round(mach * 15 * m * (1 - altitude * 0.015));
-  }, [mach, fuelType, altitude]);
+  const { thrustN, eta, Pt2, Ve, Tcomb, T_atm } = useMemo(() => {
+    const fuelHeat = fuelType === "hydrogen" ? 2200 : fuelType === "jp7" ? 1400 : 1600;
+    const V0 = mach * 340;
+    const P_atm = 101325 * Math.exp(-altitude / 8.5);
+    const T_atm = 288 - 6.5 * Math.min(altitude, 11);
+    const Pt2 = P_atm * Math.pow(1 + 0.2 * mach * mach, 3.5);
+    const Tcomb = temp + fuelHeat;
+    const Ve = Math.sqrt(2 * 1005 * Tcomb * (1 - Math.pow(P_atm / Pt2, 0.286)));
+    const F_sp = Ve - V0;
+    const mdot = 0.5 + mach * 0.3;
+    const thrustN = Math.max(0, Math.round(F_sp * mdot / 1000));
+    const eta = Math.round((1 - T_atm / Tcomb) * 100);
+    return { thrustN, eta, Pt2, Ve, Tcomb, T_atm };
+  }, [mach, fuelType, altitude, temp]);
   const wallT = useMemo(() => {
     const base = temp * 0.6;
     return Math.round(cooling ? base * 0.35 : base);
@@ -147,33 +157,46 @@ export default function ScramjetSim() {
 
   const buildPrompt = useCallback(() =>
     `Scramjet (supersonic combustion ramjet) simulation — current parameters:
-- Flight Mach number: ${mach}
-- Fuel type: ${fuelType}
-- Altitude: ${altitude} km
-- Active regenerative cooling: ${cooling ? "YES" : "NO"}
-- Stagnation temperature: ${temp} K
-- Net thrust: ${thrustN} kN
-- Combustor wall temperature: ${wallT} K
+ROLE: "You are an expert in hypersonic propulsion. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: how do these conditions affect scramjet operability, material selection, and flight envelope in a hypersonic defense vehicle?`,
-  [mach, fuelType, altitude, cooling, temp, thrustN, wallT]);
+PARAMETERS (numbered):
+1. Flight Mach number: ${mach}
+2. Fuel type: ${fuelType}
+3. Altitude: ${altitude} km
+4. Active regenerative cooling: ${cooling ? "YES" : "NO"}
+5. Stagnation temperature: ${temp} K
+6. Thermal efficiency: ${eta} %
+7. Inlet total pressure: ${(Pt2 / 1e6).toFixed(2)} MPa
+8. Exit velocity (Ve): ${Math.round(Ve)} m/s
+9. Combustor total temperature: ${Tcomb} K
+10. Net thrust: ${thrustN} kN
+11. Combustor wall temperature: ${wallT} K
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
+  [mach, fuelType, altitude, cooling, temp, eta, Pt2, Ve, Tcomb, thrustN, wallT]);
 
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={420} height={130} maxWidth={420} />
     <PillRow>
-      <Pill active={fuelType === "endothermic"} onClick={() => setFuelType("endothermic")} color={T.cyan}>Endothermic</Pill>
-      <Pill active={fuelType === "hydrocarbon"} onClick={() => setFuelType("hydrocarbon")} color={T.orange}>Hydrocarbon</Pill>
       <Pill active={fuelType === "hydrogen"} onClick={() => setFuelType("hydrogen")} color={T.green}>Hydrogen</Pill>
+      <Pill active={fuelType === "jp7"} onClick={() => setFuelType("jp7")} color={T.orange}>JP-7</Pill>
+      <Pill active={fuelType === "ethylene"} onClick={() => setFuelType("ethylene")} color={T.cyan}>Ethylene</Pill>
       <Pill active={cooling} onClick={() => setCooling(!cooling)} color={T.cyan}>{cooling ? "Cooling ON" : "Cooling OFF"}</Pill>
     </PillRow>
     <Slider label="Mach Number" value={mach} onChange={setMach} min={4} max={12} step={0.5} unit="" color={T.orange} />
-    <Slider label="Altitude" value={altitude} onChange={setAltitude} min={15} max={40} unit=" km" color={T.accent} />
+    <Slider label="Altitude" value={altitude} onChange={setAltitude} min={0} max={30} unit=" km" color={T.accent} />
     <DataRow>
       <DataBox label="Stagnation T" value={temp} unit="K" color={temp > 2500 ? T.red : T.orange} />
+      <DataBox label="η_thermal" value={eta} unit="%" color={T.green} />
+      <DataBox label="Inlet Pt" value={(Pt2 / 1e6).toFixed(1)} unit="MPa" color={T.purple} />
+      <DataBox label="Ve" value={Math.round(Ve)} unit="m/s" color={T.cyan} />
       <DataBox label="Thrust" value={thrustN} unit="kN" color={T.green} />
       <DataBox label="Wall T" value={wallT} unit="K" color={wallT > 800 ? T.red : T.cyan} />
     </DataRow>
-    <InfoBox><strong style={{ color: T.cyan }}>Scramjet:</strong> Air-breathing, supersonic combustion at Mach 5+. Uses atmospheric O₂. {cooling ? "Active cooling circulates endothermic fuel through walls before combustion." : "⚠ Without cooling, walls exceed material limits above Mach 7."} DRDL tested 12-min full-scale run in Jan 2026.</InfoBox>
+    <InfoBox><strong style={{ color: T.cyan }}>Scramjet:</strong> Air-breathing, supersonic combustion at Mach 5+. Uses atmospheric O₂. {cooling ? "Active cooling circulates fuel through the combustor walls to protect materials." : "⚠ Without cooling, walls exceed material limits above Mach 7."} DRDL tested 12-min full-scale run in Jan 2026.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.cyan} />
   </div>);
 }

@@ -127,15 +127,21 @@ export default function AdditiveManufacturingSim() {
 
   const buildPrompt = useCallback(() =>
     `Additive manufacturing for defense applications simulation — current parameters:
-- Process: ${pd.n} (${process === "dmls" ? "Direct Metal Laser Sintering" : process === "sls" ? "Selective Laser Sintering" : process === "dw" ? "Direct Write (energetic paste)" : "Fused Deposition Modelling"})
-- Part: ${part} (${part === "nozzle" ? "rocket nozzle insert" : part === "grain" ? "solid fuel grain" : "motor casing"})
-- Layer resolution: ${pd.res} mm
-- Infill density: ${infill}%
-- Total layers: ${totalLayers}
-- Estimated build time: ${buildTime} min
-- Part density: ${partDensity} g/cc
+ROLE: "You are an expert in defense additive manufacturing. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: what are the structural or functional advantages of using ${pd.n} for this ${part}, and what quality/certification challenges must DRDO overcome for operational deployment?`,
+PARAMETERS (numbered):
+1. Process: ${pd.n} (${process === "dmls" ? "Direct Metal Laser Sintering" : process === "sls" ? "Selective Laser Sintering" : process === "dw" ? "Direct Write (energetic paste)" : "Fused Deposition Modelling"})
+2. Part: ${part} (${part === "nozzle" ? "rocket nozzle insert" : part === "grain" ? "solid fuel grain" : "motor casing"})
+3. Layer resolution: ${pd.res} mm
+4. Infill density: ${infill}%
+5. Total layers: ${totalLayers}
+6. Estimated build time: ${buildTime} min
+7. Part density: ${partDensity} g/cc
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [pd, process, part, infill, totalLayers, buildTime, partDensity]);
 
   return (<div>

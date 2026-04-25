@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, StripChart, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
 import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function SolidRocketSim() {
@@ -8,16 +8,29 @@ export default function SolidRocketSim() {
   const [burnRate, setBurnRate] = useState(5);
   const [chamberP, setChamberP] = useState(7);
   const [grain, setGrain] = useState("star");
+  const [thrustHistory, setThrustHistory] = useState([]);
+  const [thrustHistory, setThrustHistory] = useState([]);
   const animRef = useRef(null);
   const startRef = useRef(null);
   const dur = 8;
 
   const thrust = useMemo(() => {
-    const m = grain === "star" ? 1.3 : grain === "tubular" ? 1.0 : 0.7;
-    return (chamberP * burnRate * 12 * m).toFixed(0);
-  }, [chamberP, burnRate, grain]);
+    const m = grain === "star" ? 1.4 : grain === "tubular" ? 1.0 : 0.6;
+    const Cf = 1.3 + 0.05 * (chamberP / 7);
+    const At = 0.005;
+    return (Cf * At * chamberP * 1e6 * m / 1000).toFixed(0);
+  }, [chamberP, grain]);
 
-  const isp = useMemo(() => (220 + chamberP * 8 + burnRate * 2).toFixed(0), [chamberP, burnRate]);
+  const cStar = useMemo(() => {
+    return Math.round(chamberP * 100 / burnRate);
+  }, [chamberP, burnRate]);
+
+  const isp = useMemo(() => {
+    const Cf = 1.3 + 0.05 * (chamberP / 7);
+    const rawIsp = Cf * cStar / 9.81;
+    return Math.min(310, Math.max(180, Math.round(rawIsp)));
+  }, [chamberP, cStar]);
+
   const progress = Math.min(elapsed / dur, 1);
 
   const canvasRef = useCanvas(
@@ -168,6 +181,43 @@ export default function SolidRocketSim() {
       ctx.shadowBlur = 0;
       ctx.font = `800 8px ${MONO_FONT}`;
       ctx.fillText("IGNITER", 20, H / 2 + 18);
+
+      const burnAreaCurve = Array.from({ length: 40 }, (_, i) => {
+        const t = i / 39;
+        if (grain === "star") return 1.0 - 0.7 * t;
+        if (grain === "tubular") return 0.4 + 0.6 * t;
+        return 0.7;
+      });
+      const stripY = H - 35, stripH = 30;
+      ctx.fillStyle = "rgba(0,0,0,0.25)";
+      ctx.fillRect(5, stripY, W - 10, stripH);
+      ctx.strokeStyle = `${T.orange}40`;
+      ctx.strokeRect(5, stripY, W - 10, stripH);
+
+      ctx.font = `600 7px ${TECH_FONT}`;
+      ctx.fillStyle = T.dimText;
+      ctx.textAlign = "left";
+      ctx.fillText("Ab", 8, stripY + 9);
+      ctx.textAlign = "right";
+      ctx.fillText("t→", W - 8, stripY + stripH - 3);
+
+      ctx.strokeStyle = T.orange;
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      burnAreaCurve.forEach((ab, i) => {
+        const x = 10 + (i / 39) * (W - 25);
+        const y = stripY + stripH - 4 - ab * (stripH - 10);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      });
+      ctx.stroke();
+
+      if (burning) {
+        const px = 10 + progress * (W - 25);
+        ctx.strokeStyle = T.green;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath(); ctx.moveTo(px, stripY); ctx.lineTo(px, stripY + stripH); ctx.stroke();
+        ctx.setLineDash([]);
+      }
     },
     [burning, elapsed, grain, progress]
   );
@@ -178,34 +228,43 @@ export default function SolidRocketSim() {
     const tick = (now) => {
       const dt = (now - startRef.current) / 1000;
       setElapsed(dt);
+      if (burning) setThrustHistory((prev) => [...prev.slice(-49), Number(thrust)]);
       if (dt < dur) animRef.current = requestAnimationFrame(tick);
       else { setBurning(false); setElapsed(dur); }
     };
     animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
-  }, [burning]);
+  }, [burning, thrust]);
 
   const reset = () => {
     cancelAnimationFrame(animRef.current);
     setBurning(false);
     setElapsed(0);
+    setThrustHistory([]);
   };
 
   const buildPrompt = useCallback(() =>
     `Solid rocket motor simulation — current parameters:
-- Grain geometry: ${grain} (star/tubular/end-burn)
-- Burn rate: ${burnRate} mm/s
-- Chamber pressure: ${chamberP} MPa
-- Calculated thrust: ${thrust} kN
-- Specific impulse (Isp): ${isp} s
-- Burn progress: ${(progress * 100).toFixed(0)}%
+ROLE: "You are an expert in solid propulsion. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences of expert technical insight: how do these parameters interact, what are the key performance trade-offs, and what does this mean for a practical solid rocket motor in a defense application?`,
-  [grain, burnRate, chamberP, thrust, isp, progress]);
+PARAMETERS (numbered):
+1. Grain geometry: ${grain} (star/tubular/end-burn)
+2. Burn rate: ${burnRate} mm/s
+3. Chamber pressure: ${chamberP} MPa
+4. Calculated thrust: ${thrust} kN
+5. Characteristic velocity (c*): ${cStar} m/s
+6. Specific impulse (Isp): ${isp} s
+7. Burn progress: ${(progress * 100).toFixed(0)}%
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
+  [grain, burnRate, chamberP, thrust, isp, cStar, progress]);
 
   return (
     <div>
-      <SimCanvas canvasRef={canvasRef} width={460} height={180} maxWidth={460} />
+      <SimCanvas canvasRef={canvasRef} width={460} height={220} maxWidth={460} />
       <PillRow>
         <Pill active={grain === "star"} onClick={() => { reset(); setGrain("star"); }}>★ Star</Pill>
         <Pill active={grain === "tubular"} onClick={() => { reset(); setGrain("tubular"); }}>◯ Tubular</Pill>
@@ -216,8 +275,10 @@ Provide 2-3 sentences of expert technical insight: how do these parameters inter
       <DataRow>
         <DataBox label="Thrust" value={thrust} unit="kN" color={T.orange} />
         <DataBox label="Isp" value={isp} unit="s" color={T.accent} />
+        <DataBox label="c*" value={cStar} unit="m/s" color={T.purple} />
         <DataBox label="Burn" value={`${(progress * 100).toFixed(0)}%`} color={burning ? T.green : T.gray} />
       </DataRow>
+      <StripChart data={thrustHistory} color={T.orange} label="Thrust (kN)" maxVal={Number(thrust) * 1.5 || 100} />
       <div style={{ display: "flex", gap: 8 }}>
         <ActionBtn onClick={() => { if (!burning) { setElapsed(0); setBurning(true); } }} disabled={burning} color={T.red}>
           {burning ? "BURNING..." : progress >= 1 ? "BURNOUT" : "🔥 IGNITE"}
@@ -230,6 +291,7 @@ Provide 2-3 sentences of expert technical insight: how do these parameters inter
         {" "}Gas exits convergent-divergent nozzle → thrust (Newton's 3rd).
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.orange} />
+      <ExportBtn simId="rocket" getData={() => ({ grain, burnRate, chamberP, thrust, isp })} color={T.orange} />
     </div>
   );
 }
