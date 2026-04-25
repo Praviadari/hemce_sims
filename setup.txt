@@ -1,0 +1,26 @@
+LOCAL COPY (RECOMMENDED): C:\hemce_sims_local
+NOTE: Use full path to powershell and Start-Process to launch each in a separate window when needed.
+
+DEVELOPMENT STARTUP (LOCAL) - WORKING COMMANDS
+# Start Vite dev server in a new window:
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'C:\Program Files\nodejs\node.exe' -ArgumentList 'C:\hemce_sims_local\node_modules\vite\bin\vite.js' -WorkingDirectory 'C:\hemce_sims_local' -WindowStyle Normal"
+
+DEVELOPMENT RESTART (LOCAL, SAFE)
+# Kill and restart the dev server on port 5173:
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "\$p=Get-NetTCPConnection -State Listen -LocalPort 5173 -ErrorAction SilentlyContinue | Select-Object -First 1 -ExpandProperty OwningProcess; if(\$p){ Stop-Process -Id \$p -Force }; Start-Process -FilePath 'C:\Program Files\nodejs\node.exe' -ArgumentList 'C:\hemce_sims_local\node_modules\vite\bin\vite.js' -WorkingDirectory 'C:\hemce_sims_local' -WindowStyle Normal"
+
+CHECK PORTS
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "Get-NetTCPConnection -State Listen -LocalPort 5173,4173 -ErrorAction SilentlyContinue | Select-Object LocalPort, OwningProcess"
+
+DEPENDENCY INSTALL (LOCAL)
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'C:\Program Files\nodejs\npm.cmd' -ArgumentList 'install' -WorkingDirectory 'C:\hemce_sims_local' -NoNewWindow -Wait"
+
+PRODUCTION BUILD AND PREVIEW (LOCAL)
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'C:\Program Files\nodejs\npm.cmd' -ArgumentList 'run build' -WorkingDirectory 'C:\hemce_sims_local' -NoNewWindow -Wait"
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'C:\Program Files\nodejs\npm.cmd' -ArgumentList 'run preview' -WorkingDirectory 'C:\hemce_sims_local' -NoNewWindow -Wait"
+
+NETWORK SHARE (OPTIONAL)
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'C:\Program Files\nodejs\npm.cmd' -ArgumentList 'install' -WorkingDirectory '\\fileserver02\\PROJECTS\\Praveen_Defence_Aerospace\\hemce_sims' -NoNewWindow -Wait"
+/c/Windows/System32/WindowsPowerShell/v1.0/powershell -NoProfile -ExecutionPolicy Bypass -Command "Start-Process -FilePath 'C:\Program Files\nodejs\npm.cmd' -ArgumentList 'run dev' -WorkingDirectory '\\fileserver02\\PROJECTS\\Praveen_Defence_Aerospace\\hemce_sims' -NoNewWindow -Wait"
+
+code "C:\hemce_sims_local"

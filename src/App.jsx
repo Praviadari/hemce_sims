@@ -1,20 +1,22 @@
-import React, { useState, Suspense, useRef } from "react";
+import React, { useState, useEffect, Suspense, useRef } from "react";
 import { Analytics } from "@vercel/analytics/react";
-import { T, FONT, TECH_FONT } from "./utils";
+import { THEMES, FONT, TECH_FONT } from "./utils";
 import { Pill, ErrorBoundary } from "./components";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
 import "./styles/global.css";
 
 /* Skeleton loader for lazy-loaded simulations */
 function SimSkeleton({ color }) {
+  const fallback = color || THEMES.dark.accent;
+
   return (
     <div
       style={{
         padding: "40px 20px",
         textAlign: "center",
         borderRadius: 14,
-        background: `${color || T.accent}08`,
-        border: `1px solid ${color || T.accent}20`,
+        background: `${fallback}08`,
+        border: `1px solid ${fallback}20`,
         animation: "pulse 1.5s ease-in-out infinite",
       }}
     >
@@ -23,7 +25,7 @@ function SimSkeleton({ color }) {
           fontFamily: TECH_FONT,
           fontSize: 11,
           fontWeight: 800,
-          color: color || T.accent,
+          color: fallback,
           letterSpacing: 2,
           opacity: 0.6,
         }}
@@ -37,6 +39,21 @@ function SimSkeleton({ color }) {
 export default function App() {
   const [activeSim, setActiveSim] = useState("rocket");
   const [catFilter, setCatFilter] = useState("all");
+  const [theme, setTheme] = useState(() => {
+    if (typeof window === "undefined") return "dark";
+    const saved = window.localStorage.getItem("theme");
+    if (saved === "light" || saved === "dark") return saved;
+    return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+  });
+
+  const currentTheme = THEMES[theme];
+
+  useEffect(() => {
+    document.body.dataset.theme = theme;
+    window.localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
   const filtered =
     catFilter === "all"
@@ -90,8 +107,8 @@ export default function App() {
       onTouchEnd={onTouchEnd}
       style={{
         minHeight: "100vh",
-        background: `radial-gradient(circle at 50% 0%, #0a192f 0%, ${T.bg} 100%)`,
-        color: T.white,
+        background: `radial-gradient(circle at 50% 0%, #0a192f 0%, ${currentTheme.bg} 100%)`,
+        color: currentTheme.white,
         fontFamily: FONT,
         padding: "14px 10px 48px",
         maxWidth: "100%",
@@ -104,13 +121,13 @@ export default function App() {
       <div style={{
         position: "fixed", top: "-10%", left: "-10%",
         width: "40%", height: "40%",
-        background: `${T.accent}08`, filter: "blur(100px)",
+        background: `${currentTheme.accent}08`, filter: "blur(100px)",
         borderRadius: "50%", pointerEvents: "none", zIndex: 0,
       }} />
       <div style={{
         position: "fixed", bottom: "10%", right: "-10%",
         width: "30%", height: "30%",
-        background: `${T.pink}05`, filter: "blur(80px)",
+        background: `${currentTheme.pink}05`, filter: "blur(80px)",
         borderRadius: "50%", pointerEvents: "none", zIndex: 0,
       }} />
 
@@ -119,7 +136,7 @@ export default function App() {
         href="#active-sim"
         style={{
           position: "absolute", top: -40, left: 8, zIndex: 100,
-          background: T.accent, color: T.bg, padding: "6px 12px",
+          background: currentTheme.accent, color: currentTheme.bg, padding: "6px 12px",
           borderRadius: 6, fontSize: 12, fontWeight: 700,
           transition: "top 0.2s",
         }}
@@ -131,39 +148,54 @@ export default function App() {
 
       {/* Header */}
       <header style={{ textAlign: "center", marginBottom: 20, paddingTop: 8, position: "relative", zIndex: 1 }}>
-        <button
-          onClick={toggleExhibition}
-          style={{
-            position: "absolute", top: 0, right: 0,
-            background: exhibition ? `${T.red}20` : T.glass,
-            border: `1px solid ${exhibition ? T.red : T.glassBorder}`,
-            color: exhibition ? T.red : T.gray,
-            padding: "5px 10px", borderRadius: 8,
-            fontFamily: TECH_FONT, fontSize: 8, fontWeight: 800,
-            cursor: "pointer", touchAction: "manipulation",
-            letterSpacing: 1
-          }}
-        >
-          {exhibition ? "EXIT EXHIBIT MODE" : "ENTER EXHIBIT MODE"}
-        </button>
+        <div style={{ position: "absolute", top: 0, right: 0, display: "flex", gap: 8 }}>
+          <button
+            onClick={toggleTheme}
+            style={{
+              background: currentTheme.glass,
+              border: `1px solid ${currentTheme.glassBorder}`,
+              color: currentTheme.accent,
+              padding: "5px 10px", borderRadius: 8,
+              fontFamily: TECH_FONT, fontSize: 8, fontWeight: 800,
+              cursor: "pointer", touchAction: "manipulation",
+              letterSpacing: 1,
+            }}
+          >
+            {theme === "dark" ? "LIGHT MODE" : "DARK MODE"}
+          </button>
+          <button
+            onClick={toggleExhibition}
+            style={{
+              background: exhibition ? `${currentTheme.red}20` : currentTheme.glass,
+              border: `1px solid ${exhibition ? currentTheme.red : currentTheme.glassBorder}`,
+              color: exhibition ? currentTheme.red : currentTheme.gray,
+              padding: "5px 10px", borderRadius: 8,
+              fontFamily: TECH_FONT, fontSize: 8, fontWeight: 800,
+              cursor: "pointer", touchAction: "manipulation",
+              letterSpacing: 1,
+            }}
+          >
+            {exhibition ? "EXIT EXHIBIT MODE" : "ENTER EXHIBIT MODE"}
+          </button>
+        </div>
         <div style={{
           fontSize: "clamp(8px, 2.5vw, 11px)",
-          color: T.accent,
+          color: currentTheme.accent,
           letterSpacing: 3,
           fontWeight: 800,
           textTransform: "uppercase",
-          textShadow: `0 0 10px ${T.accent}30`,
+          textShadow: `0 0 10px ${currentTheme.accent}30`,
         }}>
           HEMCE-2026 • 15TH INTERNATIONAL CONFERENCE & EXHIBITS
         </div>
         <div style={{
           fontSize: "clamp(18px, 5.5vw, 28px)",
           fontWeight: 900,
-          color: T.white,
+          color: currentTheme.white,
           fontFamily: TECH_FONT,
           letterSpacing: 1,
           marginTop: 5,
-          background: `linear-gradient(to bottom, #fff, ${T.gray})`,
+          background: `linear-gradient(to bottom, #fff, ${currentTheme.gray})`,
           WebkitBackgroundClip: "text",
           WebkitTextFillColor: "transparent",
         }}>
@@ -171,12 +203,12 @@ export default function App() {
         </div>
         <div style={{
           width: 44, height: 3,
-          background: `linear-gradient(90deg, ${T.accent}, ${T.pink})`,
+          background: `linear-gradient(90deg, ${currentTheme.accent}, ${currentTheme.pink})`,
           margin: "10px auto 0",
           borderRadius: 2,
-          boxShadow: `0 0 10px ${T.accent}40`,
+          boxShadow: `0 0 10px ${currentTheme.accent}40`,
         }} />
-        <div style={{ fontSize: "clamp(8px, 2.2vw, 10px)", color: T.dimText, marginTop: 6, fontWeight: 500 }}>
+        <div style={{ fontSize: "clamp(8px, 2.2vw, 10px)", color: currentTheme.dimText, marginTop: 6, fontWeight: 500 }}>
           ORGANISED BY HEMSI IN ASSOCIATION WITH DRDO & ISRO
         </div>
       </header>
@@ -222,11 +254,11 @@ export default function App() {
             style={{
               padding: "14px 6px",
               borderRadius: 14,
-              border: activeSim === s.id ? `2px solid ${s.color}` : `1px solid ${T.glassBorder}`,
-              background: activeSim === s.id ? `${s.color}15` : T.glass,
+              border: activeSim === s.id ? `2px solid ${s.color}` : `1px solid ${currentTheme.glassBorder}`,
+              background: activeSim === s.id ? `${s.color}15` : currentTheme.glass,
               backdropFilter: "blur(10px)",
               WebkitBackdropFilter: "blur(10px)",
-              color: activeSim === s.id ? s.color : T.white,
+              color: activeSim === s.id ? s.color : currentTheme.white,
               fontFamily: TECH_FONT,
               fontSize: "clamp(9px, 2.5vw, 11px)",
               fontWeight: 700,
@@ -262,13 +294,13 @@ export default function App() {
         <div
           id="active-sim"
           style={{
-            background: T.card,
+            background: currentTheme.card,
             backdropFilter: "blur(20px)",
             WebkitBackdropFilter: "blur(20px)",
             borderRadius: 18,
             padding: "14px 10px",
-            border: `1px solid ${T.accent}20`,
-            boxShadow: `0 15px 30px rgba(0,0,0,0.3), inset 0 0 20px ${T.accent}05`,
+            border: `1px solid ${currentTheme.accent}20`,
+            boxShadow: `0 15px 30px rgba(0,0,0,0.3), inset 0 0 20px ${currentTheme.accent}05`,
             position: "relative",
             zIndex: 1,
             width: "100%",
@@ -278,7 +310,7 @@ export default function App() {
           <div style={{
             fontSize: "clamp(13px, 3.5vw, 17px)",
             fontWeight: 900,
-            color: T.white,
+            color: currentTheme.white,
             fontFamily: TECH_FONT,
             marginBottom: 14,
             display: "flex",
@@ -341,28 +373,28 @@ export default function App() {
         marginTop: 40,
         padding: "24px 16px",
         borderRadius: 16,
-        background: `linear-gradient(135deg, ${T.card}, ${T.bg})`,
-        border: `1px solid ${T.glassBorder}`,
+        background: `linear-gradient(135deg, ${currentTheme.card}, ${currentTheme.bg})`,
+        border: `1px solid ${currentTheme.glassBorder}`,
         position: "relative",
         zIndex: 1,
         textAlign: "center"
       }}>
-        <div style={{ color: T.accent, fontFamily: TECH_FONT, fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>
+        <div style={{ color: currentTheme.accent, fontFamily: TECH_FONT, fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>
           TECHNOLOGY PARTNER
         </div>
-        <div style={{ color: T.white, fontSize: 16, fontWeight: 700, marginBottom: 14 }}>
+        <div style={{ color: currentTheme.white, fontSize: 16, fontWeight: 700, marginBottom: 14 }}>
           Thermal Systems Hyderabad Pvt. Ltd. (TSPL)
         </div>
-        <p style={{ color: T.gray, fontSize: 12, lineHeight: 1.6, maxWidth: 600, margin: "0 auto", marginBottom: 16 }}>
+        <p style={{ color: currentTheme.gray, fontSize: 12, lineHeight: 1.6, maxWidth: 600, margin: "0 auto", marginBottom: 16 }}>
           With nearly four decades of expertise, TSPL is a global leader in designing, engineering, and delivering turnkey Waste Heat Recovery Solutions. Having successfully executed over 400+ projects across 40 countries, they specialize in high-energy thermal management and complex boilers for the world's most demanding continuous process operations.
         </p>
         <a href="https://www.thermalindia.com" target="_blank" rel="noopener noreferrer" style={{
           display: "inline-block",
           padding: "8px 16px",
           borderRadius: 20,
-          background: `${T.accent}15`,
-          border: `1px solid ${T.accent}40`,
-          color: T.accent,
+          background: `${currentTheme.accent}15`,
+          border: `1px solid ${currentTheme.accent}40`,
+          color: currentTheme.accent,
           fontFamily: TECH_FONT,
           fontSize: 10,
           fontWeight: 700,
@@ -378,22 +410,22 @@ export default function App() {
         textAlign: "center",
         marginTop: 28,
         fontSize: "clamp(8px, 2.2vw, 10px)",
-        color: T.dimText,
+        color: currentTheme.dimText,
         lineHeight: 1.9,
         position: "relative",
         zIndex: 1,
       }}>
         <div style={{
-          background: `linear-gradient(90deg, transparent, ${T.dimText}40, transparent)`,
+          background: `linear-gradient(90deg, transparent, ${currentTheme.dimText}40, transparent)`,
           height: 1, width: "100%", marginBottom: 14,
         }} />
         SCAN QR AT BOOTH • INTERACT ON MOBILE
         <br />
-        <strong style={{ color: T.gray }}>HEMCE-2026</strong> • APRIL 29 – MAY 1, 2026
+        <strong style={{ color: currentTheme.gray }}>HEMCE-2026</strong> • APRIL 29 – MAY 1, 2026
         <br />
         LEONIA HOLISTIC DESTINATION • SHAMIRPET, HYDERABAD
         <br />
-        <a href="https://www.hemsindia.co.in/hemce2026" target="_blank" rel="noopener noreferrer" style={{ color: T.accent, textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+        <a href="https://www.hemsindia.co.in/hemce2026" target="_blank" rel="noopener noreferrer" style={{ color: currentTheme.accent, textDecoration: "none", marginTop: 4, display: "inline-block" }}>
           WWW.HEMSINDIA.CO.IN/HEMCE2026
         </a>
       </div>
