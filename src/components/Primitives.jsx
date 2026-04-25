@@ -218,7 +218,8 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
       width={width}
       height={height}
       style={{
-        width: "100%",
+        width,
+        maxWidth: "100%",
         height: "auto",
         background: "radial-gradient(circle at center, var(--sim-bg-from), var(--card))",
         borderRadius: 12,
