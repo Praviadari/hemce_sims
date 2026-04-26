@@ -1,6 +1,6 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, useCanvas } from "../utils";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function HybridRocketSim() {
   const [throttle, setThrottle] = useState(50);
@@ -11,16 +11,32 @@ export default function HybridRocketSim() {
 
   const fd = { paraffin: { rate: 3.2, isp: 250 }, htpb: { rate: 1.0, isp: 240 }, abs: { rate: 1.5, isp: 230 } }[fuel];
   const od = { n2o: { name: "N₂O", mult: 1.0 }, lox: { name: "LOX", mult: 1.3 }, h2o2: { name: "H₂O₂", mult: 1.1 } }[oxidizer];
-  const thrust = Math.round(fd.isp * throttle / 100 * od.mult * 0.4);
-  const regRate = (fd.rate * (throttle / 100) * od.mult).toFixed(1);
+
+  const regRate = useMemo(() => (fd.rate * (throttle / 100) * od.mult).toFixed(1), [fd.rate, throttle, od.mult]);
+  const optimalOF = {
+    "paraffin-n2o": 7.5, "paraffin-lox": 2.8, "paraffin-h2o2": 6.0,
+    "htpb-n2o": 8.0, "htpb-lox": 2.5, "htpb-h2o2": 6.5,
+    "abs-n2o": 7.0, "abs-lox": 2.2, "abs-h2o2": 5.5,
+  };
+  const optOF = optimalOF[`${fuel}-${oxidizer}`];
+  const fuelDensity = { paraffin: 900, htpb: 920, abs: 1040 }[fuel];
+  const oxFlux = (throttle / 100) * od.mult * 200;
+  const regRateMS = Number(regRate) * 0.001;
+  const ofRatio = (oxFlux / (fuelDensity * regRateMS + 0.001)).toFixed(1);
+  const ofDeviation = Math.abs(Number(ofRatio) - optOF);
+  const ispPenalty = Math.min(0.3, ofDeviation * 0.05);
+  const actualIsp = Math.round(fd.isp * (1 - ispPenalty));
+  const thrust = Math.round(actualIsp * throttle / 100 * od.mult * 0.4);
+  const ofColor = ofDeviation > optOF * 0.2 ? T.red : ofDeviation > optOF * 0.1 ? T.orange : T.green;
 
   const canvasRef = useCanvas((ctx, W, H) => {
     const cy = H / 2;
+    const theme = getCanvasTheme();
     
-    // Background Radial Gradient for test stand atmosphere
+    // Background for test stand atmosphere
     const bg = ctx.createRadialGradient(W/2, cy, 0, W/2, cy, W);
-    bg.addColorStop(0, "#0d1b2a");
-    bg.addColorStop(1, "#050b14");
+    bg.addColorStop(0, theme.canvasBackground);
+    bg.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
@@ -127,15 +143,27 @@ export default function HybridRocketSim() {
 
   const buildPrompt = useCallback(() =>
     `Hybrid rocket motor simulation — current parameters:
-- Solid fuel: ${fuel} (regression rate base: ${fd.rate} mm/s, Isp: ${fd.isp} s)
-- Liquid oxidizer: ${od.name}
-- Throttle setting: ${throttle}%
-- Fuel regression rate at current throttle: ${regRate} mm/s
-- Net thrust: ${thrust} kN
-- Engine running: ${running ? "YES" : "NO"}
+ROLE: "You are an expert in hybrid combustion. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: how does this fuel/oxidizer combination affect throttleability, safety margins, and what are the practical advantages of this hybrid configuration for a defense or space application?`,
-  [fuel, fd, od, throttle, regRate, thrust, running]);
+PARAMETERS (numbered):
+1. Solid fuel: ${fuel}
+2. Fuel regression rate base: ${fd.rate} mm/s
+3. Base fuel Isp: ${fd.isp} s
+4. Liquid oxidizer: ${od.name}
+5. Throttle setting: ${throttle}%
+6. Fuel regression rate at current throttle: ${regRate} mm/s
+7. Oxidizer/fuel ratio: ${ofRatio}
+8. Optimal O/F: ${optOF}
+9. O/F deviation: ${ofDeviation.toFixed(1)}
+10. Actual Isp: ${actualIsp} s
+11. Net thrust: ${thrust} kN
+12. Engine running: ${running ? "YES" : "NO"}
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
+  [fuel, fd, od, throttle, regRate, ofRatio, optOF, ofDeviation, actualIsp, thrust, running]);
 
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={370} height={120} maxWidth={370} />
@@ -153,10 +181,15 @@ Provide 2-3 sentences: how does this fuel/oxidizer combination affect throttleab
     <Slider label="Throttle" value={throttle} onChange={setThrottle} min={0} max={100} unit="%" color={T.green} />
     <DataRow>
       <DataBox label="Thrust" value={thrust} unit="kN" color={T.orange} />
-      <DataBox label="Isp" value={fd.isp} unit="s" color={T.accent} />
+      <DataBox label="Isp" value={actualIsp} unit="s" color={T.accent} />
+      <DataBox label="O/F" value={ofRatio} unit="" color={ofColor} />
       <DataBox label="Reg Rate" value={regRate} unit="mm/s" color={T.gold} />
     </DataRow>
+    <div style={{ fontSize: 10, color: T.dimText, textAlign: "center", marginTop: 2 }}>
+      Optimal O/F for {fuel}/{oxidizer}: {optOF} — Current: {ofRatio}{ofDeviation > optOF * 0.2 ? " ⚠ Far from optimal" : " ✓ Near optimal"}
+    </div>
     <InfoBox><strong style={{ color: T.green }}>Hybrid advantage:</strong> Throttleable, restartable, inherently safer. {fuel === "paraffin" ? "Paraffin: 3× regression rate." : fuel === "abs" ? "ABS: 3D-printable grains." : "HTPB: standard baseline."} ISRO/HEMRL co-developing hybrid motors.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.lime} />
+    <ExportBtn simId="hybrid" getData={() => ({ fuel, oxidizer, throttle, thrust, regRate })} color={T.lime} />
   </div>);
 }

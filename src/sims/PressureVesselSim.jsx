@@ -1,6 +1,6 @@
 import { useState, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, SimCanvas, AIInsight } from "../components";
-import { T, FONT, useCanvas } from "../utils";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ExportBtn, SimCanvas, AIInsight } from "../components";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PressureVesselSim() {
   const [pressure, setPressure] = useState(5);
@@ -20,11 +20,12 @@ export default function PressureVesselSim() {
   const canvasRef = useCanvas(
     (ctx, W, H) => {
       const cx = W / 2, cy = H / 2, p = pressure;
+      const canvasTheme = getCanvasTheme();
       
       // Deep technical background
       const bg = ctx.createRadialGradient(cx, cy, 0, cx, cy, W/2);
-      bg.addColorStop(0, "#0d1b2a");
-      bg.addColorStop(1, "#050b14");
+      bg.addColorStop(0, canvasTheme.bgStart);
+      bg.addColorStop(1, canvasTheme.bgEnd);
       ctx.fillStyle = bg;
       ctx.fillRect(0, 0, W, H);
 
@@ -115,17 +116,24 @@ export default function PressureVesselSim() {
 
   const buildPrompt = useCallback(() =>
     `Pressure vessel structural integrity simulation — current parameters:
-- Material: ${mat} (yield strength: ${ys} MPa)
-- Internal pressure: ${pressure} MPa
-- Wall thickness: ${thickness} mm
-- Inner radius: ${radius} mm
-- Hoop stress (σ_h): ${hoop.toFixed(0)} MPa
-- Axial stress: ${axial.toFixed(0)} MPa
-- Factor of Safety: ${fos.toFixed(2)}
-- Burst pressure: ${burst} MPa
-- Status: ${!safe && !warn ? "YIELDED" : warn ? "CAUTION" : "SAFE"}
+ROLE: "You are an expert in structural safety. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: what does this stress state mean for the vessel's structural integrity, and what design changes would improve safety for a propulsion or ordnance application?`,
+PARAMETERS (numbered):
+1. Material: ${mat}
+2. Yield strength: ${ys} MPa
+3. Internal pressure: ${pressure} MPa
+4. Wall thickness: ${thickness} mm
+5. Inner radius: ${radius} mm
+6. Hoop stress (σ_h): ${hoop.toFixed(0)} MPa
+7. Axial stress: ${axial.toFixed(0)} MPa
+8. Factor of Safety: ${fos.toFixed(2)}
+9. Burst pressure: ${burst} MPa
+10. Status: ${!safe && !warn ? "YIELDED" : warn ? "CAUTION" : "SAFE"}
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [mat, ys, pressure, thickness, radius, hoop, axial, fos, burst, safe, warn]);
 
   return (
@@ -149,6 +157,7 @@ Provide 2-3 sentences: what does this stress state mean for the vessel's structu
         <strong style={{ color: T.accent }}>σ_hoop = P×r/t.</strong> Orange arrows = circumferential stress. ASME requires FoS ≥ 1.5. Wall color: <span style={{ color: T.green }}>safe</span> / <span style={{ color: T.gold }}>caution</span> / <span style={{ color: T.red }}>yield exceeded</span>.
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.accent} />
+      <ExportBtn simId="pressure_vessel" getData={() => ({ mat, pressure, thickness, radius, hoop: hoop.toFixed(0), axial: axial.toFixed(0), fos: fos.toFixed(2) })} color={T.accent} />
     </div>
   );
 }

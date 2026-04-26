@@ -1,6 +1,6 @@
-import { useState, useRef, useEffect, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, useCanvas } from "../utils";
+import { useState, useRef, useEffect, useMemo, useCallback } from "react";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, StripChart, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function GunPropellantSim() {
   const [running, setRunning] = useState(false);
@@ -11,16 +11,27 @@ export default function GunPropellantSim() {
   const animRef = useRef(null);
   const sd = { single: { prog: "degressive", peak: 280 }, "7perf": { prog: "neutral", peak: 350 }, "19perf": { prog: "progressive", peak: 420 } }[grainShape];
   const peakP = Math.round(sd.peak * (1.5 / webThick) * (caliberMm / 155));
+  const pressureCurve = useMemo(() => {
+    const n = grainShape === "single" ? 0.7 : grainShape === "7perf" ? 1.0 : 1.3;
+    const tmax = webThick * 2;
+    const points = 50;
+    return Array.from({ length: points }, (_, i) => {
+      const t = (i / (points - 1)) * tmax;
+      return peakP * Math.pow(Math.sin(Math.PI * t / tmax), n);
+    });
+  }, [grainShape, webThick, peakP]);
   const muzzleV = Math.round(700 + peakP * 0.8 + caliberMm * 0.3);
+  const eta = Math.min(99, Math.max(5, Math.round((muzzleV * muzzleV) / (2 * 260 * 9.81) / peakP * 100)));
   const progress = Math.min(time / 1.5, 1);
 
   const canvasRef = useCanvas((ctx, W, H) => {
     const cy = H / 2, p = progress;
+    const theme = getCanvasTheme();
     
-    // Background Radial Gradient for the firing range
+    // Background for the firing range
     const bg = ctx.createRadialGradient(W/2, cy, 0, W/2, cy, W);
-    bg.addColorStop(0, "#0a192f");
-    bg.addColorStop(1, "#050b14");
+    bg.addColorStop(0, theme.canvasBackground);
+    bg.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
@@ -129,7 +140,39 @@ export default function GunPropellantSim() {
     ctx.fillText(`STATUS: ${running ? "FIRING" : "IDLE"}`, 20, 15);
     ctx.fillText(`X-PROFILE: ${grainShape.toUpperCase()}`, W - 100, 15);
 
-  }, [running, time, grainShape, caliberMm, progress]);
+    // P-t curve strip
+    const stripY = H - 35, stripH = 30;
+    ctx.fillStyle = "rgba(0,0,0,0.3)";
+    ctx.fillRect(5, stripY, W - 10, stripH);
+    ctx.strokeStyle = `${T.gold}40`;
+    ctx.strokeRect(5, stripY, W - 10, stripH);
+
+    ctx.font = `600 7px ${TECH_FONT}`;
+    ctx.fillStyle = T.dimText;
+    ctx.textAlign = "left";
+    ctx.fillText("P(t)", 8, stripY + 9);
+    ctx.textAlign = "right";
+    ctx.fillText("t→", W - 8, stripY + stripH - 3);
+
+    const maxP = Math.max(...pressureCurve, 1);
+    ctx.strokeStyle = T.gold;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    pressureCurve.forEach((p, i) => {
+      const x = 10 + (i / (pressureCurve.length - 1)) * (W - 25);
+      const y = stripY + stripH - 3 - (p / maxP) * (stripH - 8);
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    });
+    ctx.stroke();
+
+    if (running) {
+      const px = 10 + progress * (W - 25);
+      ctx.strokeStyle = T.red;
+      ctx.setLineDash([2, 2]);
+      ctx.beginPath(); ctx.moveTo(px, stripY); ctx.lineTo(px, stripY + stripH); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  }, [running, time, grainShape, caliberMm, pressureCurve, progress]);
 
   useEffect(() => {
     if (!running) return;
@@ -147,17 +190,25 @@ export default function GunPropellantSim() {
 
   const buildPrompt = useCallback(() =>
     `Gun propellant interior ballistics simulation — current parameters:
-- Grain geometry: ${grainShape} (burn profile: ${sd.prog})
-- Web thickness: ${webThick} mm
-- Caliber: ${caliberMm} mm
-- Peak chamber pressure: ${peakP} MPa
-- Muzzle velocity: ${muzzleV} m/s
+ROLE: "You are an expert in interior ballistics. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: how do grain geometry and web thickness affect the pressure-time curve, and what are the tactical implications of these ballistic parameters for this artillery/gun system?`,
-  [grainShape, sd, webThick, caliberMm, peakP, muzzleV]);
+PARAMETERS (numbered):
+1. Grain geometry: ${grainShape}
+2. Burn profile: ${sd.prog}
+3. Web thickness: ${webThick} mm
+4. Caliber: ${caliberMm} mm
+5. Peak chamber pressure: ${peakP} MPa
+6. Muzzle velocity: ${muzzleV} m/s
+7. Propellant efficiency: ${eta} %
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
+  [grainShape, sd, webThick, caliberMm, peakP, muzzleV, eta]);
 
   return (<div>
-    <SimCanvas canvasRef={canvasRef} width={420} height={110} maxWidth={420} />
+    <SimCanvas canvasRef={canvasRef} width={420} height={150} maxWidth={420} />
     <PillRow>
       <Pill active={grainShape === "single"} onClick={() => { reset(); setGrainShape("single"); }} color={T.orange}>Single-Perf</Pill>
       <Pill active={grainShape === "7perf"} onClick={() => { reset(); setGrainShape("7perf"); }} color={T.gold}>7-Perf</Pill>
@@ -168,13 +219,16 @@ Provide 2-3 sentences: how do grain geometry and web thickness affect the pressu
     <DataRow>
       <DataBox label="Peak P" value={peakP} unit="MPa" color={peakP > 400 ? T.red : T.orange} />
       <DataBox label="Muzzle V" value={muzzleV} unit="m/s" color={T.green} />
+      <DataBox label="η_prop" value={eta} unit="%" color={T.green} />
       <DataBox label="Profile" value={sd.prog} color={T.gold} />
     </DataRow>
+    <StripChart data={pressureCurve} color={T.gold} label="P(t) MPa" maxVal={peakP * 1.2} />
     <div style={{ display: "flex", gap: 8 }}>
       <ActionBtn onClick={() => { if (!running) { setTime(0); setRunning(true); } }} disabled={running} color={T.orange}>{running ? "FIRING..." : "⚡ FIRE"}</ActionBtn>
       <ResetBtn onClick={reset} />
     </div>
     <InfoBox><strong style={{ color: T.gold }}>Interior ballistics:</strong> Grain perforation count controls burn progressivity. 7-perf = neutral, 19-perf = progressive. Thinner web = faster burn. HEMRL + ARDE develop Pinaka/ATAGS propellants.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.gold} />
+    <ExportBtn simId="gun" getData={() => ({ grainShape, webThick, caliberMm, peakP, muzzleV })} color={T.gold} />
   </div>);
 }

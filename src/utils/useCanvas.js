@@ -20,19 +20,26 @@ export function useCanvas(draw, deps, opts = {}) {
     const c = ref.current;
     if (!c) return;
 
-    const dpr = window.devicePixelRatio || 1;
-    const rect = c.getBoundingClientRect();
-    // Use CSS-driven size if available, fallback to attribute
-    const cssW = rect.width || c.width;
-    const cssH = rect.height || c.height;
-
-    // Scale the canvas buffer for HiDPI
-    if (c.width !== Math.round(cssW * dpr) || c.height !== Math.round(cssH * dpr)) {
-      c.width = Math.round(cssW * dpr);
-      c.height = Math.round(cssH * dpr);
-    }
-
     const ctx = c.getContext("2d");
+    const dpr = window.devicePixelRatio || 1;
+    let cssW = 0;
+    let cssH = 0;
+
+    const resize = () => {
+      const rect = c.getBoundingClientRect();
+      const newW = rect.width || c.width / dpr;
+      const newH = rect.height || c.height / dpr;
+      if (newW <= 0 || newH <= 0) return;
+      cssW = newW;
+      cssH = newH;
+      const scaledW = Math.round(cssW * dpr);
+      const scaledH = Math.round(cssH * dpr);
+      if (c.width !== scaledW || c.height !== scaledH) {
+        c.width = scaledW;
+        c.height = scaledH;
+      }
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+    };
 
     const render = () => {
       ctx.save();
@@ -42,22 +49,42 @@ export function useCanvas(draw, deps, opts = {}) {
       ctx.restore();
     };
 
-    if (opts.animate) {
-      // Check for reduced motion preference
-      const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-      if (prefersReduced) {
-        render();
-        return;
-      }
+    resize();
+
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (opts.animate && !prefersReduced) {
       const loop = () => {
         render();
         animRef.current = requestAnimationFrame(loop);
       };
       animRef.current = requestAnimationFrame(loop);
-      return () => cancelAnimationFrame(animRef.current);
     } else {
       render();
     }
+
+    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => {
+      resize();
+      render();
+    }) : null;
+
+    const themeObserver = typeof MutationObserver !== "undefined" ? new MutationObserver((records) => {
+      for (const record of records) {
+        if (record.attributeName === "data-theme") {
+          resize();
+          render();
+          break;
+        }
+      }
+    }) : null;
+
+    if (observer) observer.observe(c);
+    if (themeObserver) themeObserver.observe(document.body, { attributes: true });
+
+    return () => {
+      cancelAnimationFrame(animRef.current);
+      if (observer) observer.disconnect();
+      if (themeObserver) themeObserver.disconnect();
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, deps);
 

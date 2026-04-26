@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ExportBtn, SimCanvas, AIInsight } from "../components";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function ExplosiveDetectionSim() {
   const [method, setMethod] = useState("colorimetric");
@@ -42,21 +42,29 @@ export default function ExplosiveDetectionSim() {
 
   const buildPrompt = useCallback(() =>
     `Explosive detection simulation — current parameters:
-- Detection method: ${method} (${method === "colorimetric" ? "HEMRL field kit" : method === "spectroscopic" ? "Raman spectroscopy" : method === "ion_mobility" ? "Ion Mobility Spectrometry" : "Canine olfaction"})
-- Sample type: ${s.name}
-- Detection achieved: ${result ?? "not yet scanned"}
-- Method sensitivity: ${m.sensitivity}
-- False positive rate: ${m.fp}%
-- Scan time: ${m.time} s
+ROLE: "You are an expert in explosive detection. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in real-world conditions, and what are the key operational considerations for deploying this detection technology in a field security scenario?`,
+PARAMETERS (numbered):
+1. Detection method: ${method} (${method === "colorimetric" ? "HEMRL field kit" : method === "spectroscopic" ? "Raman spectroscopy" : method === "ion_mobility" ? "Ion Mobility Spectrometry" : "Canine olfaction"})
+2. Sample type: ${s.name}
+3. Detection achieved: ${result ?? "not yet scanned"}
+4. Method sensitivity: ${m.sensitivity}
+5. False positive rate: ${m.fp}%
+6. Scan time: ${m.time} s
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [method, s, result, m]);
 
   const canvasRef = useCanvas((ctx, W, H) => {
-    // Technical dark background
+    const theme = getCanvasTheme();
+
+    // Technical background
     const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
-    bg.addColorStop(0, "#0d1b2a");
-    bg.addColorStop(1, "#050b14");
+    bg.addColorStop(0, theme.canvasBackground);
+    bg.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
@@ -137,13 +145,13 @@ Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in rea
       ctx.moveTo(W/2 + 65, cy + 35); ctx.lineTo(W/2 + 65, cy + 45); ctx.lineTo(W/2 + 55, cy + 45);
       ctx.stroke();
 
-      ctx.font = `900 10px ${T.accent}`;
+      ctx.font = `900 10px ${TECH_FONT}`;
       ctx.fillStyle = T.red;
       ctx.textAlign = "center";
       ctx.fillText("! THREAT IDENTIFIED: " + s.name.toUpperCase(), W/2, cy - 50);
       ctx.textAlign = "left";
     } else if (result === "CLEAR") {
-      ctx.font = `900 10px ${T.accent}`;
+      ctx.font = `900 10px ${TECH_FONT}`;
       ctx.fillStyle = T.green;
       ctx.textAlign = "center";
       ctx.fillText("✓ SAMPLE VERIFIED: STABLE", W/2, cy - 50);
@@ -151,7 +159,7 @@ Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in rea
     }
 
     // Status / Mode Labels
-    ctx.font = `800 8px ${T.accent}`;
+    ctx.font = `800 8px ${TECH_FONT}`;
     ctx.fillStyle = T.dimText;
     ctx.fillText(`METHOD: ${method.toUpperCase()}`, 20, 15);
     ctx.fillText(`SENSITIVITY: ${m.sensitivity.toUpperCase()}`, W - 100, 15);
@@ -186,6 +194,7 @@ Provide 2-3 sentences: how effective is ${method} for detecting ${s.name} in rea
       </div>
       <InfoBox><strong style={{ color: T.purple }}>Detection:</strong> {method === "colorimetric" ? "HEMRL field kit — color reagents, used by police/BSF." : method === "spectroscopic" ? "Raman — laser molecular fingerprinting, ppb sensitivity." : method === "ion_mobility" ? "IMS — airport-grade screening, low false-positive." : "Canine — ppt sensitivity, gold standard for field sweeps."}</InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.pink} />
+      <ExportBtn simId="explosive_detection" getData={() => ({ method, sample, scanning, result, scanProg, sensitivity: samples[sample].sensitivity })} color={T.pink} />
     </div>
   );
 }

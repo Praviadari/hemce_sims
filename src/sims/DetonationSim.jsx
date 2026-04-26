@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas } from "../utils";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ExportBtn, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function DetonationSim() {
   const [running, setRunning] = useState(false);
@@ -12,16 +12,23 @@ export default function DetonationSim() {
   const vod = { tnt: 6900, rdx: 8750, cl20: 9380, hmx: 9100 }[heMat];
   const reF = { tnt: 1.0, rdx: 1.6, cl20: 2.0, hmx: 1.7 }[heMat];
   const tntEq = (charge * reF).toFixed(1);
-  const scaledDist = (distance / Math.pow(Number(tntEq), 1 / 3)).toFixed(1);
-  const peakOP = (0.84 / scaledDist + 2.7 / (scaledDist ** 2) + 6.2 / (scaledDist ** 3)).toFixed(1);
+  const scaledDist = distance / Math.pow(Number(tntEq), 1 / 3);
+  const logZ = Math.log10(Number(scaledDist));
+  let peakOP = Math.pow(10, 2.78 - 1.6 * logZ - 0.198 * logZ * logZ);
+  if (scaledDist < 0.5) peakOP = 500;
+  if (scaledDist > 40) peakOP = 0.001;
+  const peakOPDisplay = peakOP.toFixed(2);
+  const impulse = (0.067 * Math.pow(Number(tntEq), 2 / 3) / distance * 1000).toFixed(0);
+  const arrivalMs = (distance / (340 + peakOP * 100) * 1000).toFixed(0);
   const progress = Math.min(time / 2, 1);
 
   const canvasRef = useCanvas((ctx, W, H) => {
     const cy = H / 2, cx = 60;
+    const theme = getCanvasTheme();
 
     const bgGrad = ctx.createRadialGradient(cx, cy, 0, cx, cy, W);
-    bgGrad.addColorStop(0, "#0D1B2A");
-    bgGrad.addColorStop(1, "#050B14");
+    bgGrad.addColorStop(0, theme.canvasBackground);
+    bgGrad.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bgGrad;
     ctx.fillRect(0, 0, W, H);
 
@@ -95,6 +102,59 @@ export default function DetonationSim() {
     }
   }, [running, time, charge, distance, heMat, progress]);
 
+  const profileRef = useCanvas((ctx, W, H) => {
+    const theme = getCanvasTheme();
+    ctx.fillStyle = theme.canvasBackground;
+    ctx.fillRect(0, 0, W, H);
+
+    const padL = 30, padR = 10, padT = 8, padB = 15;
+    const plotW = W - padL - padR, plotH = H - padT - padB;
+
+    const thresholds = [
+      { val: 0.07, label: "Glass", color: T.gold },
+      { val: 0.35, label: "Ear", color: T.orange },
+      { val: 2.0, label: "Lung", color: T.red },
+    ];
+    thresholds.forEach(({ val, label, color }) => {
+      const y = padT + plotH * (1 - Math.min(1, Math.log10(val + 1) / Math.log10(6)));
+      ctx.strokeStyle = `${color}40`;
+      ctx.setLineDash([3, 3]);
+      ctx.beginPath(); ctx.moveTo(padL, y); ctx.lineTo(padL + plotW, y); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.font = `600 6px ${TECH_FONT}`;
+      ctx.fillStyle = color;
+      ctx.textAlign = "right";
+      ctx.fillText(`${label} ${val}`, padL - 2, y + 3);
+    });
+
+    ctx.strokeStyle = T.red;
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    for (let i = 0; i <= 50; i++) {
+      const d = 2 + (i / 50) * 98;
+      const z = d / Math.pow(Number(tntEq), 1/3);
+      const logZ = Math.log10(z);
+      const logP = 2.78 - 1.6 * logZ - 0.198 * logZ * logZ;
+      const op = Math.pow(10, logP);
+      const x = padL + (d / 100) * plotW;
+      const y = padT + plotH * (1 - Math.min(1, Math.log10(op + 1) / Math.log10(6)));
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.stroke();
+
+    const curX = padL + (distance / 100) * plotW;
+    ctx.strokeStyle = T.green;
+    ctx.setLineDash([3, 3]);
+    ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(curX, padT); ctx.lineTo(curX, padT + plotH); ctx.stroke();
+    ctx.setLineDash([]);
+
+    ctx.font = `600 7px ${TECH_FONT}`;
+    ctx.fillStyle = T.dimText;
+    ctx.textAlign = "center";
+    ctx.fillText("Distance (m)", W / 2, H - 2);
+  }, [charge, distance, heMat, tntEq]);
+
   useEffect(() => {
     if (!running) return;
     const start = performance.now();
@@ -112,19 +172,28 @@ export default function DetonationSim() {
 
   const buildPrompt = useCallback(() =>
     `Detonation blast effects simulation — current parameters:
-- Explosive material: ${heMat.toUpperCase()}
-- Charge mass: ${charge} kg
-- TNT equivalent: ${tntEq} kg
-- Stand-off distance: ${distance} m
-- Velocity of detonation: ${(vod / 1000).toFixed(2)} km/s
-- Hopkinson-Cranz scaled distance Z: ${scaledDist} m/kg^(1/3)
-- Peak overpressure at standoff: ${peakOP} bar
+ROLE: "You are an expert in detonics and blast effects. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: what do these blast parameters mean for personnel safety, structural vulnerability, and how does ${heMat.toUpperCase()} compare to TNT for this scenario?`,
-  [heMat, charge, tntEq, distance, vod, scaledDist, peakOP]);
+PARAMETERS (numbered):
+1. Explosive material: ${heMat.toUpperCase()}
+2. Charge mass: ${charge} kg
+3. TNT equivalent: ${tntEq} kg
+4. Stand-off distance: ${distance} m
+5. Velocity of detonation: ${(vod / 1000).toFixed(2)} km/s
+6. Hopkinson-Cranz scaled distance Z: ${scaledDist.toFixed(1)} m/kg^(1/3)
+7. Peak overpressure at standoff: ${peakOPDisplay} bar
+8. Impulse: ${impulse} kPa·ms
+9. Arrival time: ${arrivalMs} ms
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
+  [heMat, charge, tntEq, distance, vod, scaledDist, peakOPDisplay, impulse, arrivalMs]);
 
   return (<div>
     <SimCanvas canvasRef={canvasRef} width={420} height={140} maxWidth={420} />
+    <SimCanvas canvasRef={profileRef} width={340} height={60} label="Overpressure distance profile" />
     <PillRow>
       <Pill active={heMat === "tnt"} onClick={() => { reset(); setHeMat("tnt"); }} color={T.orange}>TNT</Pill>
       <Pill active={heMat === "rdx"} onClick={() => { reset(); setHeMat("rdx"); }} color={T.gold}>RDX</Pill>
@@ -136,13 +205,27 @@ Provide 2-3 sentences: what do these blast parameters mean for personnel safety,
     <DataRow>
       <DataBox label="VoD" value={(vod / 1000).toFixed(1)} unit="km/s" color={T.orange} />
       <DataBox label="TNT Eq" value={tntEq} unit="kg" color={T.gold} />
-      <DataBox label="Peak ΔP" value={peakOP} unit="bar" color={Number(peakOP) > 1 ? T.red : T.accent} />
+      <DataBox label="Peak ΔP" value={peakOPDisplay} unit="bar" color={Number(peakOP) > 2 ? T.red : Number(peakOP) > 0.35 ? T.orange : Number(peakOP) > 0.07 ? T.gold : T.green} />
+      <DataBox label="Impulse" value={impulse} unit="kPa·ms" color={T.purple} />
+      <DataBox label="Arrival" value={arrivalMs} unit="ms" color={T.cyan} />
     </DataRow>
+    <div style={{ fontSize: 10, color: T.dimText, marginTop: 4, textAlign: "center" }}>
+      {Number(peakOP) > 2.0 ? (
+        <span style={{ color: T.red }}>⚠ LUNG DAMAGE ZONE (&gt;2 bar)</span>
+      ) : Number(peakOP) > 0.35 ? (
+        <span style={{ color: T.orange }}>⚠ EARDRUM RUPTURE ZONE (&gt;0.35 bar)</span>
+      ) : Number(peakOP) > 0.07 ? (
+        <span style={{ color: T.gold }}>⚠ WINDOW BREAK ZONE (&gt;0.07 bar)</span>
+      ) : (
+        <span style={{ color: T.green }}>✓ Low risk zone</span>
+      )}
+    </div>
     <div style={{ display: "flex", gap: 8 }}>
       <ActionBtn onClick={() => { if (!running) { setTime(0); setRunning(true); } }} disabled={running} color={T.red}>{running ? "DETONATING..." : "💥 DETONATE"}</ActionBtn>
       <ResetBtn onClick={reset} />
     </div>
     <InfoBox><strong style={{ color: T.orange }}>Hopkinson-Cranz scaling:</strong> Z = R/W^(1/3). CL-20 is ~2× TNT equivalent — HEMRL's indigenous development. Overpressure &gt;1 bar causes structural damage.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.red} />
+    <ExportBtn simId="detonation" getData={() => ({ heMat, charge, distance, peakOP: peakOPDisplay, impulse, arrivalMs })} color={T.red} />
   </div>);
 }

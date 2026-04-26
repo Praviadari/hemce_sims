@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, useCanvas } from "../utils";
+import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ActionBtn, ExportBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
+import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function AdditiveManufacturingSim() {
   const [process, setProcess] = useState("fdm");
@@ -16,10 +16,12 @@ export default function AdditiveManufacturingSim() {
   const partDensity = (infill * 0.01 * (process === "dmls" ? 4.43 : 1.24)).toFixed(2);
 
   const canvasRef = useCanvas((ctx, W, H) => {
-    // Technical dark background
+    const theme = getCanvasTheme();
+
+    // Technical background
     const bg = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
-    bg.addColorStop(0, "#0d1b2a");
-    bg.addColorStop(1, "#050b14");
+    bg.addColorStop(0, theme.canvasBackground);
+    bg.addColorStop(1, theme.canvasSurface);
     ctx.fillStyle = bg;
     ctx.fillRect(0, 0, W, H);
 
@@ -125,15 +127,21 @@ export default function AdditiveManufacturingSim() {
 
   const buildPrompt = useCallback(() =>
     `Additive manufacturing for defense applications simulation — current parameters:
-- Process: ${pd.n} (${process === "dmls" ? "Direct Metal Laser Sintering" : process === "sls" ? "Selective Laser Sintering" : process === "dw" ? "Direct Write (energetic paste)" : "Fused Deposition Modelling"})
-- Part: ${part} (${part === "nozzle" ? "rocket nozzle insert" : part === "grain" ? "solid fuel grain" : "motor casing"})
-- Layer resolution: ${pd.res} mm
-- Infill density: ${infill}%
-- Total layers: ${totalLayers}
-- Estimated build time: ${buildTime} min
-- Part density: ${partDensity} g/cc
+ROLE: "You are an expert in defense additive manufacturing. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
-Provide 2-3 sentences: what are the structural or functional advantages of using ${pd.n} for this ${part}, and what quality/certification challenges must DRDO overcome for operational deployment?`,
+PARAMETERS (numbered):
+1. Process: ${pd.n} (${process === "dmls" ? "Direct Metal Laser Sintering" : process === "sls" ? "Selective Laser Sintering" : process === "dw" ? "Direct Write (energetic paste)" : "Fused Deposition Modelling"})
+2. Part: ${part} (${part === "nozzle" ? "rocket nozzle insert" : part === "grain" ? "solid fuel grain" : "motor casing"})
+3. Layer resolution: ${pd.res} mm
+4. Infill density: ${infill}%
+5. Total layers: ${totalLayers}
+6. Estimated build time: ${buildTime} min
+7. Part density: ${partDensity} g/cc
+
+ANALYSIS REQUEST:
+Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
+Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
   [pd, process, part, infill, totalLayers, buildTime, partDensity]);
 
   return (<div>
@@ -164,5 +172,6 @@ Provide 2-3 sentences: what are the structural or functional advantages of using
     </div>
     <InfoBox><strong style={{ color: T.accent }}>AM for HEM:</strong> {process === "dmls" ? "DMLS: Ti-6Al-4V nozzles with complex cooling channels." : process === "dw" ? "Direct-Write: Energetic paste extrusion for custom grains." : process === "sls" ? "SLS: Sintered nylon/metal for rapid prototyping." : "FDM: ABS/PEEK fuel grains with tailored ports."} DRDO actively adopting AM.</InfoBox>
     <AIInsight buildPrompt={buildPrompt} color={T.lime} />
+    <ExportBtn simId="additive_manufacturing" getData={() => ({ process, part, infill, totalLayers, buildTime, partDensity, printing })} color={T.lime} />
   </div>);
 }
