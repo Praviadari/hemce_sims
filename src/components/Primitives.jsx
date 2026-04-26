@@ -1,10 +1,13 @@
-import React, { useRef, useEffect } from "react";
-import { T, FONT, TECH_FONT, MONO_FONT, haptics } from "../utils";
+import { useRef, useEffect } from "react";
+import { T, TECH_FONT, MONO_FONT, haptics } from "../utils";
 
 export const Pill = ({ active, onClick, children, color = T.accent, label }) => (
   <button
     type="button"
-    onClick={(e) => { haptics.light(); onClick && onClick(e); }}
+    onClick={(e) => {
+      haptics.light();
+      onClick && onClick(e);
+    }}
     aria-label={label ?? (typeof children === "string" ? children : undefined)}
     aria-pressed={active}
     style={{
@@ -28,8 +31,12 @@ export const Pill = ({ active, onClick, children, color = T.accent, label }) => 
       WebkitTapHighlightColor: "transparent",
       minHeight: 36,
     }}
-    onTouchStart={(e) => { e.currentTarget.style.opacity = "0.7"; }}
-    onTouchEnd={(e) => { e.currentTarget.style.opacity = "1"; }}
+    onTouchStart={(e) => {
+      e.currentTarget.style.opacity = "0.7";
+    }}
+    onTouchEnd={(e) => {
+      e.currentTarget.style.opacity = "1";
+    }}
   >
     {children}
   </button>
@@ -38,37 +45,42 @@ export const Pill = ({ active, onClick, children, color = T.accent, label }) => 
 export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", color = T.accent }) => {
   const id = `slider-${label.replace(/\s+/g, "-").toLowerCase()}`;
   return (
-  <div style={{ marginBottom: 16 }}>
-    <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
-      <label htmlFor={id} style={{ color: T.gray, fontSize: 11, fontWeight: 500 }}>{label}</label>
-      <span style={{ color, fontSize: 13, fontWeight: 800, fontFamily: MONO_FONT }} aria-live="polite">
-        {typeof value === "number" ? (Number.isInteger(value) ? value : value.toFixed(1)) : value}
-        <span style={{ fontSize: 10, opacity: 0.8, marginLeft: 2 }}>{unit}</span>
-      </span>
+    <div style={{ marginBottom: 16 }}>
+      <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
+        <label htmlFor={id} style={{ color: T.gray, fontSize: 11, fontWeight: 500 }}>
+          {label}
+        </label>
+        <span style={{ color, fontSize: 13, fontWeight: 800, fontFamily: MONO_FONT }} aria-live="polite">
+          {typeof value === "number" ? (Number.isInteger(value) ? value : value.toFixed(1)) : value}
+          <span style={{ fontSize: 10, opacity: 0.8, marginLeft: 2 }}>{unit}</span>
+        </span>
+      </div>
+      <div style={{ position: "relative", height: 8, display: "flex", alignItems: "center" }}>
+        <input
+          id={id}
+          type="range"
+          min={min}
+          max={max}
+          step={step}
+          value={value}
+          aria-label={`${label}: ${value}${unit}`}
+          onChange={(e) => {
+            haptics.light();
+            onChange(Number(e.target.value));
+          }}
+          style={{
+            width: "100%",
+            accentColor: color,
+            height: 6,
+            cursor: "pointer",
+            background: T.glass,
+            border: `1px solid ${T.glassBorder}`,
+            borderRadius: 3,
+            touchAction: "pan-x",
+          }}
+        />
+      </div>
     </div>
-    <div style={{ position: "relative", height: 8, display: "flex", alignItems: "center" }}>
-      <input
-        id={id}
-        type="range"
-        min={min}
-        max={max}
-        step={step}
-        value={value}
-        aria-label={`${label}: ${value}${unit}`}
-        onChange={(e) => { haptics.light(); onChange(Number(e.target.value)); }}
-        style={{
-          width: "100%",
-          accentColor: color,
-          height: 6,
-          cursor: "pointer",
-          background: T.glass,
-          border: `1px solid ${T.glassBorder}`,
-          borderRadius: 3,
-          touchAction: "pan-x",
-        }}
-      />
-    </div>
-  </div>
   );
 };
 
@@ -88,7 +100,16 @@ export const DataBox = ({ label, value, unit, color = T.accent }) => (
     }}
   >
     <div style={{ fontSize: 19, fontWeight: 900, color, fontFamily: MONO_FONT, letterSpacing: "-0.5px" }}>{value}</div>
-    <div style={{ fontSize: 9, color: T.gray, fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.5px", marginTop: 2 }}>
+    <div
+      style={{
+        fontSize: 9,
+        color: T.gray,
+        fontWeight: 600,
+        textTransform: "uppercase",
+        letterSpacing: "0.5px",
+        marginTop: 2,
+      }}
+    >
       {label}
       {unit && <span style={{ opacity: 0.6, marginLeft: 2 }}>[{unit}]</span>}
     </div>
@@ -118,15 +139,19 @@ export const InfoBox = ({ color = T.accent, children }) => (
 );
 
 export const PillRow = ({ children }) => (
-  <div style={{
-    display: "flex",
-    gap: 8,
-    margin: "12px 0",
-    flexWrap: "wrap",
-    overflowX: "auto",
-    paddingBottom: 4,
-    scrollbarWidth: "none",
-  }}>{children}</div>
+  <div
+    style={{
+      display: "flex",
+      gap: 8,
+      margin: "12px 0",
+      flexWrap: "wrap",
+      overflowX: "auto",
+      paddingBottom: 4,
+      scrollbarWidth: "none",
+    }}
+  >
+    {children}
+  </div>
 );
 
 export const DataRow = ({ children }) => (
@@ -140,7 +165,8 @@ export const StripChart = ({ data = [], color = T.accent, label = "", height = 5
     const c = canvasRef.current;
     if (!c || data.length === 0) return;
     const ctx = c.getContext("2d");
-    const W = c.width, H = c.height;
+    const W = c.width,
+      H = c.height;
 
     ctx.clearRect(0, 0, W, H);
     ctx.fillStyle = T.glass;
@@ -150,7 +176,10 @@ export const StripChart = ({ data = [], color = T.accent, label = "", height = 5
     ctx.lineWidth = 0.5;
     for (let y = 0; y <= 4; y += 1) {
       const yy = (y / 4) * H;
-      ctx.beginPath(); ctx.moveTo(0, yy); ctx.lineTo(W, yy); ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0, yy);
+      ctx.lineTo(W, yy);
+      ctx.stroke();
     }
 
     ctx.strokeStyle = color;
@@ -176,7 +205,8 @@ export const StripChart = ({ data = [], color = T.accent, label = "", height = 5
       width={300}
       height={height}
       style={{
-        width: "100%", height,
+        width: "100%",
+        height,
         borderRadius: 8,
         border: `1px solid ${T.glassBorder}`,
         marginTop: 8,
@@ -204,12 +234,16 @@ export const ExportBtn = ({ getData, simId, color = T.accent }) => {
       type="button"
       onClick={handleExport}
       style={{
-        padding: "8px 12px", borderRadius: 8,
+        padding: "8px 12px",
+        borderRadius: 8,
         border: `1px solid ${color}30`,
         background: `${color}10`,
-        color: color, fontFamily: TECH_FONT,
-        fontSize: 9, fontWeight: 700,
-        letterSpacing: 1, cursor: "pointer",
+        color: color,
+        fontFamily: TECH_FONT,
+        fontSize: 9,
+        fontWeight: 700,
+        letterSpacing: 1,
+        cursor: "pointer",
         touchAction: "manipulation",
         WebkitTapHighlightColor: "transparent",
       }}
@@ -222,7 +256,10 @@ export const ExportBtn = ({ getData, simId, color = T.accent }) => {
 export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
   <button
     type="button"
-    onClick={(e) => { haptics.heavy(); onClick && onClick(e); }}
+    onClick={(e) => {
+      haptics.heavy();
+      onClick && onClick(e);
+    }}
     disabled={disabled}
     aria-label={label ?? (typeof children === "string" ? children : undefined)}
     aria-disabled={disabled}
@@ -245,11 +282,21 @@ export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
       WebkitTapHighlightColor: "transparent",
       minHeight: 48,
     }}
-    onTouchStart={(e) => { if (!disabled) e.currentTarget.style.transform = "scale(0.97)"; }}
-    onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-    onMouseDown={(e) => { if (!disabled) e.currentTarget.style.transform = "scale(0.97)"; }}
-    onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-    onMouseLeave={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+    onTouchStart={(e) => {
+      if (!disabled) e.currentTarget.style.transform = "scale(0.97)";
+    }}
+    onTouchEnd={(e) => {
+      e.currentTarget.style.transform = "scale(1)";
+    }}
+    onMouseDown={(e) => {
+      if (!disabled) e.currentTarget.style.transform = "scale(0.97)";
+    }}
+    onMouseUp={(e) => {
+      e.currentTarget.style.transform = "scale(1)";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.transform = "scale(1)";
+    }}
   >
     {children}
   </button>
@@ -258,7 +305,10 @@ export const ActionBtn = ({ onClick, disabled, color, children, label }) => (
 export const ResetBtn = ({ onClick }) => (
   <button
     type="button"
-    onClick={(e) => { haptics.medium(); onClick && onClick(e); }}
+    onClick={(e) => {
+      haptics.medium();
+      onClick && onClick(e);
+    }}
     aria-label="Reset simulation"
     style={{
       padding: "13px 16px",
@@ -276,11 +326,21 @@ export const ResetBtn = ({ onClick }) => (
       WebkitTapHighlightColor: "transparent",
       minHeight: 48,
     }}
-    onTouchStart={(e) => { e.currentTarget.style.opacity = "0.6"; }}
-    onTouchEnd={(e) => { e.currentTarget.style.opacity = "1"; }}
-    onMouseDown={(e) => { e.currentTarget.style.opacity = "0.7"; }}
-    onMouseUp={(e) => { e.currentTarget.style.opacity = "1"; }}
-    onMouseLeave={(e) => { e.currentTarget.style.opacity = "1"; }}
+    onTouchStart={(e) => {
+      e.currentTarget.style.opacity = "0.6";
+    }}
+    onTouchEnd={(e) => {
+      e.currentTarget.style.opacity = "1";
+    }}
+    onMouseDown={(e) => {
+      e.currentTarget.style.opacity = "0.7";
+    }}
+    onMouseUp={(e) => {
+      e.currentTarget.style.opacity = "1";
+    }}
+    onMouseLeave={(e) => {
+      e.currentTarget.style.opacity = "1";
+    }}
   >
     RESET
   </button>
@@ -291,14 +351,15 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
     role="img"
     aria-label={label}
     style={{
-    position: "relative",
-    margin: "0 auto 14px",
-    width: "100%",
-    maxWidth: maxWidth ?? width,
-    minHeight: 220,
-    display: "grid",
-    placeItems: "center",
-  }}>
+      position: "relative",
+      margin: "0 auto 14px",
+      width: "100%",
+      maxWidth: maxWidth ?? width,
+      minHeight: 220,
+      display: "grid",
+      placeItems: "center",
+    }}
+  >
     <canvas
       ref={canvasRef}
       width={width}
@@ -315,14 +376,19 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
         touchAction: "none",
       }}
     />
-    <div style={{
-      position: "absolute",
-      top: 0, left: 0, right: 0, bottom: 0,
-      pointerEvents: "none",
-      borderRadius: 12,
-      boxShadow: "inset 0 0 20px rgba(var(--accent-rgb), 0.12)",
-      border: "1px solid rgba(var(--accent-rgb), 0.16)",
-      animation: "radarPulse 4s infinite ease-in-out",
-    }} />
+    <div
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        right: 0,
+        bottom: 0,
+        pointerEvents: "none",
+        borderRadius: 12,
+        boxShadow: "inset 0 0 20px rgba(var(--accent-rgb), 0.12)",
+        border: "1px solid rgba(var(--accent-rgb), 0.16)",
+        animation: "radarPulse 4s infinite ease-in-out",
+      }}
+    />
   </div>
 );

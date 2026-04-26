@@ -1,6 +1,5 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, StripChart, ActionBtn, ResetBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function SolidRocketSim() {
   const [burning, setBurning] = useState(false);
@@ -17,16 +16,16 @@ export default function SolidRocketSim() {
     const m = grain === "star" ? 1.4 : grain === "tubular" ? 1.0 : 0.6;
     const Cf = 1.3 + 0.05 * (chamberP / 7);
     const At = 0.005;
-    return (Cf * At * chamberP * 1e6 * m / 1000).toFixed(0);
+    return ((Cf * At * chamberP * 1e6 * m) / 1000).toFixed(0);
   }, [chamberP, grain]);
 
   const cStar = useMemo(() => {
-    return Math.round(chamberP * 100 / burnRate);
+    return Math.round((chamberP * 100) / burnRate);
   }, [chamberP, burnRate]);
 
   const isp = useMemo(() => {
     const Cf = 1.3 + 0.05 * (chamberP / 7);
-    const rawIsp = Cf * cStar / 9.81;
+    const rawIsp = (Cf * cStar) / 9.81;
     return Math.min(310, Math.max(180, Math.round(rawIsp)));
   }, [chamberP, cStar]);
 
@@ -37,7 +36,7 @@ export default function SolidRocketSim() {
       const p = burning ? progress : 0;
 
       const canvasTheme = getCanvasTheme();
-      const bgGlow = ctx.createRadialGradient(W/2, H/2, 0, W/2, H/2, W/2);
+      const bgGlow = ctx.createRadialGradient(W / 2, H / 2, 0, W / 2, H / 2, W / 2);
       bgGlow.addColorStop(0, `${T.accent}05`);
       bgGlow.addColorStop(1, "transparent");
       ctx.fillStyle = canvasTheme.panelFill;
@@ -53,7 +52,7 @@ export default function SolidRocketSim() {
       ctx.fill();
       ctx.stroke();
 
-      ctx.fillStyle = "#0a192f";
+      ctx.fillStyle = canvasTheme.canvasSurface;
       ctx.beginPath();
       ctx.roundRect(48, 38, W - 116, H - 76, 8);
       ctx.fill();
@@ -84,7 +83,7 @@ export default function SolidRocketSim() {
           ctx.shadowBlur = 0;
         }
 
-        ctx.fillStyle = "#0a192f";
+        ctx.fillStyle = canvasTheme.canvasSurface;
         const cx = gi + gw / 2,
           cy = 46 + p * 20 + gh / 2;
 
@@ -95,7 +94,8 @@ export default function SolidRocketSim() {
               r = Math.min(gw, gh) * 0.35;
             const x = cx + Math.cos(a) * r;
             const y = cy + Math.sin(a) * r;
-            if (i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+            if (i === 0) ctx.moveTo(x, y);
+            else ctx.lineTo(x, y);
             const a2 = ((i * 72 - 54) * Math.PI) / 180,
               r2 = r * 0.4;
             ctx.lineTo(cx + Math.cos(a2) * r2, cy + Math.sin(a2) * r2);
@@ -129,10 +129,7 @@ export default function SolidRocketSim() {
       ctx.fill();
 
       if (burning && p < 1) {
-        const intensity = Math.max(
-          0,
-          Math.min(1, elapsed / 0.5) * (1 - Math.max(0, (p - 0.9) / 0.1))
-        );
+        const intensity = Math.max(0, Math.min(1, elapsed / 0.5) * (1 - Math.max(0, (p - 0.9) / 0.1)));
         const flameRadiusX = Math.max(0, 60 * intensity);
         const flameRadiusY = Math.max(0, 10 * intensity);
 
@@ -187,7 +184,8 @@ export default function SolidRocketSim() {
         if (grain === "tubular") return 0.4 + 0.6 * t;
         return 0.7;
       });
-      const stripY = H - 35, stripH = 30;
+      const stripY = H - 35,
+        stripH = 30;
       ctx.fillStyle = "rgba(0,0,0,0.25)";
       ctx.fillRect(5, stripY, W - 10, stripH);
       ctx.strokeStyle = `${T.orange}40`;
@@ -214,11 +212,14 @@ export default function SolidRocketSim() {
         const px = 10 + progress * (W - 25);
         ctx.strokeStyle = T.green;
         ctx.setLineDash([2, 2]);
-        ctx.beginPath(); ctx.moveTo(px, stripY); ctx.lineTo(px, stripY + stripH); ctx.stroke();
+        ctx.beginPath();
+        ctx.moveTo(px, stripY);
+        ctx.lineTo(px, stripY + stripH);
+        ctx.stroke();
         ctx.setLineDash([]);
       }
     },
-    [burning, elapsed, grain, progress]
+    [burning, elapsed, grain, progress],
   );
 
   useEffect(() => {
@@ -229,7 +230,10 @@ export default function SolidRocketSim() {
       setElapsed(dt);
       if (burning) setThrustHistory((prev) => [...prev.slice(-49), Number(thrust)]);
       if (dt < dur) animRef.current = requestAnimationFrame(tick);
-      else { setBurning(false); setElapsed(dur); }
+      else {
+        setBurning(false);
+        setElapsed(dur);
+      }
     };
     animRef.current = requestAnimationFrame(tick);
     return () => cancelAnimationFrame(animRef.current);
@@ -242,8 +246,9 @@ export default function SolidRocketSim() {
     setThrustHistory([]);
   };
 
-  const buildPrompt = useCallback(() =>
-    `Solid rocket motor simulation — current parameters:
+  const buildPrompt = useCallback(
+    () =>
+      `Solid rocket motor simulation — current parameters:
 ROLE: "You are an expert in solid propulsion. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
 PARAMETERS (numbered):
@@ -259,18 +264,67 @@ ANALYSIS REQUEST:
 Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
 Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
 Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
-  [grain, burnRate, chamberP, thrust, isp, cStar, progress]);
+    [grain, burnRate, chamberP, thrust, isp, cStar, progress],
+  );
 
   return (
     <div>
       <SimCanvas canvasRef={canvasRef} width={460} height={220} maxWidth={460} />
       <PillRow>
-        <Pill active={grain === "star"} onClick={() => { reset(); setGrain("star"); }}>★ Star</Pill>
-        <Pill active={grain === "tubular"} onClick={() => { reset(); setGrain("tubular"); }}>◯ Tubular</Pill>
-        <Pill active={grain === "endburn"} onClick={() => { reset(); setGrain("endburn"); }}>▮ End-Burn</Pill>
+        <Pill
+          active={grain === "star"}
+          onClick={() => {
+            reset();
+            setGrain("star");
+          }}
+        >
+          ★ Star
+        </Pill>
+        <Pill
+          active={grain === "tubular"}
+          onClick={() => {
+            reset();
+            setGrain("tubular");
+          }}
+        >
+          ◯ Tubular
+        </Pill>
+        <Pill
+          active={grain === "endburn"}
+          onClick={() => {
+            reset();
+            setGrain("endburn");
+          }}
+        >
+          ▮ End-Burn
+        </Pill>
       </PillRow>
-      <Slider label="Burn Rate" value={burnRate} onChange={(v) => { reset(); setBurnRate(v); }} min={2} max={12} step={0.5} unit=" mm/s" color={T.orange} />
-      <Slider label="Chamber Pressure" value={chamberP} onChange={(v) => { reset(); setChamberP(v); }} min={3} max={20} step={0.5} unit=" MPa" color={T.accent} />
+      <Slider
+        label="Burn Rate"
+        value={burnRate}
+        onChange={(v) => {
+          reset();
+          setBurnRate(v);
+        }}
+        min={2}
+        max={12}
+        step={0.5}
+        unit=" mm/s"
+        color={T.orange}
+      />
+      <Slider
+        label="Chamber Pressure"
+        value={chamberP}
+        onChange={(v) => {
+          reset();
+          setChamberP(v);
+        }}
+        min={3}
+        max={20}
+        step={0.5}
+        unit=" MPa"
+        color={T.accent}
+      />
       <DataRow>
         <DataBox label="Thrust" value={thrust} unit="kN" color={T.orange} />
         <DataBox label="Isp" value={isp} unit="s" color={T.accent} />
@@ -279,15 +333,28 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
       </DataRow>
       <StripChart data={thrustHistory} color={T.orange} label="Thrust (kN)" maxVal={Number(thrust) * 1.5 || 100} />
       <div style={{ display: "flex", gap: 8 }}>
-        <ActionBtn onClick={() => { if (!burning) { setElapsed(0); setBurning(true); } }} disabled={burning} color={T.red}>
+        <ActionBtn
+          onClick={() => {
+            if (!burning) {
+              setElapsed(0);
+              setBurning(true);
+            }
+          }}
+          disabled={burning}
+          color={T.red}
+        >
           {burning ? "BURNING..." : progress >= 1 ? "BURNOUT" : "🔥 IGNITE"}
         </ActionBtn>
         <ResetBtn onClick={reset} />
       </div>
       <InfoBox color={T.accent}>
         <strong style={{ color: T.accent }}>How it works:</strong> Solid propellant burns inward from grain bore.
-        {grain === "star" ? " Star bore → high initial thrust, regressive." : grain === "tubular" ? " Tubular bore → progressive thrust increase." : " End-burn → long, constant low thrust."}
-        {" "}Gas exits convergent-divergent nozzle → thrust (Newton's 3rd).
+        {grain === "star"
+          ? " Star bore → high initial thrust, regressive."
+          : grain === "tubular"
+            ? " Tubular bore → progressive thrust increase."
+            : " End-burn → long, constant low thrust."}{" "}
+        Gas exits convergent-divergent nozzle → thrust (Newton's 3rd).
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.orange} />
       <ExportBtn simId="rocket" getData={() => ({ grain, burnRate, chamberP, thrust, isp })} color={T.orange} />

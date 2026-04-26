@@ -1,6 +1,5 @@
 import { useState, useCallback } from "react";
-import { Pill, Slider, DataBox, InfoBox, PillRow, DataRow, ExportBtn, SimCanvas, AIInsight } from "../components";
-import { T, FONT, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
 
 export default function PAUTSim() {
   const [angle, setAngle] = useState(0);
@@ -14,7 +13,11 @@ export default function PAUTSim() {
   const canvasRef = useCanvas(
     (ctx, W, H) => {
       const theme = getCanvasTheme();
-      const pw = Math.min(elems * 3, W - 60), px = (W - pw) / 2, py = 25, ph = 14, ew = pw / elems;
+      const pw = Math.min(elems * 3, W - 60),
+        px = (W - pw) / 2,
+        py = 25,
+        ph = 14,
+        ew = pw / elems;
 
       ctx.fillStyle = theme.canvasBackground;
       ctx.fillRect(0, 0, W, H);
@@ -28,8 +31,8 @@ export default function PAUTSim() {
       ctx.stroke();
 
       for (let i = 0; i < elems; i++) {
-        const isActive = mode === "sector" || Math.abs((px + i * ew + ew/2) - (W/2 + angle * 2)) < 24;
-        const phase = Math.sin((i / elems) * Math.PI + (performance.now() / 100)) * 0.5 + 0.5;
+        const isActive = mode === "sector" || Math.abs(px + i * ew + ew / 2 - (W / 2 + angle * 2)) < 24;
+        const phase = Math.sin((i / elems) * Math.PI + performance.now() / 100) * 0.5 + 0.5;
 
         if (isActive) {
           ctx.shadowBlur = 8;
@@ -43,9 +46,12 @@ export default function PAUTSim() {
         ctx.shadowBlur = 0;
       }
 
-      const my = py + ph + 8, mh = H - my - 12;
-      const bscanX = 20, bscanY = py + ph + 10;
-      const bscanW = W - 40, bscanH = H - bscanY - 10;
+      const my = py + ph + 8,
+        mh = H - my - 12;
+      const bscanX = 20,
+        bscanY = py + ph + 10;
+      const bscanW = W - 40,
+        bscanH = H - bscanY - 10;
       const imgData = ctx.createImageData(bscanW, bscanH);
       const data = imgData.data;
       const wallDepth = 0.85;
@@ -61,17 +67,15 @@ export default function PAUTSim() {
           if (defect) {
             const defectNormX = 0.65;
             const defectNormY = 0.45;
-            const dx = (x / bscanW) - defectNormX;
+            const dx = x / bscanW - defectNormX;
             const dy = normY - defectNormY;
             const distToDefect = Math.sqrt(dx * dx * 4 + dy * dy * 16);
             if (distToDefect < 0.08) {
               defectEcho = 255 * (1 - distToDefect / 0.08);
             }
           }
-          const beamCenter = mode === "sector"
-            ? 0.5 + Math.sin(angle * Math.PI / 180) * 0.3
-            : (0.5 + angle * 0.01);
-          const beamDist = Math.abs((x / bscanW) - beamCenter);
+          const beamCenter = mode === "sector" ? 0.5 + Math.sin((angle * Math.PI) / 180) * 0.3 : 0.5 + angle * 0.01;
+          const beamDist = Math.abs(x / bscanW - beamCenter);
           const beamIntensity = beamDist < 0.15 ? 1.2 : 0.8;
           const intensity = Math.min(255, (noise + surfaceEcho + wallEcho + defectEcho) * beamIntensity);
           data[idx] = intensity * 0.8;
@@ -93,7 +97,8 @@ export default function PAUTSim() {
       ctx.textAlign = "left";
       ctx.fillText("B-SCAN", bscanX + 4, bscanY + 10);
 
-      const bcx = W / 2, rad = (angle * Math.PI) / 180;
+      const bcx = W / 2,
+        rad = (angle * Math.PI) / 180;
       ctx.lineCap = "round";
 
       if (mode === "sector") {
@@ -102,7 +107,8 @@ export default function PAUTSim() {
           const isCenter = Math.abs(a - angle) < 2.5;
           ctx.strokeStyle = isCenter ? `${T.accent}CC` : `${T.accent}08`;
           ctx.lineWidth = isCenter ? 3 : 0.5;
-          ctx.beginPath(); ctx.moveTo(bcx, my);
+          ctx.beginPath();
+          ctx.moveTo(bcx, my);
           const scale = Math.min(1, mh / (Math.cos(r) * 200));
           ctx.lineTo(bcx + Math.sin(r) * 200 * scale, my + Math.cos(r) * 200 * scale);
           ctx.stroke();
@@ -125,35 +131,45 @@ export default function PAUTSim() {
         }
       }
 
+      const defectX = bcx + 30;
+      const defectY = my + mh * 0.45;
+
       if (defect) {
-        const bx = bcx + Math.sin(rad) * ((dy - my) / Math.cos(rad || 0.001));
-        const dist = Math.sqrt((bx - dx)**2);
+        const bx = bcx + Math.sin(rad) * ((defectY - my) / Math.cos(rad || 0.001));
+        const dist = Math.sqrt((bx - defectX) ** 2);
         if (dist < 40) {
-          const strength = 1 - (dist / 40);
+          const strength = 1 - dist / 40;
           ctx.fillStyle = `rgba(255, 77, 109, ${strength * 0.4})`;
-          ctx.beginPath(); ctx.arc(dx, dy, 20 * strength, 0, Math.PI * 2); ctx.fill();
+          ctx.beginPath();
+          ctx.arc(defectX, defectY, 20 * strength, 0, Math.PI * 2);
+          ctx.fill();
           ctx.font = `900 10px ${TECH_FONT}`;
           ctx.fillStyle = T.red;
           ctx.textAlign = "center";
-          ctx.fillText("SIGNAL ECHO", dx, dy - 18);
+          ctx.fillText("SIGNAL ECHO", defectX, defectY - 18);
           ctx.textAlign = "left";
         }
       }
 
-      ctx.font = `800 10px ${TECH_FONT}`; ctx.fillStyle = T.accent; ctx.fillText("PHASED ARRAY PROBE v4.2", px - 4, py - 10);
-      ctx.font = `600 9px ${MONO_FONT}`; ctx.fillStyle = T.dimText; ctx.fillText("SUBSTRATE: TI-6AL-4V (ALLOY)", 25, my + 15);
+      ctx.font = `800 10px ${TECH_FONT}`;
+      ctx.fillStyle = T.accent;
+      ctx.fillText("PHASED ARRAY PROBE v4.2", px - 4, py - 10);
+      ctx.font = `600 9px ${MONO_FONT}`;
+      ctx.fillStyle = T.dimText;
+      ctx.fillText("SUBSTRATE: TI-6AL-4V (ALLOY)", 25, my + 15);
       if (defect) {
         ctx.fillStyle = T.red;
         ctx.font = `800 9px ${TECH_FONT}`;
-        ctx.fillText("VOLUMETRIC FLAW DETECTED", dx - 60, dy + 20);
+        ctx.fillText("VOLUMETRIC FLAW DETECTED", defectX - 60, defectY + 20);
       }
     },
     [angle, focal, elems, freq, defect, mode],
-    { animate: true }
+    { animate: true },
   );
 
-  const buildPrompt = useCallback(() =>
-    `Phased Array Ultrasonic Testing (PAUT) simulation — current parameters:
+  const buildPrompt = useCallback(
+    () =>
+      `Phased Array Ultrasonic Testing (PAUT) simulation — current parameters:
 ROLE: "You are an expert in NDT ultrasonics. You have deep knowledge of DRDO, HEMRL, and Indian defense R&D programs."
 
 PARAMETERS (numbered):
@@ -169,27 +185,45 @@ ANALYSIS REQUEST:
 Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
 Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
 Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
-  [mode, angle, focal, elems, freq, res, defect]);
+    [mode, angle, focal, elems, freq, res, defect],
+  );
 
   return (
     <div>
       <SimCanvas canvasRef={canvasRef} width={380} height={240} maxWidth={380} />
       <PillRow>
-        <Pill active={mode === "sector"} onClick={() => setMode("sector")}>Sector</Pill>
-        <Pill active={mode === "linear"} onClick={() => setMode("linear")} color={T.gold}>Linear</Pill>
-        <Pill active={defect} onClick={() => setDefect(!defect)} color={T.red}>{defect ? "Defect ON" : "Defect OFF"}</Pill>
+        <Pill active={mode === "sector"} onClick={() => setMode("sector")}>
+          Sector
+        </Pill>
+        <Pill active={mode === "linear"} onClick={() => setMode("linear")} color={T.gold}>
+          Linear
+        </Pill>
+        <Pill active={defect} onClick={() => setDefect(!defect)} color={T.red}>
+          {defect ? "Defect ON" : "Defect OFF"}
+        </Pill>
       </PillRow>
       <Slider label="Beam Angle" value={angle} onChange={setAngle} min={-30} max={30} unit="°" color={T.accent} />
       <Slider label="Focal Depth" value={focal} onChange={setFocal} min={10} max={80} unit=" mm" color={T.orange} />
       <Slider label="Elements" value={elems} onChange={setElems} min={8} max={64} step={4} color={T.gold} />
-      <Slider label="Frequency" value={freq} onChange={setFreq} min={1} max={15} step={0.5} unit=" MHz" color={T.green} />
+      <Slider
+        label="Frequency"
+        value={freq}
+        onChange={setFreq}
+        min={1}
+        max={15}
+        step={0.5}
+        unit=" MHz"
+        color={T.green}
+      />
       <DataRow>
         <DataBox label="Elements" value={elems} color={T.gold} />
         <DataBox label="Freq" value={freq} unit="MHz" color={T.green} />
         <DataBox label="Resolution" value={res} unit="mm" color={T.accent} />
       </DataRow>
       <InfoBox>
-        <strong style={{ color: T.accent }}>PAUT:</strong> Electronic phasing steers beam without moving probe. {mode === "sector" ? "Sector scan sweeps angles." : "Linear scan shifts laterally."} {defect ? "Red echo = defect reflection!" : ""} Higher freq = finer resolution, less penetration.
+        <strong style={{ color: T.accent }}>PAUT:</strong> Electronic phasing steers beam without moving probe.{" "}
+        {mode === "sector" ? "Sector scan sweeps angles." : "Linear scan shifts laterally."}{" "}
+        {defect ? "Red echo = defect reflection!" : ""} Higher freq = finer resolution, less penetration.
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.green} />
       <ExportBtn simId="paut" getData={() => ({ mode, angle, focal, elems, freq, defect, res })} color={T.green} />

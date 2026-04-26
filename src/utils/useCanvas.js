@@ -3,10 +3,20 @@
 // HiDPI-aware + optional continuous animation
 // ═══════════════════════════════════════
 
-import { useRef, useEffect, useCallback } from "react";
+import { useRef, useEffect } from "react";
 
 /**
- * @param {Function} draw - (ctx, W, H) => void — drawing function
+ * Deterministic pseudo-random number [0, 1) from a frame seed + index.
+ * Same seed+index → same number every frame, so particles don't flicker.
+ * @param {number} seed  - typically the frameCount
+ * @param {number} index - per-call unique offset (loop index, etc.)
+ */
+export function prng(seed, index) {
+  return ((Math.sin(seed * 0.37 + index * 7.13) + 1) * 43758.5453) % 1;
+}
+
+/**
+ * @param {Function} draw - (ctx, W, H, frameCount) => void — drawing function
  * @param {Array} deps - React dependency array for redraws
  * @param {Object} opts - { animate: boolean } — if true, runs rAF loop
  */
@@ -41,11 +51,12 @@ export function useCanvas(draw, deps, opts = {}) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
     };
 
-    const render = () => {
+    let frameCount = 0;
+    const render = (fc = 0) => {
       ctx.save();
       ctx.scale(dpr, dpr);
       ctx.clearRect(0, 0, cssW, cssH);
-      drawRef.current(ctx, cssW, cssH);
+      drawRef.current(ctx, cssW, cssH, fc);
       ctx.restore();
     };
 
@@ -54,28 +65,35 @@ export function useCanvas(draw, deps, opts = {}) {
     const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
     if (opts.animate && !prefersReduced) {
       const loop = () => {
-        render();
+        frameCount++;
+        render(frameCount);
         animRef.current = requestAnimationFrame(loop);
       };
       animRef.current = requestAnimationFrame(loop);
     } else {
-      render();
+      render(0);
     }
 
-    const observer = typeof ResizeObserver !== "undefined" ? new ResizeObserver(() => {
-      resize();
-      render();
-    }) : null;
+    const observer =
+      typeof ResizeObserver !== "undefined"
+        ? new ResizeObserver(() => {
+            resize();
+            render();
+          })
+        : null;
 
-    const themeObserver = typeof MutationObserver !== "undefined" ? new MutationObserver((records) => {
-      for (const record of records) {
-        if (record.attributeName === "data-theme") {
-          resize();
-          render();
-          break;
-        }
-      }
-    }) : null;
+    const themeObserver =
+      typeof MutationObserver !== "undefined"
+        ? new MutationObserver((records) => {
+            for (const record of records) {
+              if (record.attributeName === "data-theme") {
+                resize();
+                render();
+                break;
+              }
+            }
+          })
+        : null;
 
     if (observer) observer.observe(c);
     if (themeObserver) themeObserver.observe(document.body, { attributes: true });

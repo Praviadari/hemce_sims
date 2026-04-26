@@ -1,0 +1,45 @@
+﻿
+D:\desktop\Web Development\hemce-sims\src\App.jsx
+  7:10  warning  'SimSkeleton' is defined but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\sims\ExplosiveDetectionSim.jsx
+   70:11  warning  'cx' is assigned a value but never used. Allowed unused vars must match /^_/u     unused-imports/no-unused-vars
+  139:13  warning  'rSize' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\sims\GreenPropellantSim.jsx
+  24:37  warning  'frameCount' is defined but never used. Allowed unused args must match /^_/u  unused-imports/no-unused-vars
+  33:38  warning  'i' is defined but never used. Allowed unused args must match /^_/u           unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\sims\HybridRocketSim.jsx
+   9:9   warning  'ivRef' is assigned a value but never used. Allowed unused vars must match /^_/u      unused-imports/no-unused-vars
+  67:11  warning  'regOffset' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\sims\PAUTSim.jsx
+  128:44  error  'dy' is not defined  no-undef
+  129:38  error  'dx' is not defined  no-undef
+  133:36  error  'dx' is not defined  no-undef
+  133:40  error  'dy' is not defined  no-undef
+  137:39  error  'dx' is not defined  no-undef
+  137:43  error  'dy' is not defined  no-undef
+  147:50  error  'dx' is not defined  no-undef
+  147:59  error  'dy' is not defined  no-undef
+
+D:\desktop\Web Development\hemce-sims\src\sims\PressureVesselSim.jsx
+  21:37  warning  'p' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\sims\PropellantChemistrySim.jsx
+  29:11  warning  'cx' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  29:20  warning  'cy' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+  29:32  warning  'r' is assigned a value but never used. Allowed unused vars must match /^_/u   unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\sims\ScramjetSim.jsx
+  11:41  warning  'T_atm' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\sims\ShapedChargeSim.jsx
+  207:9  warning  'reset' is assigned a value but never used. Allowed unused vars must match /^_/u  unused-imports/no-unused-vars
+
+D:\desktop\Web Development\hemce-sims\src\utils\haptics.js
+  9:14  warning  'e' is defined but never used  unused-imports/no-unused-vars
+
+Γ£û 22 problems (8 errors, 14 warnings)
+

@@ -73,12 +73,15 @@ export function getCanvasTheme(themeKey = getCurrentThemeKey()) {
   };
 }
 
-export const T = new Proxy({}, {
-  get(_, prop) {
-    const theme = THEMES[getCurrentThemeKey()];
-    return theme[prop];
+export const T = new Proxy(
+  {},
+  {
+    get(_, prop) {
+      const theme = THEMES[getCurrentThemeKey()];
+      return theme[prop];
+    },
   },
-});
+);
 
 export const FONT = "'Outfit', sans-serif";
 export const TECH_FONT = "'Orbitron', sans-serif";

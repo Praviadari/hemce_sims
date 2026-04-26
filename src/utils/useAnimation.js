@@ -9,6 +9,16 @@ export function useAnimation(running, duration, onTick, onEnd) {
 
   useEffect(() => {
     if (!running) return;
+
+    // WCAG 2.1 SC 2.3.3: respect reduced motion preference
+    const prefersReduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    if (prefersReduced) {
+      // Skip animation — jump to end state immediately
+      onTick(duration);
+      onEnd?.();
+      return;
+    }
+
     const start = performance.now();
     const tick = (now) => {
       const elapsed = (now - start) / 1000;

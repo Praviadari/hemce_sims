@@ -1,7 +1,5 @@
-import React, { useState, useEffect, Suspense, useRef } from "react";
-import { Analytics } from "@vercel/analytics/react";
+import { useState, useEffect, useRef } from "react";
 import { THEMES, FONT, TECH_FONT } from "./utils";
-import { Pill, ErrorBoundary } from "./components";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
 import "./styles/global.css";
 
@@ -60,10 +58,7 @@ export default function App() {
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
-  const filtered =
-    catFilter === "all"
-      ? SIM_REGISTRY
-      : SIM_REGISTRY.filter((s) => s.cat === catFilter);
+  const filtered = catFilter === "all" ? SIM_REGISTRY : SIM_REGISTRY.filter((s) => s.cat === catFilter);
 
   const active = SIM_REGISTRY.find((s) => s.id === activeSim);
   const ActiveComp = active?.comp;
@@ -125,30 +120,57 @@ export default function App() {
       }}
     >
       {/* Decorative blobs */}
-      <div style={{
-        position: "fixed", top: "-10%", left: "-10%",
-        width: "40%", height: "40%",
-        background: `${currentTheme.accent}08`, filter: "blur(100px)",
-        borderRadius: "50%", pointerEvents: "none", zIndex: 0,
-      }} />
-      <div style={{
-        position: "fixed", bottom: "10%", right: "-10%",
-        width: "30%", height: "30%",
-        background: `${currentTheme.pink}05`, filter: "blur(80px)",
-        borderRadius: "50%", pointerEvents: "none", zIndex: 0,
-      }} />
+      <div
+        style={{
+          position: "fixed",
+          top: "-10%",
+          left: "-10%",
+          width: "40%",
+          height: "40%",
+          background: `${currentTheme.accent}08`,
+          filter: "blur(100px)",
+          borderRadius: "50%",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
+      <div
+        style={{
+          position: "fixed",
+          bottom: "10%",
+          right: "-10%",
+          width: "30%",
+          height: "30%",
+          background: `${currentTheme.pink}05`,
+          filter: "blur(80px)",
+          borderRadius: "50%",
+          pointerEvents: "none",
+          zIndex: 0,
+        }}
+      />
 
       {/* Skip-to-content for keyboard users */}
       <a
         href="#active-sim"
         style={{
-          position: "absolute", top: -40, left: 8, zIndex: 100,
-          background: currentTheme.accent, color: currentTheme.bg, padding: "6px 12px",
-          borderRadius: 6, fontSize: 12, fontWeight: 700,
+          position: "absolute",
+          top: -40,
+          left: 8,
+          zIndex: 100,
+          background: currentTheme.accent,
+          color: currentTheme.bg,
+          padding: "6px 12px",
+          borderRadius: 6,
+          fontSize: 12,
+          fontWeight: 700,
           transition: "top 0.2s",
         }}
-        onFocus={(e) => { e.currentTarget.style.top = "8px"; }}
-        onBlur={(e) => { e.currentTarget.style.top = "-40px"; }}
+        onFocus={(e) => {
+          e.currentTarget.style.top = "8px";
+        }}
+        onBlur={(e) => {
+          e.currentTarget.style.top = "-40px";
+        }}
       >
         Skip to simulation
       </a>
@@ -163,9 +185,13 @@ export default function App() {
               background: currentTheme.glass,
               border: `1px solid ${currentTheme.glassBorder}`,
               color: currentTheme.accent,
-              padding: "5px 10px", borderRadius: 8,
-              fontFamily: TECH_FONT, fontSize: 8, fontWeight: 800,
-              cursor: "pointer", touchAction: "manipulation",
+              padding: "5px 10px",
+              borderRadius: 8,
+              fontFamily: TECH_FONT,
+              fontSize: 8,
+              fontWeight: 800,
+              cursor: "pointer",
+              touchAction: "manipulation",
               letterSpacing: 1,
             }}
           >
@@ -176,12 +202,16 @@ export default function App() {
               type="button"
               onClick={() => setCompareMode((prev) => !prev)}
               style={{
-                padding: "6px 12px", borderRadius: 8,
+                padding: "6px 12px",
+                borderRadius: 8,
                 border: `1px solid ${currentTheme.glassBorder}`,
                 background: compareMode ? `${currentTheme.accent}20` : currentTheme.glass,
                 color: compareMode ? currentTheme.accent : currentTheme.gray,
-                fontFamily: TECH_FONT, fontSize: 9, fontWeight: 700,
-                cursor: "pointer", letterSpacing: 1,
+                fontFamily: TECH_FONT,
+                fontSize: 9,
+                fontWeight: 700,
+                cursor: "pointer",
+                letterSpacing: 1,
               }}
             >
               {compareMode ? "✕ SINGLE" : "⇄ COMPARE"}
@@ -194,46 +224,59 @@ export default function App() {
               background: exhibition ? `${currentTheme.red}20` : currentTheme.glass,
               border: `1px solid ${exhibition ? currentTheme.red : currentTheme.glassBorder}`,
               color: exhibition ? currentTheme.red : currentTheme.gray,
-              padding: "5px 10px", borderRadius: 8,
-              fontFamily: TECH_FONT, fontSize: 8, fontWeight: 800,
-              cursor: "pointer", touchAction: "manipulation",
+              padding: "5px 10px",
+              borderRadius: 8,
+              fontFamily: TECH_FONT,
+              fontSize: 8,
+              fontWeight: 800,
+              cursor: "pointer",
+              touchAction: "manipulation",
               letterSpacing: 1,
             }}
           >
             {exhibition ? "EXIT EXHIBIT MODE" : "ENTER EXHIBIT MODE"}
           </button>
         </div>
-        <div style={{
-          fontSize: "clamp(8px, 2.5vw, 11px)",
-          color: currentTheme.accent,
-          letterSpacing: 3,
-          fontWeight: 800,
-          textTransform: "uppercase",
-          textShadow: `0 0 10px ${currentTheme.accent}30`,
-        }}>
+        <div
+          style={{
+            fontSize: "clamp(8px, 2.5vw, 11px)",
+            color: currentTheme.accent,
+            letterSpacing: 3,
+            fontWeight: 800,
+            textTransform: "uppercase",
+            textShadow: `0 0 10px ${currentTheme.accent}30`,
+          }}
+        >
           HEMCE-2026 • 15TH INTERNATIONAL CONFERENCE & EXHIBITS
         </div>
-        <div style={{
-          fontSize: "clamp(18px, 5.5vw, 28px)",
-          fontWeight: 900,
-          color: currentTheme.white,
-          fontFamily: TECH_FONT,
-          letterSpacing: 1,
-          marginTop: 5,
-          background: `linear-gradient(to bottom, #fff, ${currentTheme.gray})`,
-          WebkitBackgroundClip: "text",
-          WebkitTextFillColor: "transparent",
-        }}>
+        <div
+          style={{
+            fontSize: "clamp(18px, 5.5vw, 28px)",
+            fontWeight: 900,
+            color: currentTheme.white,
+            fontFamily: TECH_FONT,
+            letterSpacing: 1,
+            marginTop: 5,
+            background: `linear-gradient(to bottom, #fff, ${currentTheme.gray})`,
+            WebkitBackgroundClip: "text",
+            WebkitTextFillColor: "transparent",
+          }}
+        >
           SIMULATION HUB
         </div>
-        <div style={{
-          width: 44, height: 3,
-          background: `linear-gradient(90deg, ${currentTheme.accent}, ${currentTheme.pink})`,
-          margin: "10px auto 0",
-          borderRadius: 2,
-          boxShadow: `0 0 10px ${currentTheme.accent}40`,
-        }} />
-        <div style={{ fontSize: "clamp(8px, 2.2vw, 10px)", color: currentTheme.dimText, marginTop: 6, fontWeight: 500 }}>
+        <div
+          style={{
+            width: 44,
+            height: 3,
+            background: `linear-gradient(90deg, ${currentTheme.accent}, ${currentTheme.pink})`,
+            margin: "10px auto 0",
+            borderRadius: 2,
+            boxShadow: `0 0 10px ${currentTheme.accent}40`,
+          }}
+        />
+        <div
+          style={{ fontSize: "clamp(8px, 2.2vw, 10px)", color: currentTheme.dimText, marginTop: 6, fontWeight: 500 }}
+        >
           ORGANISED BY HEMSI IN ASSOCIATION WITH DRDO & ISRO
         </div>
       </header>
@@ -253,7 +296,13 @@ export default function App() {
         }}
       >
         {CATEGORIES.map((c) => (
-          <Pill key={c.id} active={catFilter === c.id} onClick={() => setCatFilter(c.id)} color={c.color} label={`Filter: ${c.label}`}>
+          <Pill
+            key={c.id}
+            active={catFilter === c.id}
+            onClick={() => setCatFilter(c.id)}
+            color={c.color}
+            label={`Filter: ${c.label}`}
+          >
             {c.label}
           </Pill>
         ))}
@@ -303,15 +352,23 @@ export default function App() {
               WebkitTapHighlightColor: "transparent",
               minHeight: 72,
             }}
-            onTouchStart={(e) => { if (activeSim !== s.id) e.currentTarget.style.opacity = "0.75"; }}
-            onTouchEnd={(e) => { e.currentTarget.style.opacity = "1"; }}
+            onTouchStart={(e) => {
+              if (activeSim !== s.id) e.currentTarget.style.opacity = "0.75";
+            }}
+            onTouchEnd={(e) => {
+              e.currentTarget.style.opacity = "1";
+            }}
           >
-            <div style={{
-              fontSize: 22,
-              marginBottom: 2,
-              filter: activeSim === s.id ? `drop-shadow(0 0 8px ${s.color}60)` : "grayscale(0.4)",
-              transition: "all .25s",
-            }}>{s.icon}</div>
+            <div
+              style={{
+                fontSize: 22,
+                marginBottom: 2,
+                filter: activeSim === s.id ? `drop-shadow(0 0 8px ${s.color}60)` : "grayscale(0.4)",
+                transition: "all .25s",
+              }}
+            >
+              {s.icon}
+            </div>
             <div style={{ lineHeight: 1.2, fontSize: "clamp(9px, 2.5vw, 11px)" }}>{s.label}</div>
           </button>
         ))}
@@ -335,23 +392,25 @@ export default function App() {
           }}
         >
           {/* Panel header */}
-          <div style={{
-            fontSize: "clamp(13px, 3.5vw, 17px)",
-            fontWeight: 900,
-            color: currentTheme.white,
-            fontFamily: TECH_FONT,
-            marginBottom: 14,
-            display: "flex",
-            alignItems: "center",
-            gap: 10,
-            borderBottom: `1px solid ${active.color}20`,
-            paddingBottom: 10,
-          }}>
-            <span style={{ fontSize: 26, filter: `drop-shadow(0 0 10px ${active.color}80)` }}>
-              {active.icon}
-            </span>
+          <div
+            style={{
+              fontSize: "clamp(13px, 3.5vw, 17px)",
+              fontWeight: 900,
+              color: currentTheme.white,
+              fontFamily: TECH_FONT,
+              marginBottom: 14,
+              display: "flex",
+              alignItems: "center",
+              gap: 10,
+              borderBottom: `1px solid ${active.color}20`,
+              paddingBottom: 10,
+            }}
+          >
+            <span style={{ fontSize: 26, filter: `drop-shadow(0 0 10px ${active.color}80)` }}>{active.icon}</span>
             <div style={{ display: "flex", flexDirection: "column" }}>
-              <span style={{ fontSize: "clamp(8px, 2vw, 10px)", color: active.color, letterSpacing: 2, fontWeight: 800 }}>
+              <span
+                style={{ fontSize: "clamp(8px, 2vw, 10px)", color: active.color, letterSpacing: 2, fontWeight: 800 }}
+              >
                 ACTIVE SIMULATION
               </span>
               {active.label}
@@ -360,15 +419,45 @@ export default function App() {
           <ErrorBoundary color={active.color}>
             <Suspense fallback={<SimSkeleton color={active.color} />}>
               {compareMode ? (
-                <div style={{ display: "grid", gridTemplateColumns: typeof window !== "undefined" && window.innerWidth < 600 ? "1fr" : "1fr 1fr", gap: 12 }}>
-                  <div style={{ borderRight: typeof window !== "undefined" && window.innerWidth < 600 ? "none" : `1px solid ${currentTheme.glassBorder}`, paddingRight: 8 }}>
-                    <div style={{ fontSize: 9, color: currentTheme.accent, fontFamily: TECH_FONT, marginBottom: 6, textAlign: "center" }}>
+                <div
+                  style={{
+                    display: "grid",
+                    gridTemplateColumns: typeof window !== "undefined" && window.innerWidth < 600 ? "1fr" : "1fr 1fr",
+                    gap: 12,
+                  }}
+                >
+                  <div
+                    style={{
+                      borderRight:
+                        typeof window !== "undefined" && window.innerWidth < 600
+                          ? "none"
+                          : `1px solid ${currentTheme.glassBorder}`,
+                      paddingRight: 8,
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 9,
+                        color: currentTheme.accent,
+                        fontFamily: TECH_FONT,
+                        marginBottom: 6,
+                        textAlign: "center",
+                      }}
+                    >
                       CONFIG A
                     </div>
                     <ActiveComp key={`${activeSim}-a`} />
                   </div>
                   <div style={{ paddingLeft: 8 }}>
-                    <div style={{ fontSize: 9, color: currentTheme.green, fontFamily: TECH_FONT, marginBottom: 6, textAlign: "center" }}>
+                    <div
+                      style={{
+                        fontSize: 9,
+                        color: currentTheme.green,
+                        fontFamily: TECH_FONT,
+                        marginBottom: 6,
+                        textAlign: "center",
+                      }}
+                    >
                       CONFIG B
                     </div>
                     <ActiveComp key={`${activeSim}-b`} />
@@ -384,14 +473,16 @@ export default function App() {
 
       {/* Topic tags */}
       {active && (
-        <div style={{
-          marginTop: 10,
-          display: "flex",
-          gap: 6,
-          flexWrap: "wrap",
-          position: "relative",
-          zIndex: 1,
-        }}>
+        <div
+          style={{
+            marginTop: 10,
+            display: "flex",
+            gap: 6,
+            flexWrap: "wrap",
+            position: "relative",
+            zIndex: 1,
+          }}
+        >
           {active.tags.map((t) => (
             <span
               key={t}
@@ -414,63 +505,102 @@ export default function App() {
       )}
 
       {/* About TSPL */}
-      <div style={{
-        marginTop: 40,
-        padding: "24px 16px",
-        borderRadius: 16,
-        background: `linear-gradient(135deg, ${currentTheme.card}, ${currentTheme.bg})`,
-        border: `1px solid ${currentTheme.glassBorder}`,
-        position: "relative",
-        zIndex: 1,
-        textAlign: "center"
-      }}>
-        <div style={{ color: currentTheme.accent, fontFamily: TECH_FONT, fontSize: 11, fontWeight: 800, letterSpacing: 2, marginBottom: 8 }}>
+      <div
+        style={{
+          marginTop: 40,
+          padding: "24px 16px",
+          borderRadius: 16,
+          background: `linear-gradient(135deg, ${currentTheme.card}, ${currentTheme.bg})`,
+          border: `1px solid ${currentTheme.glassBorder}`,
+          position: "relative",
+          zIndex: 1,
+          textAlign: "center",
+        }}
+      >
+        <div
+          style={{
+            color: currentTheme.accent,
+            fontFamily: TECH_FONT,
+            fontSize: 11,
+            fontWeight: 800,
+            letterSpacing: 2,
+            marginBottom: 8,
+          }}
+        >
           TECHNOLOGY PARTNER
         </div>
         <div style={{ color: currentTheme.white, fontSize: 16, fontWeight: 700, marginBottom: 14 }}>
           Thermal Systems Hyderabad Pvt. Ltd. (TSPL)
         </div>
-        <p style={{ color: currentTheme.gray, fontSize: 12, lineHeight: 1.6, maxWidth: 600, margin: "0 auto", marginBottom: 16 }}>
-          With nearly four decades of expertise, TSPL is a global leader in designing, engineering, and delivering turnkey Waste Heat Recovery Solutions. Having successfully executed over 400+ projects across 40 countries, they specialize in high-energy thermal management and complex boilers for the world's most demanding continuous process operations.
+        <p
+          style={{
+            color: currentTheme.gray,
+            fontSize: 12,
+            lineHeight: 1.6,
+            maxWidth: 600,
+            margin: "0 auto",
+            marginBottom: 16,
+          }}
+        >
+          With nearly four decades of expertise, TSPL is a global leader in designing, engineering, and delivering
+          turnkey Waste Heat Recovery Solutions. Having successfully executed over 400+ projects across 40 countries,
+          they specialize in high-energy thermal management and complex boilers for the world's most demanding
+          continuous process operations.
         </p>
-        <a href="https://www.thermalindia.com" target="_blank" rel="noopener noreferrer" style={{
-          display: "inline-block",
-          padding: "8px 16px",
-          borderRadius: 20,
-          background: `${currentTheme.accent}15`,
-          border: `1px solid ${currentTheme.accent}40`,
-          color: currentTheme.accent,
-          fontFamily: TECH_FONT,
-          fontSize: 10,
-          fontWeight: 700,
-          textDecoration: "none",
-          letterSpacing: 1
-        }}>
+        <a
+          href="https://www.thermalindia.com"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{
+            display: "inline-block",
+            padding: "8px 16px",
+            borderRadius: 20,
+            background: `${currentTheme.accent}15`,
+            border: `1px solid ${currentTheme.accent}40`,
+            color: currentTheme.accent,
+            fontFamily: TECH_FONT,
+            fontSize: 10,
+            fontWeight: 700,
+            textDecoration: "none",
+            letterSpacing: 1,
+          }}
+        >
           EXPLORE THERMALINDIA.COM
         </a>
       </div>
 
       {/* Footer */}
-      <div style={{
-        textAlign: "center",
-        marginTop: 28,
-        fontSize: "clamp(8px, 2.2vw, 10px)",
-        color: currentTheme.dimText,
-        lineHeight: 1.9,
-        position: "relative",
-        zIndex: 1,
-      }}>
-        <div style={{
-          background: `linear-gradient(90deg, transparent, ${currentTheme.dimText}40, transparent)`,
-          height: 1, width: "100%", marginBottom: 14,
-        }} />
+      <div
+        style={{
+          textAlign: "center",
+          marginTop: 28,
+          fontSize: "clamp(8px, 2.2vw, 10px)",
+          color: currentTheme.dimText,
+          lineHeight: 1.9,
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        <div
+          style={{
+            background: `linear-gradient(90deg, transparent, ${currentTheme.dimText}40, transparent)`,
+            height: 1,
+            width: "100%",
+            marginBottom: 14,
+          }}
+        />
         SCAN QR AT BOOTH • INTERACT ON MOBILE
         <br />
         <strong style={{ color: currentTheme.gray }}>HEMCE-2026</strong> • APRIL 29 – MAY 1, 2026
         <br />
         LEONIA HOLISTIC DESTINATION • SHAMIRPET, HYDERABAD
         <br />
-        <a href="https://www.hemsindia.co.in/hemce2026" target="_blank" rel="noopener noreferrer" style={{ color: currentTheme.accent, textDecoration: "none", marginTop: 4, display: "inline-block" }}>
+        <a
+          href="https://www.hemsindia.co.in/hemce2026"
+          target="_blank"
+          rel="noopener noreferrer"
+          style={{ color: currentTheme.accent, textDecoration: "none", marginTop: 4, display: "inline-block" }}
+        >
           WWW.HEMSINDIA.CO.IN/HEMCE2026
         </a>
       </div>

@@ -69,10 +69,18 @@ export function AIInsight({ buildPrompt, color = T.accent }) {
           type="button"
           onClick={() => askAI("https://gemini.google.com/app")}
           style={buttonStyle}
-          onTouchStart={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
-          onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-          onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
-          onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.transform = "scale(0.98)";
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = "scale(0.98)";
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+          }}
         >
           ✦ ASK GEMINI AI
         </button>
@@ -81,10 +89,18 @@ export function AIInsight({ buildPrompt, color = T.accent }) {
           type="button"
           onClick={() => askAI("https://chatgpt.com")}
           style={chatGptStyle}
-          onTouchStart={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
-          onTouchEnd={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
-          onMouseDown={(e) => { e.currentTarget.style.transform = "scale(0.98)"; }}
-          onMouseUp={(e) => { e.currentTarget.style.transform = "scale(1)"; }}
+          onTouchStart={(e) => {
+            e.currentTarget.style.transform = "scale(0.98)";
+          }}
+          onTouchEnd={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+          }}
+          onMouseDown={(e) => {
+            e.currentTarget.style.transform = "scale(0.98)";
+          }}
+          onMouseUp={(e) => {
+            e.currentTarget.style.transform = "scale(1)";
+          }}
         >
           ✦ ASK CHATGPT
         </button>
@@ -117,33 +133,37 @@ export function AIInsight({ buildPrompt, color = T.accent }) {
       </button>
 
       {showPreview && (
-        <pre style={{
-          marginTop: 10,
-          padding: 12,
-          borderRadius: 12,
-          background: T.glass,
-          fontFamily: MONO_FONT,
-          fontSize: 10,
-          color: T.dimText,
-          lineHeight: 1.4,
-          maxHeight: 120,
-          overflow: "auto",
-          whiteSpace: "pre-wrap",
-          wordBreak: "break-word",
-          border: `1px solid ${T.dimText}10`,
-        }}>
+        <pre
+          style={{
+            marginTop: 10,
+            padding: 12,
+            borderRadius: 12,
+            background: T.glass,
+            fontFamily: MONO_FONT,
+            fontSize: 10,
+            color: T.dimText,
+            lineHeight: 1.4,
+            maxHeight: 120,
+            overflow: "auto",
+            whiteSpace: "pre-wrap",
+            wordBreak: "break-word",
+            border: `1px solid ${T.dimText}10`,
+          }}
+        >
           {buildPrompt()}
         </pre>
       )}
 
       {copied && (
-        <ol style={{
-          marginTop: 8,
-          paddingLeft: 18,
-          fontSize: 10,
-          color: T.dimText,
-          lineHeight: 1.4,
-        }}>
+        <ol
+          style={{
+            marginTop: 8,
+            paddingLeft: 18,
+            fontSize: 10,
+            color: T.dimText,
+            lineHeight: 1.4,
+          }}
+        >
           <li>Switch to the AI tab that just opened.</li>
           <li>Paste your prompt (Ctrl+V or ⌘+V).</li>
           <li>Read the expert analysis.</li>
