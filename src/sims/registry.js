@@ -19,8 +19,11 @@ const AdditiveManufacturingSim = lazy(() => import("./AdditiveManufacturingSim")
 const GreenPropellantSim = lazy(() => import("./GreenPropellantSim"));
 const CookOffTestSim = lazy(() => import("./CookOffTestSim"));
 const ShapedChargeSim = lazy(() => import("./ShapedChargeSim"));
+const ThermobaricSim = lazy(() => import("./ThermobaricSim"));
 const ReactiveArmorSim = lazy(() => import("./ReactiveArmorSim"));
 const CombustionDiagnosticsSim = lazy(() => import("./CombustionDiagnosticsSim"));
+const CocrystalSim = lazy(() => import("./CocrystalSim"));
+const CombustionInstabilitySim = lazy(() => import("./CombustionInstabilitySim"));
 
 export const SIM_REGISTRY = [
   {
@@ -52,12 +55,12 @@ export const SIM_REGISTRY = [
   },
   {
     id: "scramjet",
-    icon: "✈",
-    label: "Scramjet",
+    icon: "☄️",
+    label: "Scramjet/Ramjet",
     cat: "propulsion",
     color: T.cyan,
     comp: ScramjetSim,
-    tags: ["ramjet", "scramjet", "hypersonic"],
+    tags: ["hypersonic", "scramjet", "ramjet", "irrt", "air-breathing", "propulsion", "mach"],
   },
   {
     id: "detonation",
@@ -141,6 +144,15 @@ export const SIM_REGISTRY = [
     tags: ["shaped charge", "EFP", "warhead", "Munroe effect"],
   },
   {
+    id: "thermobaric",
+    icon: "🔥",
+    label: "Thermobaric",
+    cat: "detonics",
+    color: T.red,
+    comp: ThermobaricSim,
+    tags: ["thermobaric", "FAE", "fuel-air", "TBX", "Klapotke"],
+  },
+  {
     id: "armor",
     icon: "🛡",
     label: "Reactive Armor",
@@ -157,6 +169,24 @@ export const SIM_REGISTRY = [
     color: T.cyan,
     comp: CombustionDiagnosticsSim,
     tags: ["diagnostics", "pyrometry", "spectroscopy", "combustion"],
+  },
+  {
+    id: "instability",
+    icon: "〰️",
+    label: "Combustion Instab.",
+    cat: "testing",
+    color: T.orange,
+    comp: CombustionInstabilitySim,
+    tags: ["instability", "acoustic", "combustion", "stability", "baffles"],
+  },
+  {
+    id: "cocrystal",
+    icon: "💎",
+    label: "HEM Cocrystals",
+    cat: "materials",
+    color: T.purple,
+    comp: CocrystalSim,
+    tags: ["cocrystal", "CL-20", "insensitive munitions", "disruptive"],
   },
 ];
 

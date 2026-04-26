@@ -9,6 +9,8 @@ export default function DetonationSim() {
   const [charge, setCharge] = useState(5);
   const [distance, setDistance] = useState(20);
   const [heMat, setHeMat] = useState("tnt");
+  const [barrier, setBarrier] = useState("none"); // "none" | "sandbag" | "concrete" | "aqueous_foam" | "composite"
+  const [application, setApplication] = useState("openfield"); // "openfield" | "shaped_charge" | "efp" | "mining" | "demolition"
   const animRef = useRef(null);
   const vod = { tnt: 6900, rdx: 8750, cl20: 9380, hmx: 9100 }[heMat];
   const reF = { tnt: 1.0, rdx: 1.6, cl20: 2.0, hmx: 1.7 }[heMat];
@@ -18,7 +20,19 @@ export default function DetonationSim() {
   let peakOP = Math.pow(10, 2.78 - 1.6 * logZ - 0.198 * logZ * logZ);
   if (scaledDist < 0.5) peakOP = 500;
   if (scaledDist > 40) peakOP = 0.001;
+
+  const appData = {
+    openfield: { factor: 1.0, desc: "Unconfined detonation — standard Kingery-Bulmash" },
+    shaped_charge: { factor: 0.3, desc: "Energy focused into jet — 70% less blast, high penetration" },
+    efp: { factor: 0.5, desc: "Explosively Formed Penetrator — moderate blast + projectile" },
+    mining: { factor: 1.2, desc: "Confined blast — 20% amplification from rock reflection" },
+    demolition: { factor: 0.8, desc: "Controlled demo — shaped charges reduce collateral blast" },
+  };
+
+  peakOP = peakOP * appData[application].factor;
   const peakOPDisplay = peakOP.toFixed(2);
+  const attenuation = { none: 1.0, sandbag: 0.55, concrete: 0.30, aqueous_foam: 0.40, composite: 0.20 };
+  const mitigatedOP = (Number(peakOP) * attenuation[barrier]).toFixed(2);
   const impulse = (((0.067 * Math.pow(Number(tntEq), 2 / 3)) / distance) * 1000).toFixed(0);
   const arrivalMs = ((distance / (340 + peakOP * 100)) * 1000).toFixed(0);
   const progress = Math.min(time / 2, 1);
@@ -88,6 +102,20 @@ export default function DetonationSim() {
       }
 
       const tgt = Math.min(cx + distance * 3, W - 30);
+      
+      const barrierX = cx + distance * 1.5;
+      if (barrier !== "none") {
+        const barrierColor = { sandbag: "#8B7355", concrete: "#808080", aqueous_foam: T.cyan, composite: T.green }[barrier];
+        ctx.fillStyle = barrierColor;
+        ctx.globalAlpha = 0.7;
+        ctx.fillRect(barrierX - 5, cy - 30, 10, 60);
+        ctx.globalAlpha = 1;
+        ctx.font = `600 7px ${TECH_FONT}`;
+        ctx.fillStyle = T.dimText;
+        ctx.textAlign = "center";
+        ctx.fillText(barrier.toUpperCase().replace("_", " "), barrierX, cy + 40);
+      }
+
       ctx.strokeStyle = T.green;
       ctx.setLineDash([5, 5]);
       ctx.lineWidth = 1;
@@ -110,7 +138,7 @@ export default function DetonationSim() {
         ctx.fillText("IMPACT", tgt - 20, cy - 15);
       }
     },
-    [running, time, charge, distance, heMat, progress],
+    [running, time, charge, distance, heMat, progress, barrier],
   );
 
   const profileRef = useCanvas(
@@ -216,14 +244,22 @@ PARAMETERS (numbered):
 7. Peak overpressure at standoff: ${peakOPDisplay} bar
 8. Impulse: ${impulse} kPa·ms
 9. Arrival time: ${arrivalMs} ms
+10. Barrier type: ${barrier}
+11. Mitigated overpressure: ${mitigatedOP} bar
+12. Application context: ${application}
 
 ANALYSIS REQUEST:
 Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
 Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
 Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?
 Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
-    [heMat, charge, tntEq, distance, vod, scaledDist, peakOPDisplay, impulse, arrivalMs, related],
+    [heMat, charge, tntEq, distance, vod, scaledDist, peakOPDisplay, impulse, arrivalMs, related, barrier, mitigatedOP, application],
   );
+
+  const unClass = Number(peakOP) > 2 ? "1.1 Mass Explosion" :
+                  Number(peakOP) > 0.35 ? "1.2 Projection Hazard" :
+                  Number(peakOP) > 0.07 ? "1.3 Fire Hazard" : "1.4 Minor Hazard";
+  const unColor = Number(peakOP) > 2 ? T.red : Number(peakOP) > 0.35 ? T.orange : T.gold;
 
   return (
     <div>
@@ -271,6 +307,23 @@ Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
           CL-20
         </Pill>
       </PillRow>
+      <PillRow>
+        <Pill active={application === "openfield"} onClick={() => setApplication("openfield")} color={T.orange}>Open Field</Pill>
+        <Pill active={application === "shaped_charge"} onClick={() => setApplication("shaped_charge")} color={T.red}>Shaped Charge</Pill>
+        <Pill active={application === "efp"} onClick={() => setApplication("efp")} color={T.gold}>EFP</Pill>
+        <Pill active={application === "mining"} onClick={() => setApplication("mining")} color={T.green}>Mining</Pill>
+        <Pill active={application === "demolition"} onClick={() => setApplication("demolition")} color={T.gray}>Demolition</Pill>
+      </PillRow>
+      <div style={{ fontSize: 10, color: T.dimText, marginTop: 4, marginBottom: 12, fontStyle: "italic", textAlign: "center" }}>
+        {appData[application].desc}
+      </div>
+      <PillRow>
+        <Pill active={barrier === "none"} onClick={() => setBarrier("none")} color={T.red}>No Barrier</Pill>
+        <Pill active={barrier === "sandbag"} onClick={() => setBarrier("sandbag")} color={T.gold}>Sandbag</Pill>
+        <Pill active={barrier === "concrete"} onClick={() => setBarrier("concrete")} color={T.gray}>Concrete</Pill>
+        <Pill active={barrier === "aqueous_foam"} onClick={() => setBarrier("aqueous_foam")} color={T.cyan}>Aqueous Foam</Pill>
+        <Pill active={barrier === "composite"} onClick={() => setBarrier("composite")} color={T.green}>Composite</Pill>
+      </PillRow>
       <Slider
         label="Charge Mass"
         value={charge}
@@ -302,10 +355,10 @@ Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
           label="Peak ΔP"
           value={peakOPDisplay}
           unit="bar"
-          color={
-            Number(peakOP) > 2 ? T.red : Number(peakOP) > 0.35 ? T.orange : Number(peakOP) > 0.07 ? T.gold : T.green
-          }
+          color={Number(peakOP) > 2 ? T.red : Number(peakOP) > 0.35 ? T.orange : Number(peakOP) > 0.07 ? T.gold : T.green}
         />
+        <DataBox label="Mitigated ΔP" value={mitigatedOP} unit="bar" color={Number(mitigatedOP) > 2 ? T.red : Number(mitigatedOP) > 0.35 ? T.orange : T.green} />
+        <DataBox label="Attenuation" value={Math.round((1 - attenuation[barrier]) * 100)} unit="%" color={barrier === "none" ? T.red : T.green} />
         <DataBox label="Impulse" value={impulse} unit="kPa·ms" color={T.purple} />
         <DataBox label="Arrival" value={arrivalMs} unit="ms" color={T.cyan} />
       </DataRow>
@@ -338,6 +391,7 @@ Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
       <InfoBox>
         <strong style={{ color: T.orange }}>Hopkinson-Cranz scaling:</strong> Z = R/W^(1/3). CL-20 is ~2× TNT equivalent
         — HEMRL's indigenous development. Overpressure &gt;1 bar causes structural damage.
+        Blast mitigation uses barriers (sandbag, concrete, aqueous foam) to attenuate overpressure. Composite blast walls can reduce peak overpressure by 80%. HEMRL tests mitigation for ammunition storage safety.
         {related.length > 0 && (
           <div style={{ marginTop: 8, borderTop: `1px solid ${T.glassBorder}`, paddingTop: 8 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: T.accent, marginBottom: 4 }}>
@@ -357,6 +411,14 @@ Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
             ))}
           </div>
         )}
+      </InfoBox>
+      <InfoBox color={unColor}>
+        <strong>UN Hazard Classification:</strong> {unClass}<br/>
+        <span style={{ fontSize: 10 }}>
+          Quantity-Distance (Q-D) safe storage: {Math.round(distance * 1.5)}m minimum separation.<br/>
+          NEQ (Net Explosive Quantity): {tntEq} kg TNT equivalent.<br/>
+          Ref: AASTP-1 (NATO) / JSG 1300 (Indian MoD) safety standards.
+        </span>
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.red} />
       <ExportBtn

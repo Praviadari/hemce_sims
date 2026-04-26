@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { THEMES, FONT, TECH_FONT } from "./utils";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
 import MissilePanel from "./components/MissilePanel";
+import SchedulePanel from "./components/SchedulePanel";
 import "./styles/global.css";
 
 /* Skeleton loader for lazy-loaded simulations */
@@ -64,6 +65,8 @@ export default function App() {
       if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
       if (e.key === "m" || e.key === "M")
         setActiveTab((prev) => (prev === "sims" ? "missiles" : "sims"));
+      if (e.key === "s" || e.key === "S")
+        setActiveTab((prev) => (prev === "schedule" ? "sims" : "schedule"));
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
@@ -309,6 +312,7 @@ export default function App() {
         {[
           { id: "sims", label: "⚡ SIMULATIONS" },
           { id: "missiles", label: "🎯 MISSILE DATABASE" },
+          { id: "schedule", label: "📅 LIVE SCHEDULE" },
         ].map((tab) => (
           <button
             key={tab.id}
@@ -356,6 +360,32 @@ export default function App() {
           }}
         >
           <MissilePanel
+            onOpenSim={(simId) => {
+              const match = SIM_REGISTRY.find((s) => s.id === simId);
+              if (match) setActiveSim(match.id);
+              setActiveTab("sims");
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Live Schedule tab ── */}
+      {activeTab === "schedule" && (
+        <div
+          style={{
+            background: currentTheme.card,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderRadius: 18,
+            padding: "16px 12px",
+            border: `1px solid ${currentTheme.glassBorder}`,
+            boxShadow: `0 15px 30px rgba(0,0,0,0.3)`,
+            position: "relative",
+            zIndex: 1,
+            marginBottom: 20,
+          }}
+        >
+          <SchedulePanel
             onOpenSim={(simId) => {
               const match = SIM_REGISTRY.find((s) => s.id === simId);
               if (match) setActiveSim(match.id);

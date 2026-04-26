@@ -330,6 +330,14 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
         progressivity. 7-perf = neutral, 19-perf = progressive. Thinner web = faster burn. HEMRL + ARDE develop
         Pinaka/ATAGS propellants.
       </InfoBox>
+      <InfoBox color={T.gold}>
+        <strong>Propellant Safety:</strong> Compatibility Group C (mass-fire, bulk propellant).<br/>
+        <span style={{ fontSize: 10 }}>
+          Storage: segregated magazine, temp &lt; 50°C, humidity &lt; 70%.<br/>
+          Shelf life: 15-25 years (double-base), 20+ years (triple-base with stabilizer).<br/>
+          Disposal: open burning under controlled conditions (DRDO CFEES protocols).
+        </span>
+      </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.gold} />
       <ExportBtn simId="gun" getData={() => ({ grainShape, webThick, caliberMm, peakP, muzzleV })} color={T.gold} />
     </div>

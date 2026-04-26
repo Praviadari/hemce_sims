@@ -189,6 +189,15 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
         {nano ? "Nano-Al increases burn rate 3-5× via surface area." : ""} HEMRL leads India's energetic materials
         synthesis.
       </InfoBox>
+      <InfoBox color={T.orange}>
+        <strong>HEM Safety Classification:</strong><br/>
+        <span style={{ fontSize: 10 }}>
+          AP (oxidizer): UN Class 5.1 Oxidizer — hygroscopic, store in sealed containers.<br/>
+          Al powder: UN Class 4.1 Flammable Solid — static-sensitive, ground all equipment.<br/>
+          HTPB binder: non-hazardous alone, crosslinks with IPDI (isocyanate — respiratory hazard).<br/>
+          Mixed propellant: UN Class 1.3C — mass fire hazard. HEMRL safety protocols apply.
+        </span>
+      </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.purple} />
       <ExportBtn
         simId="propellant_chemistry"
