@@ -1,29 +1,34 @@
 // ═══════════════════════════════════════
-// SIMULATION REGISTRY — Lazy-loaded for code splitting
-// To add a new sim: create component in sims/, lazy-import below, add entry. Done.
+// SIMULATION REGISTRY — Synchronous imports for kiosk performance
 // ═══════════════════════════════════════
 
-import { lazy } from "react";
 import { T } from "../utils";
 
-const SolidRocketSim = lazy(() => import("./SolidRocketSim"));
-const PressureVesselSim = lazy(() => import("./PressureVesselSim"));
-const PAUTSim = lazy(() => import("./PAUTSim"));
-const ScramjetSim = lazy(() => import("./ScramjetSim"));
-const DetonationSim = lazy(() => import("./DetonationSim"));
-const PropellantChemistrySim = lazy(() => import("./PropellantChemistrySim"));
-const GunPropellantSim = lazy(() => import("./GunPropellantSim"));
-const HybridRocketSim = lazy(() => import("./HybridRocketSim"));
-const ExplosiveDetectionSim = lazy(() => import("./ExplosiveDetectionSim"));
-const AdditiveManufacturingSim = lazy(() => import("./AdditiveManufacturingSim"));
-const GreenPropellantSim = lazy(() => import("./GreenPropellantSim"));
-const CookOffTestSim = lazy(() => import("./CookOffTestSim"));
-const ShapedChargeSim = lazy(() => import("./ShapedChargeSim"));
-const ThermobaricSim = lazy(() => import("./ThermobaricSim"));
-const ReactiveArmorSim = lazy(() => import("./ReactiveArmorSim"));
-const CombustionDiagnosticsSim = lazy(() => import("./CombustionDiagnosticsSim"));
-const CocrystalSim = lazy(() => import("./CocrystalSim"));
-const CombustionInstabilitySim = lazy(() => import("./CombustionInstabilitySim"));
+import SolidRocketSim from "./SolidRocketSim";
+import ScramjetSim from "./ScramjetSim";
+import DetonationSim from "./DetonationSim";
+import GunPropellantSim from "./GunPropellantSim";
+import HybridRocketSim from "./HybridRocketSim";
+import PropellantChemistrySim from "./PropellantChemistrySim";
+import PressureVesselSim from "./PressureVesselSim";
+import PAUTSim from "./PAUTSim";
+import ExplosiveDetectionSim from "./ExplosiveDetectionSim";
+import AdditiveManufacturingSim from "./AdditiveManufacturingSim";
+import ShapedChargeSim from "./ShapedChargeSim";
+import ReactiveArmorSim from "./ReactiveArmorSim";
+import CombustionDiagnosticsSim from "./CombustionDiagnosticsSim";
+import CocrystalSim from "./CocrystalSim";
+import ThermobaricSim from "./ThermobaricSim";
+import CombustionInstabilitySim from "./CombustionInstabilitySim";
+
+export const CATEGORIES = [
+  { id: "all", label: "All", color: T.accent },
+  { id: "propulsion", label: "Propulsion", color: T.orange },
+  { id: "detonics", label: "Detonics", color: T.red },
+  { id: "materials", label: "Materials", color: T.purple },
+  { id: "safety", label: "Safety", color: T.green },
+  { id: "testing", label: "Testing", color: T.cyan },
+];
 
 export const SIM_REGISTRY = [
   {
@@ -34,24 +39,7 @@ export const SIM_REGISTRY = [
     color: T.orange,
     comp: SolidRocketSim,
     tags: ["solid propulsion", "combustion", "propellants"],
-  },
-  {
-    id: "vessel",
-    icon: "⚙",
-    label: "Pressure Vessel",
-    cat: "safety",
-    color: T.accent,
-    comp: PressureVesselSim,
-    tags: ["quality control", "safety", "standards"],
-  },
-  {
-    id: "paut",
-    icon: "🔍",
-    label: "PAUT / NDT",
-    cat: "testing",
-    color: T.green,
-    comp: PAUTSim,
-    tags: ["NDT", "evaluation", "quality"],
+    related: ["hybrid", "instability", "diagnostics", "chemistry"],
   },
   {
     id: "scramjet",
@@ -61,33 +49,7 @@ export const SIM_REGISTRY = [
     color: T.cyan,
     comp: ScramjetSim,
     tags: ["hypersonic", "scramjet", "ramjet", "irrt", "air-breathing", "propulsion", "mach"],
-  },
-  {
-    id: "detonation",
-    icon: "💥",
-    label: "Detonation",
-    cat: "detonics",
-    color: T.red,
-    comp: DetonationSim,
-    tags: ["detonics", "shock loading", "blast effects"],
-  },
-  {
-    id: "chemistry",
-    icon: "🧪",
-    label: "Propellant Chem",
-    cat: "materials",
-    color: T.purple,
-    comp: PropellantChemistrySim,
-    tags: ["synthesis", "green", "nano energetics"],
-  },
-  {
-    id: "gun",
-    icon: "⚡",
-    label: "Gun Propellant",
-    cat: "propulsion",
-    color: T.gold,
-    comp: GunPropellantSim,
-    tags: ["gun propellants", "interior ballistics"],
+    related: ["thermobaric", "hybrid", "rocket"],
   },
   {
     id: "hybrid",
@@ -97,42 +59,27 @@ export const SIM_REGISTRY = [
     color: T.lime,
     comp: HybridRocketSim,
     tags: ["hybrid combustion", "liquid propulsion"],
+    related: ["rocket", "scramjet", "diagnostics"],
   },
   {
-    id: "detection",
-    icon: "🔬",
-    label: "HE Detection",
-    cat: "safety",
-    color: T.pink,
-    comp: ExplosiveDetectionSim,
-    tags: ["explosive detection", "field testing"],
+    id: "instability",
+    icon: "〰️",
+    label: "Combustion Instab.",
+    cat: "propulsion",
+    color: T.orange,
+    comp: CombustionInstabilitySim,
+    tags: ["instability", "acoustic", "combustion", "stability", "baffles"],
+    related: ["rocket", "hybrid", "diagnostics"],
   },
   {
-    id: "am",
-    icon: "🖨",
-    label: "Additive Mfg",
-    cat: "manufacturing",
-    color: T.lime,
-    comp: AdditiveManufacturingSim,
-    tags: ["additive manufacturing", "3D printing"],
-  },
-  {
-    id: "greenprop",
-    icon: "🍃",
-    label: "Green Propellant",
-    cat: "materials",
-    color: "#2ecc71",
-    comp: GreenPropellantSim,
-    tags: ["green energetics", "nano energetics"],
-  },
-  {
-    id: "im",
-    icon: "🛡",
-    label: "Cook-Off Test",
-    cat: "safety",
-    color: "#3b82f6",
-    comp: CookOffTestSim,
-    tags: ["insensitive munitions", "safety"],
+    id: "detonation",
+    icon: "💥",
+    label: "Detonation",
+    cat: "detonics",
+    color: T.red,
+    comp: DetonationSim,
+    tags: ["detonics", "shock loading", "blast effects"],
+    related: ["thermobaric", "shaped", "armor"],
   },
   {
     id: "shaped",
@@ -142,6 +89,7 @@ export const SIM_REGISTRY = [
     color: T.red,
     comp: ShapedChargeSim,
     tags: ["shaped charge", "EFP", "warhead", "Munroe effect"],
+    related: ["detonation", "armor", "thermobaric"],
   },
   {
     id: "thermobaric",
@@ -151,33 +99,17 @@ export const SIM_REGISTRY = [
     color: T.red,
     comp: ThermobaricSim,
     tags: ["thermobaric", "FAE", "fuel-air", "TBX", "Klapotke"],
+    related: ["detonation", "shaped", "scramjet"],
   },
   {
-    id: "armor",
-    icon: "🛡",
-    label: "Reactive Armor",
-    cat: "safety",
-    color: T.accent,
-    comp: ReactiveArmorSim,
-    tags: ["armor", "ERA", "ballistic protection", "Kanchan"],
-  },
-  {
-    id: "diagnostics",
-    icon: "📡",
-    label: "Combustion Diag.",
-    cat: "testing",
-    color: T.cyan,
-    comp: CombustionDiagnosticsSim,
-    tags: ["diagnostics", "pyrometry", "spectroscopy", "combustion"],
-  },
-  {
-    id: "instability",
-    icon: "〰️",
-    label: "Combustion Instab.",
-    cat: "testing",
-    color: T.orange,
-    comp: CombustionInstabilitySim,
-    tags: ["instability", "acoustic", "combustion", "stability", "baffles"],
+    id: "chemistry",
+    icon: "🧪",
+    label: "Propellant Chem",
+    cat: "materials",
+    color: T.purple,
+    comp: PropellantChemistrySim,
+    tags: ["synthesis", "green", "nano energetics"],
+    related: ["cocrystal", "rocket", "gun"],
   },
   {
     id: "cocrystal",
@@ -187,15 +119,76 @@ export const SIM_REGISTRY = [
     color: T.purple,
     comp: CocrystalSim,
     tags: ["cocrystal", "CL-20", "insensitive munitions", "disruptive"],
+    related: ["chemistry", "detonation"],
   },
-];
-
-export const CATEGORIES = [
-  { id: "all", label: "All", color: T.white },
-  { id: "propulsion", label: "Propulsion", color: T.orange },
-  { id: "materials", label: "Materials", color: T.purple },
-  { id: "detonics", label: "Detonics", color: T.red },
-  { id: "testing", label: "NDT/QC", color: T.green },
-  { id: "safety", label: "Safety", color: T.pink },
-  { id: "manufacturing", label: "Mfg", color: T.lime },
+  {
+    id: "am",
+    icon: "🖨",
+    label: "Additive Mfg",
+    cat: "materials",
+    color: T.lime,
+    comp: AdditiveManufacturingSim,
+    tags: ["additive manufacturing", "3D printing"],
+    related: ["vessel", "paut", "rocket"],
+  },
+  {
+    id: "vessel",
+    icon: "⚙",
+    label: "Pressure Vessel",
+    cat: "safety",
+    color: T.accent,
+    comp: PressureVesselSim,
+    tags: ["quality control", "safety", "standards"],
+    related: ["paut", "am", "gun"],
+  },
+  {
+    id: "armor",
+    icon: "🛡",
+    label: "Reactive Armor",
+    cat: "safety",
+    color: T.accent,
+    comp: ReactiveArmorSim,
+    tags: ["armor", "ERA", "ballistic protection", "Kanchan"],
+    related: ["shaped", "detonation", "vessel"],
+  },
+  {
+    id: "gun",
+    icon: "⚡",
+    label: "Gun Propellant",
+    cat: "safety",
+    color: T.gold,
+    comp: GunPropellantSim,
+    tags: ["gun propellants", "interior ballistics"],
+    related: ["detonation", "chemistry", "vessel"],
+  },
+  {
+    id: "paut",
+    icon: "🔍",
+    label: "PAUT / NDT",
+    cat: "testing",
+    color: T.green,
+    comp: PAUTSim,
+    tags: ["NDT", "evaluation", "quality"],
+    related: ["vessel", "am", "diagnostics"],
+  },
+  {
+    id: "detection",
+    icon: "🔬",
+    label: "HE Detection",
+    cat: "testing",
+    color: T.pink,
+    comp: ExplosiveDetectionSim,
+    tags: ["explosive detection", "field testing"],
+    related: ["detonation", "chemistry"],
+  },
+  {
+    id: "diagnostics",
+    icon: "📡",
+    label: "Combustion Diag.",
+    cat: "testing",
+    color: T.cyan,
+    comp: CombustionDiagnosticsSim,
+    tags: ["diagnostics", "pyrometry", "spectroscopy", "combustion"],
+    related: ["rocket", "hybrid", "instability"],
+  },
 ];

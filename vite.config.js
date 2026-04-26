@@ -24,4 +24,12 @@ export default defineConfig({
     host: "0.0.0.0",
     port: 5173,
   },
+  build: {
+    target: "es2020",
+    minify: "terser",
+    terserOptions: { compress: { drop_console: true } },
+    rollupOptions: {
+      output: { manualChunks: { vendor: ["react", "react-dom"] } },
+    },
+  },
 });

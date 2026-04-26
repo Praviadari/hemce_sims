@@ -12,6 +12,7 @@
 html {
   /* Prevent font scaling on orientation change in iOS */
   -webkit-text-size-adjust: 100%;
+  touch-action: manipulation;
 }
 
 :root {

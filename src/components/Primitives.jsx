@@ -1,5 +1,5 @@
-import { useRef, useEffect } from "react";
 import { T, TECH_FONT, MONO_FONT, haptics } from "../utils";
+import { SIM_REGISTRY } from "../sims";
 
 export const Pill = ({ active, onClick, children, color = T.accent, label }) => (
   <button
@@ -27,9 +27,9 @@ export const Pill = ({ active, onClick, children, color = T.accent, label }) => 
       letterSpacing: "0.5px",
       textTransform: "uppercase",
       boxShadow: active ? `0 0 15px ${color}30` : "none",
-      touchAction: "manipulation",
       WebkitTapHighlightColor: "transparent",
-      minHeight: 36,
+      minHeight: 44,
+      touchAction: "manipulation",
     }}
     onTouchStart={(e) => {
       e.currentTarget.style.opacity = "0.7";
@@ -55,7 +55,15 @@ export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", 
           <span style={{ fontSize: 10, opacity: 0.8, marginLeft: 2 }}>{unit}</span>
         </span>
       </div>
-      <div style={{ position: "relative", height: 8, display: "flex", alignItems: "center" }}>
+      <div style={{ position: "relative", height: 16, display: "flex", alignItems: "center" }}>
+        <div style={{
+          position: "absolute", top: -12, left: `calc(${(value - min) / (max - min) * 100}% - 14px)`,
+          fontSize: 9, fontFamily: MONO_FONT, color: color, pointerEvents: "none",
+          fontWeight: 700, padding: "2px 6px", background: `${color}30`, borderRadius: 4,
+          opacity: 0.9, textAlign: "center", minWidth: 28
+        }}>
+          {typeof value === "number" ? (Number.isInteger(value) ? value : value.toFixed(1)) : value}
+        </div>
         <input
           id={id}
           type="range"
@@ -71,11 +79,11 @@ export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", 
           style={{
             width: "100%",
             accentColor: color,
-            height: 6,
+            height: 8,
             cursor: "pointer",
             background: T.glass,
             border: `1px solid ${T.glassBorder}`,
-            borderRadius: 3,
+            borderRadius: 4,
             touchAction: "pan-x",
           }}
         />
@@ -392,3 +400,28 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
     />
   </div>
 );
+
+export const RelatedSims = ({ currentId, onNavigate }) => {
+  const current = SIM_REGISTRY.find(s => s.id === currentId);
+  if (!current?.related) return null;
+  const related = current.related.map(id => SIM_REGISTRY.find(s => s.id === id)).filter(Boolean);
+
+  return (
+    <div style={{ marginTop: 12, paddingTop: 8, borderTop: `1px solid ${T.glassBorder}` }}>
+      <div style={{ fontSize: 9, fontWeight: 700, color: T.dimText, fontFamily: TECH_FONT, marginBottom: 6 }}>
+        RELATED SIMULATIONS
+      </div>
+      <div style={{ display: "flex", gap: 6, flexWrap: "wrap", justifyContent: "center" }}>
+        {related.map(s => (
+          <button key={s.id} onClick={() => onNavigate(s.id)}
+            style={{
+              padding: "6px 10px", borderRadius: 8, border: `1px solid ${s.color}30`,
+              background: `${s.color}10`, color: s.color,
+              fontSize: 9, fontFamily: TECH_FONT, fontWeight: 600, cursor: "pointer",
+            }}
+          >{s.icon} {s.label}</button>
+        ))}
+      </div>
+    </div>
+  );
+};

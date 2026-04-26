@@ -3,6 +3,7 @@ import { THEMES, FONT, TECH_FONT } from "./utils";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
 import MissilePanel from "./components/MissilePanel";
 import SchedulePanel from "./components/SchedulePanel";
+import { Pill, ErrorBoundary, Analytics, RelatedSims } from "./components/Primitives";
 import "./styles/global.css";
 
 /* Skeleton loader for lazy-loaded simulations */
@@ -40,6 +41,9 @@ export default function App() {
   const [activeSim, setActiveSim] = useState("rocket");
   const [catFilter, setCatFilter] = useState("all");
   const [activeTab, setActiveTab] = useState("sims"); // "sims" | "missiles"
+  const [kioskMode, setKioskMode] = useState(false);
+  const [autoSimIndex, setAutoSimIndex] = useState(0);
+  const [showSplash, setShowSplash] = useState(true);
   const [theme, setTheme] = useState(() => {
     if (typeof window === "undefined") return "dark";
     const saved = window.localStorage.getItem("theme");
@@ -50,6 +54,11 @@ export default function App() {
   const currentTheme = THEMES[theme];
   const [compareMode, setCompareMode] = useState(false);
 
+  const catCounts = SIM_REGISTRY.reduce((acc, s) => {
+    acc[s.cat] = (acc[s.cat] || 0) + 1;
+    return acc;
+  }, {});
+
   useEffect(() => {
     document.body.dataset.theme = theme;
     window.localStorage.setItem("theme", theme);
@@ -58,6 +67,55 @@ export default function App() {
   useEffect(() => {
     setCompareMode(false);
   }, [activeSim]);
+
+  useEffect(() => {
+    if (!kioskMode) return;
+    const allSims = SIM_REGISTRY.map(s => s.id);
+    const interval = setInterval(() => {
+      setAutoSimIndex(prev => {
+        const next = (prev + 1) % allSims.length;
+        setActiveSim(allSims[next]);
+        setActiveTab("sims");
+        return next;
+      });
+    }, 15000); 
+    return () => clearInterval(interval);
+  }, [kioskMode]);
+
+  useEffect(() => {
+    if (!kioskMode) return;
+    const pause = () => {
+      setKioskMode(false); 
+    };
+    window.addEventListener("touchstart", pause, { once: true });
+    window.addEventListener("click", pause, { once: true });
+    return () => {
+      window.removeEventListener("touchstart", pause);
+      window.removeEventListener("click", pause);
+    };
+  }, [kioskMode]);
+
+  useEffect(() => {
+    if (kioskMode) return;
+    const timer = setTimeout(() => setKioskMode(true), 60000);
+    const reset = () => { clearTimeout(timer); };
+    window.addEventListener("touchstart", reset);
+    window.addEventListener("mousemove", reset);
+    return () => {
+      clearTimeout(timer);
+      window.removeEventListener("touchstart", reset);
+      window.removeEventListener("mousemove", reset);
+    };
+  }, [kioskMode, activeSim]);
+
+  useEffect(() => {
+    if (sessionStorage.getItem("hemce_splash_seen")) setShowSplash(false);
+  }, []);
+
+  const dismissSplash = () => {
+    setShowSplash(false);
+    sessionStorage.setItem("hemce_splash_seen", "1");
+  };
 
   // Keyboard shortcut: M toggles between tabs
   useEffect(() => {
@@ -212,6 +270,17 @@ export default function App() {
             }}
           >
             {theme === "dark" ? "LIGHT MODE" : "DARK MODE"}
+          </button>
+          <button onClick={() => setKioskMode(prev => !prev)}
+            style={{
+              padding: "6px 10px", borderRadius: 8,
+              border: `1px solid ${currentTheme.glassBorder}`,
+              background: kioskMode ? `${currentTheme.green}20` : currentTheme.glass,
+              color: kioskMode ? currentTheme.green : currentTheme.gray,
+              fontFamily: TECH_FONT, fontSize: 8, fontWeight: 700, cursor: "pointer",
+            }}
+          >
+            {kioskMode ? "🟢 KIOSK ON" : "📺 KIOSK"}
           </button>
           {ActiveComp && (
             <button
@@ -447,7 +516,7 @@ export default function App() {
             key={s.id}
             onClick={() => setActiveSim(s.id)}
             style={{
-              padding: "14px 6px",
+              padding: "12px",
               borderRadius: 14,
               border: activeSim === s.id ? `2px solid ${s.color}` : `1px solid ${currentTheme.glassBorder}`,
               background: activeSim === s.id ? `${s.color}15` : currentTheme.glass,
@@ -468,7 +537,7 @@ export default function App() {
               transform: activeSim === s.id ? "scale(1.03)" : "scale(1)",
               touchAction: "manipulation",
               WebkitTapHighlightColor: "transparent",
-              minHeight: 72,
+              minHeight: 64,
             }}
             onTouchStart={(e) => {
               if (activeSim !== s.id) e.currentTarget.style.opacity = "0.75";
@@ -489,6 +558,21 @@ export default function App() {
             </div>
             <div style={{ lineHeight: 1.2, fontSize: "clamp(9px, 2.5vw, 11px)" }}>{s.label}</div>
           </button>
+        ))}
+      </div>
+
+      <div style={{
+        display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap",
+        padding: "8px 0", marginTop: 8,
+        borderTop: `1px solid ${currentTheme.glassBorder}`,
+      }}>
+        <span style={{ fontSize: 9, color: currentTheme.accent, fontFamily: TECH_FONT, fontWeight: 700 }}>
+          {SIM_REGISTRY.length} SIMULATIONS
+        </span>
+        {Object.entries(catCounts).map(([cat, count]) => (
+          <span key={cat} style={{ fontSize: 8, color: currentTheme.dimText, fontFamily: TECH_FONT }}>
+            {cat.toUpperCase()}: {count}
+          </span>
         ))}
       </div>
 
@@ -586,6 +670,12 @@ export default function App() {
               )}
             </Suspense>
           </ErrorBoundary>
+          {activeSim && (
+            <RelatedSims currentId={activeSim} onNavigate={(id) => {
+              setActiveSim(id);
+              document.getElementById("active-sim")?.scrollIntoView({ behavior: "smooth" });
+            }} />
+          )}
         </div>
       )}
 
@@ -725,6 +815,74 @@ export default function App() {
       <Analytics />
         </>
       )}
+
+      {kioskMode && (
+        <div style={{
+          position: "fixed", bottom: 0, left: 0, right: 0, padding: "8px 0",
+          background: `linear-gradient(transparent, ${currentTheme.bg})`,
+          textAlign: "center", zIndex: 100,
+        }}>
+          <div style={{ fontSize: 11, color: currentTheme.accent, fontFamily: TECH_FONT, fontWeight: 700 }}>
+            🎯 HEMCE 2026 SIMULATION HUB — Touch to explore
+          </div>
+          <div style={{ fontSize: 8, color: currentTheme.dimText }}>
+            {autoSimIndex + 1}/{SIM_REGISTRY.length} simulations • Auto-cycling
+          </div>
+        </div>
+      )}
+
+      {showSplash && (
+        <div style={{
+          position: "fixed", inset: 0, zIndex: 200,
+          background: "rgba(0,0,0,0.85)", display: "flex",
+          alignItems: "center", justifyContent: "center",
+          backdropFilter: "blur(10px)",
+        }} onClick={dismissSplash}>
+          <div style={{
+            maxWidth: 360, padding: 24, borderRadius: 16,
+            background: currentTheme.glass, border: `1px solid ${currentTheme.glassBorder}`,
+            textAlign: "center",
+          }} onClick={(e) => e.stopPropagation()}>
+            <div style={{ fontSize: 32, marginBottom: 8 }}>🚀</div>
+            <div style={{
+              fontSize: 16, fontWeight: 800, color: currentTheme.accent,
+              fontFamily: TECH_FONT, letterSpacing: 2, marginBottom: 4,
+            }}>HEMCE 2026</div>
+            <div style={{
+              fontSize: 11, fontWeight: 700, color: currentTheme.white,
+              fontFamily: TECH_FONT, marginBottom: 12,
+            }}>SIMULATION HUB</div>
+            <div style={{ fontSize: 10, color: currentTheme.gray, lineHeight: 1.6, marginBottom: 16, fontFamily: currentTheme.font || "Inter, sans-serif" }}>
+              Interactive defence & aerospace simulations covering solid rockets, scramjets, detonics, gun propellants, hybrid motors, and more.
+              <br/><br/>
+              <strong style={{ color: currentTheme.accent }}>16 simulations</strong> •
+              <strong style={{ color: currentTheme.accent }}> Indian Missile Database</strong> •
+              <strong style={{ color: currentTheme.accent }}> Live Conference Schedule</strong>
+            </div>
+            <div style={{ display: "flex", gap: 8, justifyContent: "center", flexWrap: "wrap", marginBottom: 12 }}>
+              {["Propulsion", "Detonics", "Materials", "Safety", "NDT", "AI/ML"].map(tag => (
+                <span key={tag} style={{
+                  padding: "3px 8px", borderRadius: 8, fontSize: 8,
+                  background: `${currentTheme.accent}15`, color: currentTheme.accent,
+                  fontFamily: TECH_FONT, fontWeight: 600,
+                }}>{tag}</span>
+              ))}
+            </div>
+            <button onClick={dismissSplash}
+              style={{
+                padding: "10px 24px", borderRadius: 12, border: "none",
+                background: currentTheme.accent, color: "#000",
+                fontFamily: TECH_FONT, fontSize: 11, fontWeight: 800,
+                letterSpacing: 2, cursor: "pointer",
+              }}
+            >EXPLORE →</button>
+            <div style={{ fontSize: 8, color: currentTheme.dimText, marginTop: 8 }}>
+              DRDL Hyderabad • 29 Apr - 01 May 2026
+            </div>
+          </div>
+        </div>
+      )}
+
     </div>
   );
 }

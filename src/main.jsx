@@ -5,3 +5,7 @@ ReactDOM.createRoot(document.getElementById("root")).render(
     <App />
   </React.StrictMode>,
 );
+
+if (screen.orientation?.lock) {
+  screen.orientation.lock("landscape").catch(() => {});
+}
