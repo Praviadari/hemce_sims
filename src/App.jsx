@@ -1,6 +1,7 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { THEMES, FONT, TECH_FONT } from "./utils";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
+import MissilePanel from "./components/MissilePanel";
 import "./styles/global.css";
 
 /* Skeleton loader for lazy-loaded simulations */
@@ -37,6 +38,7 @@ function SimSkeleton({ color }) {
 export default function App() {
   const [activeSim, setActiveSim] = useState("rocket");
   const [catFilter, setCatFilter] = useState("all");
+  const [activeTab, setActiveTab] = useState("sims"); // "sims" | "missiles"
   const [theme, setTheme] = useState(() => {
     if (typeof window === "undefined") return "dark";
     const saved = window.localStorage.getItem("theme");
@@ -55,6 +57,17 @@ export default function App() {
   useEffect(() => {
     setCompareMode(false);
   }, [activeSim]);
+
+  // Keyboard shortcut: M toggles between tabs
+  useEffect(() => {
+    const handler = (e) => {
+      if (e.target.tagName === "INPUT" || e.target.tagName === "TEXTAREA") return;
+      if (e.key === "m" || e.key === "M")
+        setActiveTab((prev) => (prev === "sims" ? "missiles" : "sims"));
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, []);
 
   const toggleTheme = () => setTheme((prev) => (prev === "dark" ? "light" : "dark"));
 
@@ -217,6 +230,7 @@ export default function App() {
               {compareMode ? "✕ SINGLE" : "⇄ COMPARE"}
             </button>
           )}
+
           <button
             type="button"
             onClick={toggleExhibition}
@@ -280,6 +294,80 @@ export default function App() {
           ORGANISED BY HEMSI IN ASSOCIATION WITH DRDO & ISRO
         </div>
       </header>
+
+      {/* ── Tab bar ── */}
+      <div
+        style={{
+          display: "flex",
+          gap: 0,
+          marginBottom: 12,
+          borderBottom: `1px solid ${currentTheme.glassBorder}`,
+          position: "relative",
+          zIndex: 1,
+        }}
+      >
+        {[
+          { id: "sims", label: "⚡ SIMULATIONS" },
+          { id: "missiles", label: "🎯 MISSILE DATABASE" },
+        ].map((tab) => (
+          <button
+            key={tab.id}
+            type="button"
+            onClick={() => setActiveTab(tab.id)}
+            style={{
+              flex: 1,
+              padding: "10px 0",
+              border: "none",
+              background: "transparent",
+              borderBottom:
+                activeTab === tab.id
+                  ? `2px solid ${currentTheme.accent}`
+                  : "2px solid transparent",
+              color: activeTab === tab.id ? currentTheme.accent : currentTheme.gray,
+              fontFamily: TECH_FONT,
+              fontSize: 10,
+              fontWeight: 700,
+              letterSpacing: 1.5,
+              cursor: "pointer",
+              touchAction: "manipulation",
+              WebkitTapHighlightColor: "transparent",
+              transition: "color 0.2s, border-bottom-color 0.2s",
+            }}
+          >
+            {tab.label}
+          </button>
+        ))}
+      </div>
+
+      {/* ── Missile Database tab ── */}
+      {activeTab === "missiles" && (
+        <div
+          style={{
+            background: currentTheme.card,
+            backdropFilter: "blur(20px)",
+            WebkitBackdropFilter: "blur(20px)",
+            borderRadius: 18,
+            padding: "16px 12px",
+            border: `1px solid ${currentTheme.glassBorder}`,
+            boxShadow: `0 15px 30px rgba(0,0,0,0.3)`,
+            position: "relative",
+            zIndex: 1,
+            marginBottom: 20,
+          }}
+        >
+          <MissilePanel
+            onOpenSim={(simId) => {
+              const match = SIM_REGISTRY.find((s) => s.id === simId);
+              if (match) setActiveSim(match.id);
+              setActiveTab("sims");
+            }}
+          />
+        </div>
+      )}
+
+      {/* ── Simulations tab content ── */}
+      {activeTab === "sims" && (
+        <>
 
       {/* Category filter */}
       <nav
@@ -605,6 +693,8 @@ export default function App() {
         </a>
       </div>
       <Analytics />
+        </>
+      )}
     </div>
   );
 }

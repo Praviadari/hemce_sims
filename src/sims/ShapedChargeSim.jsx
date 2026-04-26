@@ -274,6 +274,19 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How do these parameters relate to DRDO shaped
       </InfoBox>
 
       <AIInsight buildPrompt={buildPrompt} color={T.red} />
+      <ExportBtn
+        simId="shaped_charge"
+        getData={() => ({
+          liner,
+          coneAngle,
+          standoff,
+          explosive,
+          jetVelocityKms: (physics.Vjet / 1000).toFixed(2),
+          penetrationMmRha: physics.Peff,
+          standoffFactor: (physics.standoffFactor * 100).toFixed(0) + "%",
+        })}
+        color={T.red}
+      />
     </div>
   );
 }

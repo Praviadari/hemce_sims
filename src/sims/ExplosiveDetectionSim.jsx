@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { T, TECH_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 
 export default function ExplosiveDetectionSim() {
   const [method, setMethod] = useState("colorimetric");
@@ -66,7 +66,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
   );
 
   const canvasRef = useCanvas(
-    (ctx, W, H) => {
+    (ctx, W, H, frame) => {
       const theme = getCanvasTheme();
 
       // Technical background
@@ -116,8 +116,8 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
         // Sampling Particles (for IMS/Canine)
         if (method === "ion_mobility" || method === "canine") {
           for (let i = 0; i < 5; i++) {
-            const px = W / 2 - 60 + Math.random() * 120;
-            const py = beamY + (Math.random() - 0.5) * 10;
+            const px = W / 2 - 60 + prng(frame, i * 2) * 120;
+            const py = beamY + (prng(frame, i * 2 + 1) - 0.5) * 10;
             ctx.fillStyle = s.color;
             ctx.beginPath();
             ctx.arc(px, py, 1, 0, Math.PI * 2);

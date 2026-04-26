@@ -22,7 +22,7 @@ export function GreenPropellantSim() {
   if (particlesRef.current.length === 0) initParticles();
 
   const canvasRef = useCanvas(
-    (ctx, frameCount) => {
+    (ctx, W, H, frameCount) => {
       ctx.clearRect(0, 0, 460, 180);
 
       const isMixing = phase === "mixing";
@@ -82,6 +82,7 @@ export function GreenPropellantSim() {
         ctx.fillText("SYNTHESIS COMPLETE", 230, 95);
       }
     },
+    [phase, tech],
     { animate: true },
   );
 

@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 
 export default function PressureVesselSim() {
   const [pressure, setPressure] = useState(5);
@@ -17,7 +17,7 @@ export default function PressureVesselSim() {
   const wallColor = hoop > ys ? T.red : hoop > ys * 0.67 ? T.gold : T.green;
 
   const canvasRef = useCanvas(
-    (ctx, W, H) => {
+    (ctx, W, H, frame) => {
       const cx = W / 2,
         cy = H / 2,
         p = pressure;
@@ -83,8 +83,8 @@ export default function PressureVesselSim() {
       if (stressP > 1.0) {
         ctx.fillStyle = T.white;
         for (let i = 0; i < 5; i++) {
-          const vx = cx + Math.random() * 10 - 5;
-          const vy = cy - dr - ww - Math.random() * 30;
+          const vx = cx + prng(frame, i * 2) * 10 - 5;
+          const vy = cy - dr - ww - prng(frame, i * 2 + 1) * 30;
           ctx.globalAlpha = 0.4;
           ctx.beginPath();
           ctx.arc(vx, vy, 2, 0, Math.PI * 2);

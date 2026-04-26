@@ -13,3 +13,4 @@ export {
 } from "./Primitives";
 export { AIInsight } from "./AIInsight";
 export { ErrorBoundary } from "./ErrorBoundary";
+export { default as MissilePanel } from "./MissilePanel";

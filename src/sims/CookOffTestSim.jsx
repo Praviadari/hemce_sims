@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { useCanvas, T } from "../utils";
+import { useCanvas, T, prng } from "../utils";
 
 export function CookOffTestSim() {
   const [phase, setPhase] = useState("idle"); // idle | heating | reaction
@@ -7,7 +7,7 @@ export function CookOffTestSim() {
   const tempRef = useRef(20);
 
   const canvasRef = useCanvas(
-    (ctx, frameCount) => {
+    (ctx, W, H, frameCount) => {
       ctx.clearRect(0, 0, 460, 180);
 
       // Heating simulation logic (Fast Cook-Off Test equivalent)
@@ -46,8 +46,8 @@ export function CookOffTestSim() {
           ctx.fillStyle = `rgba(255, 200, 50, 0.9)`;
           ctx.beginPath();
           for (let i = 0; i < 15; i++) {
-            const r = Math.random() * 150 + 50;
-            const a = Math.random() * Math.PI * 2;
+            const r = prng(frameCount, i * 3) * 150 + 50;
+            const a = prng(frameCount, i * 3 + 1) * Math.PI * 2;
             ctx.lineTo(230 + Math.cos(a) * r, 90 + Math.sin(a) * r);
           }
           ctx.closePath();
@@ -61,7 +61,7 @@ export function CookOffTestSim() {
           ctx.fillStyle = `rgba(100, 150, 255, 0.8)`;
           for (let i = 0; i < 8; i++) {
             ctx.beginPath();
-            ctx.arc(230 + (Math.random() * 100 - 50), 60 - Math.random() * 40, Math.random() * 20 + 10, 0, Math.PI * 2);
+            ctx.arc(230 + (prng(frameCount, i * 4) * 100 - 50), 60 - prng(frameCount, i * 4 + 1) * 40, prng(frameCount, i * 4 + 2) * 20 + 10, 0, Math.PI * 2);
             ctx.fill();
           }
           ctx.fillStyle = "#3b82f6";
@@ -77,6 +77,7 @@ export function CookOffTestSim() {
         ctx.fillText(`${Math.floor(t)}°C`, 230, 30);
       }
     },
+    [phase, munType],
     { animate: true },
   );
 

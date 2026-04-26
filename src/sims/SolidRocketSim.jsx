@@ -1,7 +1,9 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { MISSILE_DB } from "../data/missileDB";
 
 export default function SolidRocketSim() {
+  const related = MISSILE_DB.filter((m) => m.relatedSimId === "rocket");
   const [burning, setBurning] = useState(false);
   const [elapsed, setElapsed] = useState(0);
   const [burnRate, setBurnRate] = useState(5);
@@ -32,7 +34,7 @@ export default function SolidRocketSim() {
   const progress = Math.min(elapsed / dur, 1);
 
   const canvasRef = useCanvas(
-    (ctx, W, H) => {
+    (ctx, W, H, frame) => {
       const p = burning ? progress : 0;
 
       const canvasTheme = getCanvasTheme();
@@ -145,13 +147,13 @@ export default function SolidRocketSim() {
           ctx.fill();
 
           for (let i = 0; i < 20; i++) {
-            const fl = (50 + Math.random() * 80) * intensity,
-              sp = (Math.random() - 0.5) * 40 * intensity;
+            const fl = (50 + prng(frame, i * 5) * 80) * intensity,
+              sp = (prng(frame, i * 5 + 1) - 0.5) * 40 * intensity;
             ctx.strokeStyle = i < 8 ? T.white : i < 15 ? T.accent : T.pink;
-            ctx.globalAlpha = 0.4 + Math.random() * 0.4;
-            ctx.lineWidth = 1 + Math.random() * 3;
+            ctx.globalAlpha = 0.4 + prng(frame, i * 5 + 2) * 0.4;
+            ctx.lineWidth = 1 + prng(frame, i * 5 + 3) * 3;
             ctx.beginPath();
-            ctx.moveTo(W - 15, H / 2 + (Math.random() - 0.5) * 10);
+            ctx.moveTo(W - 15, H / 2 + (prng(frame, i * 5 + 4) - 0.5) * 10);
             ctx.lineTo(W - 15 + fl, H / 2 + sp);
             ctx.stroke();
           }
@@ -220,6 +222,7 @@ export default function SolidRocketSim() {
       }
     },
     [burning, elapsed, grain, progress],
+    { animate: burning },
   );
 
   useEffect(() => {
@@ -263,8 +266,9 @@ PARAMETERS (numbered):
 ANALYSIS REQUEST:
 Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
 Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
-Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
-    [grain, burnRate, chamberP, thrust, isp, cStar, progress],
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?
+Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
+    [grain, burnRate, chamberP, thrust, isp, cStar, progress, related],
   );
 
   return (
@@ -355,6 +359,25 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
             ? " Tubular bore → progressive thrust increase."
             : " End-burn → long, constant low thrust."}{" "}
         Gas exits convergent-divergent nozzle → thrust (Newton's 3rd).
+        {related.length > 0 && (
+          <div style={{ marginTop: 8, borderTop: `1px solid ${T.glassBorder}`, paddingTop: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.accent, marginBottom: 4 }}>
+              INDIAN SYSTEMS USING THIS TECHNOLOGY:
+            </div>
+            {related.map((m) => (
+              <div key={m.id} style={{ fontSize: 10, color: T.gray, marginBottom: 2 }}>
+                {m.image_emoji} <strong style={{ color: T.white }}>{m.name}</strong>
+                {" — "}{m.propulsion.stages} | {m.performance.range}
+                {m.sources[0] && (
+                  <a href={m.sources[0].url} target="_blank" rel="noopener noreferrer"
+                     style={{ color: T.accent, marginLeft: 4, fontSize: 9 }}>
+                    [source]
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.orange} />
       <ExportBtn simId="rocket" getData={() => ({ grain, burnRate, chamberP, thrust, isp })} color={T.orange} />

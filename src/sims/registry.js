@@ -20,6 +20,7 @@ const GreenPropellantSim = lazy(() => import("./GreenPropellantSim"));
 const CookOffTestSim = lazy(() => import("./CookOffTestSim"));
 const ShapedChargeSim = lazy(() => import("./ShapedChargeSim"));
 const ReactiveArmorSim = lazy(() => import("./ReactiveArmorSim"));
+const CombustionDiagnosticsSim = lazy(() => import("./CombustionDiagnosticsSim"));
 
 export const SIM_REGISTRY = [
   {
@@ -147,6 +148,15 @@ export const SIM_REGISTRY = [
     color: T.accent,
     comp: ReactiveArmorSim,
     tags: ["armor", "ERA", "ballistic protection", "Kanchan"],
+  },
+  {
+    id: "diagnostics",
+    icon: "📡",
+    label: "Combustion Diag.",
+    cat: "testing",
+    color: T.cyan,
+    comp: CombustionDiagnosticsSim,
+    tags: ["diagnostics", "pyrometry", "spectroscopy", "combustion"],
   },
 ];
 

@@ -1,7 +1,9 @@
 import { useState, useMemo, useCallback } from "react";
 import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { MISSILE_DB } from "../data/missileDB";
 
 export default function ScramjetSim() {
+  const related = MISSILE_DB.filter((m) => m.relatedSimId === "scramjet");
   const [mach, setMach] = useState(6);
   const [fuelType, setFuelType] = useState("hydrogen");
   const [altitude, setAltitude] = useState(25);
@@ -206,8 +208,9 @@ PARAMETERS (numbered):
 ANALYSIS REQUEST:
 Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
 Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
-Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
-    [mach, fuelType, altitude, cooling, temp, eta, Pt2, Ve, Tcomb, thrustN, wallT],
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?
+Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
+    [mach, fuelType, altitude, cooling, temp, eta, Pt2, Ve, Tcomb, thrustN, wallT, related],
   );
 
   return (
@@ -253,6 +256,25 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
           ? "Active cooling circulates fuel through the combustor walls to protect materials."
           : "⚠ Without cooling, walls exceed material limits above Mach 7."}{" "}
         DRDL tested 12-min full-scale run in Jan 2026.
+        {related.length > 0 && (
+          <div style={{ marginTop: 8, borderTop: `1px solid ${T.glassBorder}`, paddingTop: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.accent, marginBottom: 4 }}>
+              INDIAN SYSTEMS USING THIS TECHNOLOGY:
+            </div>
+            {related.map((m) => (
+              <div key={m.id} style={{ fontSize: 10, color: T.gray, marginBottom: 2 }}>
+                {m.image_emoji} <strong style={{ color: T.white }}>{m.name}</strong>
+                {" — "}{m.propulsion.stages} | {m.performance.range}
+                {m.sources[0] && (
+                  <a href={m.sources[0].url} target="_blank" rel="noopener noreferrer"
+                     style={{ color: T.accent, marginLeft: 4, fontSize: 9 }}>
+                    [source]
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.cyan} />
       <ExportBtn

@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 
 export default function AdditiveManufacturingSim() {
   const [process, setProcess] = useState("fdm");
@@ -20,7 +20,7 @@ export default function AdditiveManufacturingSim() {
   const partDensity = (infill * 0.01 * (process === "dmls" ? 4.43 : 1.24)).toFixed(2);
 
   const canvasRef = useCanvas(
-    (ctx, W, H) => {
+    (ctx, W, H, frame) => {
       const theme = getCanvasTheme();
 
       // Technical background
@@ -79,7 +79,7 @@ export default function AdditiveManufacturingSim() {
       // Print Head / Nozzle
       if (printing && layer < totalLayers) {
         const hy = by + bh - (layer + 1) * lh;
-        const moveX = Math.sin(performance.now() / 100) * (bw / 2 - 5);
+        const moveX = Math.sin(frame * 0.05) * (bw / 2 - 5);
 
         // Nozzle structure
         ctx.fillStyle = "#4A5568";
@@ -105,7 +105,7 @@ export default function AdditiveManufacturingSim() {
         if (process === "dmls" || process === "sls") {
           for (let i = 0; i < 3; i++) {
             ctx.fillStyle = T.gold;
-            ctx.fillRect(bx + bw / 2 + moveX + Math.random() * 10 - 5, hy - Math.random() * 10, 1, 1);
+            ctx.fillRect(bx + bw / 2 + moveX + prng(frame, i * 2) * 10 - 5, hy - prng(frame, i * 2 + 1) * 10, 1, 1);
           }
         }
       }

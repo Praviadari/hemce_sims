@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { T, TECH_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 
 export default function ReactiveArmorSim() {
   const [armorType, setArmorType] = useState("era");
@@ -190,7 +190,7 @@ export default function ReactiveArmorSim() {
       const impactY = plateCy;
 
       if (armorType === "era") {
-        // Reactive tiles flying out
+        // Reactive tiles flying out — deterministic rotation per tile index
         const tileOffsets = [
           [-16, -22],
           [10, -18],
@@ -198,10 +198,10 @@ export default function ReactiveArmorSim() {
           [14, 20],
           [-22, 4],
         ];
-        tileOffsets.forEach(([dx, dy]) => {
+        tileOffsets.forEach(([dx, dy], tileIdx) => {
           ctx.save();
           ctx.translate(impactX + dx, impactY + dy);
-          ctx.rotate(Math.random() * 0.5);
+          ctx.rotate(prng(0, tileIdx) * 0.5);
           ctx.fillStyle = T.orange;
           ctx.shadowBlur = 6;
           ctx.shadowColor = T.orange;

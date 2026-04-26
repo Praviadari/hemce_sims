@@ -1,7 +1,9 @@
 import { useState, useRef, useCallback, useMemo } from "react";
 import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { MISSILE_DB } from "../data/missileDB";
 
 export default function HybridRocketSim() {
+  const related = MISSILE_DB.filter((m) => m.relatedSimId === "hybrid");
   const [throttle, setThrottle] = useState(50);
   const [fuel, setFuel] = useState("paraffin");
   const [oxidizer, setOxidizer] = useState("n2o");
@@ -83,7 +85,7 @@ export default function HybridRocketSim() {
 
       // Solid Fuel Grain Regression Visualization
       const fc = fuel === "paraffin" ? "#F5DEB3" : fuel === "abs" ? "#8B8682" : "#A0522D";
-      const regOffset = -2 + (throttle / 100) * 12 * Math.sin(performance.now() / 1000); // Visual flair for regression
+      const regOffset = -2 + (throttle / 100) * 12 * Math.sin(frame * 0.03); // Visual flair for regression
       const portH = 15 + (throttle / 100) * 10;
 
       ctx.fillStyle = fc;
@@ -99,7 +101,7 @@ export default function HybridRocketSim() {
       // Flow & Combustion Core
       if (running) {
         // Ox Flow Pulse
-        const flowPulse = Math.sin(performance.now() / 50) * 0.5 + 0.5;
+        const flowPulse = Math.sin(frame * 0.2) * 0.5 + 0.5;
         ctx.strokeStyle = `rgba(0, 180, 216, ${0.4 * flowPulse})`;
         ctx.lineWidth = 4;
         ctx.beginPath();
@@ -198,8 +200,9 @@ PARAMETERS (numbered):
 ANALYSIS REQUEST:
 Part 1 — PERFORMANCE: Analyze these parameters. Are they realistic? What performance regime do they represent (low/medium/high)? What is the efficiency?
 Part 2 — SAFETY & RISK: What are the safety margins? What failure modes exist at these conditions? What would a test engineer watch for?
-Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?`,
-    [fuel, fd, od, throttle, regRate, ofRatio, optOF, ofDeviation, actualIsp, thrust, running],
+Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? Reference specific Indian systems (e.g., Agni, BrahMos, Pinaka, SMART, Astra, Nag, Akash) where applicable. What are India's current capabilities and gaps in this domain?
+Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
+    [fuel, fd, od, throttle, regRate, ofRatio, optOF, ofDeviation, actualIsp, thrust, running, related],
   );
 
   return (
@@ -249,6 +252,25 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
             ? "ABS: 3D-printable grains."
             : "HTPB: standard baseline."}{" "}
         ISRO/HEMRL co-developing hybrid motors.
+        {related.length > 0 && (
+          <div style={{ marginTop: 8, borderTop: `1px solid ${T.glassBorder}`, paddingTop: 8 }}>
+            <div style={{ fontSize: 10, fontWeight: 700, color: T.accent, marginBottom: 4 }}>
+              INDIAN SYSTEMS USING THIS TECHNOLOGY:
+            </div>
+            {related.map((m) => (
+              <div key={m.id} style={{ fontSize: 10, color: T.gray, marginBottom: 2 }}>
+                {m.image_emoji} <strong style={{ color: T.white }}>{m.name}</strong>
+                {" — "}{m.propulsion.stages} | {m.performance.range}
+                {m.sources[0] && (
+                  <a href={m.sources[0].url} target="_blank" rel="noopener noreferrer"
+                     style={{ color: T.accent, marginLeft: 4, fontSize: 9 }}>
+                    [source]
+                  </a>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.lime} />
       <ExportBtn simId="hybrid" getData={() => ({ fuel, oxidizer, throttle, thrust, regRate })} color={T.lime} />
