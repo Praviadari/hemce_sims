@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ActionBtn, ResetBtn, ExportBtn } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 import { MISSILE_DB } from "../data/missileDB";
 
 export default function DetonationSim() {

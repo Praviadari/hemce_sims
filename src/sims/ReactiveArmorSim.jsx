@@ -1,5 +1,8 @@
 import { useState, useMemo, useCallback } from "react";
 import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 
 export default function ReactiveArmorSim() {
   const [armorType, setArmorType] = useState("era");

@@ -1,5 +1,8 @@
 import { useState, useRef } from "react";
 import { useCanvas, T, prng } from "../utils";
+import { Pill, PillRow, DataBox, DataRow, InfoBox, SimCanvas, ActionBtn } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 
 export function CookOffTestSim() {
   const [phase, setPhase] = useState("idle"); // idle | heating | reaction

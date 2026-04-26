@@ -20,6 +20,8 @@ import CombustionDiagnosticsSim from "./CombustionDiagnosticsSim";
 import CocrystalSim from "./CocrystalSim";
 import ThermobaricSim from "./ThermobaricSim";
 import CombustionInstabilitySim from "./CombustionInstabilitySim";
+import CookOffTestSim from "./CookOffTestSim";
+import GreenPropellantSim from "./GreenPropellantSim";
 
 export const CATEGORIES = [
   { id: "all", label: "All", color: T.accent },
@@ -58,8 +60,28 @@ export const SIM_REGISTRY = [
     cat: "propulsion",
     color: T.lime,
     comp: HybridRocketSim,
-    tags: ["hybrid combustion", "liquid propulsion"],
+    tags: ["hybrid", "propulsion", "combustion"],
     related: ["rocket", "scramjet", "diagnostics"],
+  },
+  {
+    id: "cookoff",
+    icon: "🌡️",
+    label: "Cook-Off Test",
+    cat: "safety",
+    color: T.red,
+    comp: CookOffTestSim,
+    tags: ["cook-off", "thermal", "safety", "ignition"],
+    related: ["vessel", "gun", "chemistry"],
+  },
+  {
+    id: "greenprop",
+    icon: "🌿",
+    label: "Green Propellant",
+    cat: "materials",
+    color: T.green,
+    comp: GreenPropellantSim,
+    tags: ["green", "ADN", "HAN", "environment", "sustainable"],
+    related: ["chemistry", "hybrid", "rocket"],
   },
   {
     id: "instability",

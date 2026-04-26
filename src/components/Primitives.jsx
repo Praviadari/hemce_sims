@@ -1,5 +1,8 @@
+import { useRef, useEffect } from "react";
 import { T, TECH_FONT, MONO_FONT, haptics } from "../utils";
 import { SIM_REGISTRY } from "../sims";
+
+export const Analytics = () => null;
 
 export const Pill = ({ active, onClick, children, color = T.accent, label }) => (
   <button

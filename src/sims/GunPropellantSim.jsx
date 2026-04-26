@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ActionBtn, ResetBtn, ExportBtn, StripChart } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 
 export default function GunPropellantSim() {
   const [running, setRunning] = useState(false);

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 import {
   Pill,
   Slider,

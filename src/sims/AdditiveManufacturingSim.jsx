@@ -1,5 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ActionBtn, ResetBtn, ExportBtn } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 
 export default function AdditiveManufacturingSim() {
   const [process, setProcess] = useState("fdm");

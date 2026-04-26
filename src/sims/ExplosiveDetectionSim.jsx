@@ -1,5 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
+import { Pill, PillRow, DataBox, DataRow, InfoBox, SimCanvas, ActionBtn, ExportBtn } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 
 export default function ExplosiveDetectionSim() {
   const [method, setMethod] = useState("colorimetric");

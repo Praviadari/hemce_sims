@@ -752,7 +752,7 @@ export default function App() {
         >
           With nearly four decades of expertise, TSPL is a global leader in designing, engineering, and delivering
           turnkey Waste Heat Recovery Solutions. Having successfully executed over 400+ projects across 40 countries,
-          they specialize in high-energy thermal management and complex boilers for the world's most demanding
+          they specialize in high-energy thermal management and complex boilers for the world&apos;s most demanding
           continuous process operations.
         </p>
         <a

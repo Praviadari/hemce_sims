@@ -1,5 +1,8 @@
 import { useState, useRef } from "react";
 import { useCanvas, T } from "../utils";
+import { Pill, PillRow, DataBox, DataRow, InfoBox, SimCanvas, ActionBtn } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 
 export function GreenPropellantSim() {
   const [phase, setPhase] = useState("idle"); // idle | mixing | complete

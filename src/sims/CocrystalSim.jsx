@@ -1,5 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
-import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { useState, useCallback } from "react";
+import { T, TECH_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ExportBtn } from "../components";
+import { AIInsight } from "../components/AIInsight";
+
 
 export default function CocrystalSim() {
   const [coformer, setCoformer] = useState("hmx"); // "hmx" | "fox7" | "tnt" | "dnb" | "none"
