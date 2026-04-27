@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from "react";
-import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, MONO_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ActionBtn, ResetBtn, ExportBtn } from "../components";
 import { AIInsight } from "../components/AIInsight";
 
@@ -41,7 +41,7 @@ export default function DetonationSim() {
   const progress = Math.min(time / 2, 1);
 
   const canvasRef = useCanvas(
-    (ctx, W, H) => {
+    (ctx, W, H, frame) => {
       const cy = H / 2,
         cx = 60;
       const theme = getCanvasTheme();
@@ -60,11 +60,12 @@ export default function DetonationSim() {
       ctx.stroke();
 
       const chargeColor = { tnt: T.orange, rdx: T.gold, cl20: T.red, hmx: T.accent }[heMat];
-      ctx.shadowBlur = running ? 0 : 10;
+      const pulse = Math.sin(frame * 0.05);
+      ctx.shadowBlur = running ? 0 : 10 + pulse * 5;
       ctx.shadowColor = chargeColor;
       ctx.fillStyle = chargeColor;
       ctx.beginPath();
-      ctx.roundRect(cx - 10, cy - 10, 20, 20, 4);
+      ctx.roundRect(cx - 10 - pulse, cy - 10 - pulse, 20 + pulse * 2, 20 + pulse * 2, 4);
       ctx.fill();
       ctx.shadowBlur = 0;
 
@@ -72,6 +73,19 @@ export default function DetonationSim() {
       ctx.fillStyle = T.bg;
       ctx.textAlign = "center";
       ctx.fillText("HE", cx, cy + 3);
+
+      if (!running) {
+        ctx.fillStyle = T.orange;
+        for (let i = 0; i < 15; i++) {
+          const a = prng(frame, i) * Math.PI * 2;
+          const r = 20 + ((frame * 0.2 + prng(frame, i + 1) * 30) % 50);
+          ctx.globalAlpha = Math.max(0, 1 - (r - 20) / 50);
+          ctx.beginPath();
+          ctx.arc(cx + Math.cos(a) * r, cy + Math.sin(a) * r, 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        ctx.globalAlpha = 1;
+      }
 
       if (running) {
         const r = progress * (W - 40);
@@ -130,7 +144,9 @@ export default function DetonationSim() {
 
       ctx.font = `800 10px ${MONO_FONT}`;
       ctx.fillStyle = T.green;
+      ctx.globalAlpha = 0.5 + Math.sin(frame * 0.08) * 0.5;
       ctx.fillText(`${distance}m STANDOFF`, tgt - 10, 15);
+      ctx.globalAlpha = 1;
 
       if (running && progress * (W - 40) >= tgt - cx) {
         ctx.fillStyle = T.red;
@@ -142,6 +158,7 @@ export default function DetonationSim() {
       }
     },
     [running, time, charge, distance, heMat, progress, barrier],
+    { animate: true }
   );
 
   const profileRef = useCanvas(
@@ -393,7 +410,7 @@ Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
       </div>
       <InfoBox>
         <strong style={{ color: T.orange }}>Hopkinson-Cranz scaling:</strong> Z = R/W^(1/3). CL-20 is ~2× TNT equivalent
-        — HEMRL's indigenous development. Overpressure &gt;1 bar causes structural damage.
+        — HEMRL&apos;s indigenous development. Overpressure &gt;1 bar causes structural damage.
         Blast mitigation uses barriers (sandbag, concrete, aqueous foam) to attenuate overpressure. Composite blast walls can reduce peak overpressure by 80%. HEMRL tests mitigation for ammunition storage safety.
         {related.length > 0 && (
           <div style={{ marginTop: 8, borderTop: `1px solid ${T.glassBorder}`, paddingTop: 8 }}>

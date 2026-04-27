@@ -58,6 +58,16 @@ export default function GunPropellantSim() {
       ctx.fillRect(110, cy - 10, W - 140, 20);
       ctx.strokeRect(110, cy - 10, W - 140, 20);
 
+      if (!running) {
+        ctx.strokeStyle = "rgba(255,255,255,0.15)";
+        ctx.beginPath();
+        for (let x = 120; x < W - 40; x += 10) {
+           const y = cy + Math.sin(frame * 0.05 + x * 0.1) * 3;
+           x === 120 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+        }
+        ctx.stroke();
+      }
+
       // Chamber Pressure Pulse
       if (running && p > 0.05 && p < 1) {
         const heat = Math.sin(p * Math.PI) * 0.8;
@@ -74,22 +84,30 @@ export default function GunPropellantSim() {
         for (let i = 0; i < 9; i++) {
           const gx = 25 + (i % 3) * 15;
           const gy = cy - 15 + Math.floor(i / 3) * 15;
+          const shimmer = !running ? Math.sin(frame * 0.1 + prng(frame, i)*10) * 0.2 : 0;
+          ctx.globalAlpha = 1 - shimmer;
           ctx.fillStyle = gColor;
           ctx.beginPath();
-          ctx.arc(gx, gy, 4 * (1 - p * 3), 0, Math.PI * 2);
+          const burnOuter = Math.min(!running ? 0 : p * 15, 3.5); 
+          ctx.arc(gx, gy, Math.max(0.1, 4 - burnOuter), 0, Math.PI * 2);
           ctx.fill();
+          ctx.globalAlpha = 1;
+          
           // Perf holes
           ctx.fillStyle = theme.canvasSurface;
           const perf = grainShape === "single" ? 1 : grainShape === "7perf" ? 7 : 19;
+          const burnInner = Math.min(!running ? 0 : p * 15, 2.5);
           ctx.beginPath();
-          ctx.arc(gx, gy, 1, 0, Math.PI * 2);
+          ctx.arc(gx, gy, 1 + burnInner, 0, Math.PI * 2);
           ctx.fill();
           if (perf > 1) {
             for (let a = 0; a < 6; a++) {
               const r = 2.5 * (1 - p * 3);
-              if (r > 0) ctx.beginPath();
-              ctx.arc(gx + Math.cos(a) * r, gy + Math.sin(a) * r, 0.5, 0, Math.PI * 2);
-              ctx.fill();
+              if (r > 0) {
+                ctx.beginPath();
+                ctx.arc(gx + Math.cos(a) * r, gy + Math.sin(a) * r, 0.5 + burnInner * 0.5, 0, Math.PI * 2);
+                ctx.fill();
+              }
             }
           }
         }
@@ -201,6 +219,7 @@ export default function GunPropellantSim() {
       }
     },
     [running, time, grainShape, caliberMm, pressureCurve, progress],
+    { animate: true }
   );
 
   useEffect(() => {

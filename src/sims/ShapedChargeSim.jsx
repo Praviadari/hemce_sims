@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback } from "react";
-import { T, TECH_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ExportBtn } from "../components";
 import { AIInsight } from "../components/AIInsight";
 
@@ -37,7 +37,7 @@ export default function ShapedChargeSim() {
 
   // ── Canvas ─────────────────────────────────────────────────────────────────
   const canvasRef = useCanvas(
-    (ctx, W, H) => {
+    (ctx, W, H, frame) => {
       const canvasTheme = getCanvasTheme();
 
       // Background
@@ -60,6 +60,10 @@ export default function ShapedChargeSim() {
         bodyH = H - 60;
       const cx = bodyX + bodyW / 2;
 
+      // Detonation wave front propagates slowly down the charge
+      const waveCycle = (frame % 200) / 200;
+      const waveY = bodyY + waveCycle * bodyH;
+
       // Cylindrical explosive body
       const bodyGrad = ctx.createLinearGradient(bodyX, 0, bodyX + bodyW, 0);
       bodyGrad.addColorStop(0, `${explColor}55`);
@@ -72,6 +76,12 @@ export default function ShapedChargeSim() {
       ctx.roundRect(bodyX, bodyY, bodyW, bodyH, 6);
       ctx.fill();
       ctx.stroke();
+
+      // Draw Wave Front
+      ctx.fillStyle = T.yellow;
+      ctx.globalAlpha = 0.5 * (1-waveCycle);
+      ctx.fillRect(bodyX, bodyY, bodyW, waveY - bodyY);
+      ctx.globalAlpha = 1;
 
       // Detonator (top, red circle)
       ctx.shadowBlur = 12;
@@ -124,6 +134,15 @@ export default function ShapedChargeSim() {
       ctx.lineTo(targetX, jetY);
       ctx.stroke();
 
+      // Jet particles drift rightward from the cone tip
+      ctx.fillStyle = T.white;
+      for (let i = 0; i < 15; i++) {
+          const driftedX = jetStartX + ((frame * 2 + prng(frame, i) * 100) % (targetX - jetStartX));
+          ctx.beginPath();
+          ctx.arc(driftedX, jetY + (prng(frame, i+1) - 0.5) * 4, 1.5, 0, Math.PI*2);
+          ctx.fill();
+      }
+
       // Slug (thicker blob just behind jet head)
       const slugX = jetStartX + (targetX - jetStartX) * 0.25;
       ctx.fillStyle = linerColor;
@@ -152,14 +171,16 @@ export default function ShapedChargeSim() {
       if (physics.Peff > 0) {
         ctx.fillStyle = canvasTheme.canvasSurface;
         ctx.beginPath();
-        ctx.roundRect(targetX, jetY - 5, penetrationPx + 2, 10, 2);
+        // Penetration depth indicator pulses
+        const pPulse = Math.sin(frame * 0.1) * 2;
+        ctx.roundRect(targetX, jetY - 5, penetrationPx + 2 + pPulse, 10, 2);
         ctx.fill();
         // Spall glow at penetration front
         ctx.shadowBlur = 8;
         ctx.shadowColor = T.orange;
         ctx.fillStyle = T.orange;
         ctx.beginPath();
-        ctx.arc(targetX + penetrationPx, jetY, 4, 0, Math.PI * 2);
+        ctx.arc(targetX + penetrationPx + pPulse, jetY, 4, 0, Math.PI * 2);
         ctx.fill();
         ctx.shadowBlur = 0;
       }
@@ -185,6 +206,7 @@ export default function ShapedChargeSim() {
       ctx.fillText("RHA TARGET", targetX + targetW / 2, 16);
     },
     [liner, coneAngle, standoff, explosive, physics],
+    { animate: true }
   );
 
   // ── AI prompt ──────────────────────────────────────────────────────────────
@@ -272,7 +294,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How do these parameters relate to DRDO shaped
 
       <InfoBox color={T.red}>
         Shaped charges use the <strong style={{ color: T.red }}>Munroe effect</strong> — explosive-driven metal liner
-        collapse forms a hypervelocity jet. DRDO's anti-tank munitions (Nag ATGM) use copper-lined shaped charges.
+        collapse forms a hypervelocity jet. DRDO&apos;s anti-tank munitions (Nag ATGM) use copper-lined shaped charges.
         Optimal standoff is <strong>2–4 CD</strong>.
       </InfoBox>
 

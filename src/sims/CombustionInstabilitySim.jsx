@@ -234,7 +234,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL/ISRO progr
       </div>
 
       <InfoBox>
-        Combustion instability occurs when acoustic modes couple with pressure-dependent burn rate (Pc^n). The burn rate exponent 'n' is critical — higher n means stronger coupling. Session 5A (HEMCE 2026) covers mitigation strategies including baffles, acoustic liners, and inert particle damping. ISRO's PSLV and Agni motors use baffles for longitudinal mode suppression.
+        Combustion instability occurs when acoustic modes couple with pressure-dependent burn rate (Pc^n). The burn rate exponent &apos;n&apos; is critical — higher n means stronger coupling. Session 5A (HEMCE 2026) covers mitigation strategies including baffles, acoustic liners, and inert particle damping. ISRO&apos;s PSLV and Agni motors use baffles for longitudinal mode suppression.
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.orange} />
       <ExportBtn

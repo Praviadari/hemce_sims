@@ -272,7 +272,7 @@ Please evaluate the vehicle performance at these conditions. Include in prompt: 
       )}
 
       <InfoBox>
-        Water-breathing ramjets use seawater as both working fluid and oxidizer for hydro-reactive metal fuels (Mg, Al). At 100 m/s cruise, ram pressure reaches 5 MPa — enough to force seawater into the combustor without pumps. Achieved Isp of 485s (2× solid rockets). Russia's Shkval torpedo (200+ knots) uses Mg-based hydroreactive fuel. DRDO's SMART system and Varunastra torpedo programs are exploring advanced underwater propulsion. Paper FA01-P10 at HEMCE 2026 presents variable-thrust water-breathing engine research.
+        Water-breathing ramjets use seawater as both working fluid and oxidizer for hydro-reactive metal fuels (Mg, Al). At 100 m/s cruise, ram pressure reaches 5 MPa — enough to force seawater into the combustor without pumps. Achieved Isp of 485s (2× solid rockets). Russia&apos;s Shkval torpedo (200+ knots) uses Mg-based hydroreactive fuel. DRDO&apos;s SMART system and Varunastra torpedo programs are exploring advanced underwater propulsion. Paper FA01-P10 at HEMCE 2026 presents variable-thrust water-breathing engine research.
       </InfoBox>
 
       <AIInsight buildPrompt={buildPrompt} color={T.cyan} />

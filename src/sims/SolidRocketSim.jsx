@@ -361,7 +361,7 @@ Related Indian systems: ${related.map((m) => m.name).join(", ")}`,
           : grain === "tubular"
             ? " Tubular bore → progressive thrust increase."
             : " End-burn → long, constant low thrust."}{" "}
-        Gas exits convergent-divergent nozzle → thrust (Newton's 3rd).
+        Gas exits convergent-divergent nozzle → thrust (Newton&apos;s 3rd).
         {related.length > 0 && (
           <div style={{ marginTop: 8, borderTop: `1px solid ${T.glassBorder}`, paddingTop: 8 }}>
             <div style={{ fontSize: 10, fontWeight: 700, color: T.accent, marginBottom: 4 }}>

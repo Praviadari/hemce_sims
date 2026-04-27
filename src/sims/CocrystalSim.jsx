@@ -221,7 +221,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this development relate to insensiti
         <DataBox label="P_CJ" value={pCj} unit="GPa" color={T.orange} />
       </DataRow>
       <InfoBox color={T.purple}>
-        <strong style={{ color: T.purple }}>Energetic cocrystals</strong> are the frontier of HEM research. CL-20/HMX cocrystals (Bolton 2012) retain 95% of CL-20's energy while doubling impact safety. HEMRL Pune leads India's CL-20 synthesis program. FOX-7 cocrystals achieve 64% reduction in impact sensitivity — promising for insensitive munitions (IM) compliance.
+        <strong style={{ color: T.purple }}>Energetic cocrystals</strong> are the frontier of HEM research. CL-20/HMX cocrystals (Bolton 2012) retain 95% of CL-20&apos;s energy while doubling impact safety. HEMRL Pune leads India&apos;s CL-20 synthesis program. FOX-7 cocrystals achieve 64% reduction in impact sensitivity — promising for insensitive munitions (IM) compliance.
       </InfoBox>
       <AIInsight buildPrompt={buildPrompt} color={T.purple} />
       <ExportBtn simId="cocrystal" getData={() => ({ coformer, molarRatio, particleSize, density, vod, h50: h50Adjusted, pCj })} color={T.purple} />

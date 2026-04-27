@@ -189,7 +189,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/HEMRL programs? 
       <InfoBox>
         <strong style={{ color: T.purple }}>Formulation:</strong> Oxidizer ({oxidizer.toUpperCase()}) + Binder (
         {binder.toUpperCase()}) + Al fuel. {ox.green ? "♻ Green oxidizer — reduced HCl emissions." : ""}{" "}
-        {nano ? "Nano-Al increases burn rate 3-5× via surface area." : ""} HEMRL leads India's energetic materials
+        {nano ? "Nano-Al increases burn rate 3-5× via surface area." : ""} HEMRL leads India&apos;s energetic materials
         synthesis.
       </InfoBox>
       <InfoBox color={T.orange}>

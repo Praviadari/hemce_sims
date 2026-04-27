@@ -36,7 +36,7 @@ export default function ReactiveArmorSim() {
 
   // ── Canvas ─────────────────────────────────────────────────────────────────
   const canvasRef = useCanvas(
-    (ctx, W, H) => {
+    (ctx, W, H, frame) => {
       const canvasTheme = getCanvasTheme();
 
       // Background
@@ -70,7 +70,8 @@ export default function ReactiveArmorSim() {
       ctx.strokeRect(-plateW / 2 - 8, -plateH / 2, 8, plateH);
 
       // Reactive / intermediate layer
-      const reactGrad = ctx.createLinearGradient(-plateW / 2, 0, plateW / 2, 0);
+      const shimmerShift = Math.sin(frame * 0.05) * 50;
+      const reactGrad = ctx.createLinearGradient(-plateW / 2, 0 + shimmerShift, plateW / 2, 0 - shimmerShift);
       reactGrad.addColorStop(0, `${reactiveColor}55`);
       reactGrad.addColorStop(0.5, reactiveColor);
       reactGrad.addColorStop(1, `${reactiveColor}55`);
@@ -88,6 +89,8 @@ export default function ReactiveArmorSim() {
           ctx.moveTo(-plateW / 2, y);
           ctx.lineTo(plateW / 2, y);
           ctx.stroke();
+          ctx.fillStyle = `rgba(255, 69, 58, ${0.1 + Math.sin(frame * 0.1 + y)*0.1})`;
+          ctx.fillRect(-plateW / 2, y - 10, plateW, 10);
         }
       }
       // NERA wavy lines
@@ -97,7 +100,7 @@ export default function ReactiveArmorSim() {
         for (let y = -plateH / 2 + 10; y < plateH / 2 - 5; y += 10) {
           ctx.beginPath();
           for (let x = -plateW / 2; x <= plateW / 2; x += 4) {
-            const wave = Math.sin((x + y) * 0.4) * 2;
+            const wave = Math.sin((x + y) * 0.4 - frame * 0.1) * 2;
             x === -plateW / 2 ? ctx.moveTo(x, y + wave) : ctx.lineTo(x, y + wave);
           }
           ctx.stroke();
@@ -137,28 +140,32 @@ export default function ReactiveArmorSim() {
       // ── Incoming threat (from left) ─────────────────────────────────────
       const threatEndX = plateCx - Math.cos(obliqRad) * (plateW / 2 + 8) - 10;
       const threatY = plateCy + Math.sin(obliqRad) * 0;
+      
+      const approach = (frame % 300) / 300; 
+      const offsetX = -100 + approach * 100;
+      const tX = threatEndX + offsetX;
 
       if (threat === "ke") {
         // Long thin APFSDS rod
         ctx.shadowBlur = 8;
         ctx.shadowColor = T.cyan;
         ctx.fillStyle = T.cyan;
-        ctx.fillRect(40, threatY - 3, threatEndX - 40, 6);
+        ctx.fillRect(40 + offsetX, threatY - 3, tX - (40 + offsetX), 6);
         ctx.shadowBlur = 0;
         // Fin stub
         ctx.fillStyle = `${T.cyan}88`;
-        ctx.fillRect(40, threatY - 8, 14, 16);
+        ctx.fillRect(40 + offsetX, threatY - 8, 14, 16);
       } else if (threat === "heat") {
         // HEAT projectile nose
         ctx.fillStyle = T.orange;
         ctx.strokeStyle = `${T.orange}aa`;
         ctx.lineWidth = 1.5;
         ctx.beginPath();
-        ctx.moveTo(threatEndX, threatY);
-        ctx.lineTo(threatEndX - 20, threatY - 10);
-        ctx.lineTo(threatEndX - 50, threatY - 10);
-        ctx.lineTo(threatEndX - 50, threatY + 10);
-        ctx.lineTo(threatEndX - 20, threatY + 10);
+        ctx.moveTo(tX, threatY);
+        ctx.lineTo(tX - 20, threatY - 10);
+        ctx.lineTo(tX - 50, threatY - 10);
+        ctx.lineTo(tX - 50, threatY + 10);
+        ctx.lineTo(tX - 20, threatY + 10);
         ctx.closePath();
         ctx.fill();
         ctx.stroke();
@@ -166,8 +173,8 @@ export default function ReactiveArmorSim() {
         ctx.strokeStyle = T.yellow ?? "#f4c430";
         ctx.lineWidth = 2;
         ctx.beginPath();
-        ctx.moveTo(threatEndX, threatY);
-        ctx.lineTo(threatEndX + 18, threatY);
+        ctx.moveTo(tX, threatY);
+        ctx.lineTo(tX + 18, threatY);
         ctx.stroke();
       } else {
         // Irregular fragment polygon
@@ -176,11 +183,11 @@ export default function ReactiveArmorSim() {
         ctx.lineWidth = 1;
         ctx.beginPath();
         const fpts = [
-          [threatEndX - 18, threatY - 9],
-          [threatEndX - 8, threatY - 14],
-          [threatEndX, threatY - 4],
-          [threatEndX - 4, threatY + 10],
-          [threatEndX - 16, threatY + 8],
+          [tX - 18, threatY - 9],
+          [tX - 8, threatY - 14],
+          [tX, threatY - 4],
+          [tX - 4, threatY + 10],
+          [tX - 16, threatY + 8],
         ];
         fpts.forEach(([fx, fy], i) => (i === 0 ? ctx.moveTo(fx, fy) : ctx.lineTo(fx, fy)));
         ctx.closePath();
@@ -283,6 +290,7 @@ export default function ReactiveArmorSim() {
       ctx.fillText(threat.toUpperCase(), W - 8, 14);
     },
     [armorType, obliquity, threat, physics],
+    { animate: true }
   );
 
   // ── AI prompt ──────────────────────────────────────────────────────────────
@@ -360,7 +368,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO armor programs? 
       </DataRow>
 
       <InfoBox color={T.accent}>
-        <strong style={{ color: T.accent }}>DRDO's Kanchan</strong> composite armor (Arjun MBT) provides multi-threat
+        <strong style={{ color: T.accent }}>DRDO&apos;s Kanchan</strong> composite armor (Arjun MBT) provides multi-threat
         protection. ERA tiles (Contact-5 type) are effective against HEAT jets but less so vs KE rods. NERA offers
         reusable protection without explosive risk.
       </InfoBox>
