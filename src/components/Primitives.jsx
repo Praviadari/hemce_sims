@@ -47,6 +47,7 @@ export const Pill = ({ active, onClick, children, color = T.accent, label }) => 
 
 export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", color = T.accent }) => {
   const id = `slider-${label.replace(/\s+/g, "-").toLowerCase()}`;
+  const position = ((value - min) / (max - min)) * 100;
   return (
     <div style={{ marginBottom: 16 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 6 }}>
@@ -58,12 +59,23 @@ export const Slider = ({ label, value, onChange, min, max, step = 1, unit = "", 
           <span style={{ fontSize: 10, opacity: 0.8, marginLeft: 2 }}>{unit}</span>
         </span>
       </div>
-      <div style={{ position: "relative", height: 16, display: "flex", alignItems: "center" }}>
+      <div style={{ position: "relative", height: 16, display: "flex", alignItems: "center", overflow: "hidden" }}>
         <div style={{
-          position: "absolute", top: -12, left: `calc(${(value - min) / (max - min) * 100}% - 14px)`,
-          fontSize: 9, fontFamily: MONO_FONT, color: color, pointerEvents: "none",
-          fontWeight: 700, padding: "2px 6px", background: `${color}30`, borderRadius: 4,
-          opacity: 0.9, textAlign: "center", minWidth: 28
+          position: "absolute",
+          top: -12,
+          left: `${position}%`,
+          transform: "translateX(-50%)",
+          fontSize: 9,
+          fontFamily: MONO_FONT,
+          color: color,
+          pointerEvents: "none",
+          fontWeight: 700,
+          padding: "2px 6px",
+          background: `${color}30`,
+          borderRadius: 4,
+          opacity: 0.9,
+          textAlign: "center",
+          minWidth: 28,
         }}>
           {typeof value === "number" ? (Number.isInteger(value) ? value : value.toFixed(1)) : value}
         </div>
@@ -364,9 +376,9 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
     style={{
       position: "relative",
       margin: "0 auto 14px",
-      width: "100%",
+      width,
       maxWidth: maxWidth ?? width,
-      minHeight: 220,
+      minHeight: height,
       display: "grid",
       placeItems: "center",
     }}
@@ -377,8 +389,7 @@ export const SimCanvas = ({ canvasRef, width, height, maxWidth, label = "Simulat
       height={height}
       style={{
         width,
-        maxWidth: "100%",
-        height: "auto",
+        height,
         background: "radial-gradient(circle at center, var(--sim-bg-from), var(--card))",
         borderRadius: 12,
         border: "1px solid var(--glass-border)",
