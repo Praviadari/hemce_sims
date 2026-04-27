@@ -3,7 +3,7 @@ import { THEMES, FONT, TECH_FONT } from "./utils";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
 import MissilePanel from "./components/MissilePanel";
 import SchedulePanel from "./components/SchedulePanel";
-import { Pill, ErrorBoundary, Analytics, RelatedSims } from "./components/Primitives";
+import { Pill, ErrorBoundary, Analytics, RelatedSims } from "./components";
 import "./styles/global.css";
 
 /* Skeleton loader for lazy-loaded simulations */

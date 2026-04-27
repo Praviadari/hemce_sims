@@ -143,3 +143,5 @@ export function GreenPropellantSim() {
     </div>
   );
 }
+
+export default GreenPropellantSim;

@@ -156,3 +156,5 @@ export function CookOffTestSim() {
     </div>
   );
 }
+
+export default CookOffTestSim;
