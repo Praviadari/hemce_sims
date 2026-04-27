@@ -22,6 +22,7 @@ import ThermobaricSim from "./ThermobaricSim";
 import CombustionInstabilitySim from "./CombustionInstabilitySim";
 import CookOffTestSim from "./CookOffTestSim";
 import GreenPropellantSim from "./GreenPropellantSim";
+import WaterRamjetSim from "./WaterRamjetSim";
 
 export const CATEGORIES = [
   { id: "all", label: "All", color: T.accent },
@@ -41,7 +42,7 @@ export const SIM_REGISTRY = [
     color: T.orange,
     comp: SolidRocketSim,
     tags: ["solid propulsion", "combustion", "propellants"],
-    related: ["hybrid", "instability", "diagnostics", "chemistry"],
+    related: ["hybrid", "waterjet", "instability", "diagnostics", "chemistry"],
   },
   {
     id: "scramjet",
@@ -51,7 +52,7 @@ export const SIM_REGISTRY = [
     color: T.cyan,
     comp: ScramjetSim,
     tags: ["hypersonic", "scramjet", "ramjet", "irrt", "air-breathing", "propulsion", "mach"],
-    related: ["thermobaric", "hybrid", "rocket"],
+    related: ["thermobaric", "hybrid", "rocket", "waterjet"],
   },
   {
     id: "hybrid",
@@ -61,7 +62,7 @@ export const SIM_REGISTRY = [
     color: T.lime,
     comp: HybridRocketSim,
     tags: ["hybrid", "propulsion", "combustion"],
-    related: ["rocket", "scramjet", "diagnostics"],
+    related: ["rocket", "scramjet", "waterjet", "diagnostics"],
   },
   {
     id: "cookoff",
@@ -212,5 +213,15 @@ export const SIM_REGISTRY = [
     comp: CombustionDiagnosticsSim,
     tags: ["diagnostics", "pyrometry", "spectroscopy", "combustion"],
     related: ["rocket", "hybrid", "instability"],
+  },
+  {
+    id: "waterjet",
+    icon: "🌊",
+    label: "Water Ramjet",
+    cat: "propulsion",
+    color: T.cyan,
+    comp: WaterRamjetSim,
+    tags: ["water ramjet", "underwater", "torpedo", "hydro-reactive", "Mg fuel", "Shkval", "supercavitation"],
+    related: ["hybrid", "scramjet", "rocket"],
   },
 ];
