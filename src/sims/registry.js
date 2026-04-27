@@ -23,6 +23,17 @@ import CombustionInstabilitySim from "./CombustionInstabilitySim";
 import CookOffTestSim from "./CookOffTestSim";
 import GreenPropellantSim from "./GreenPropellantSim";
 import WaterRamjetSim from "./WaterRamjetSim";
+import FragmentationSim from "./FragmentationSim";
+import LiquidBiPropellantSim from "./LiquidBiPropellantSim";
+import ETCGunSim from "./ETCGunSim";
+import HallThrusterSim from "./HallThrusterSim";
+import EFPSim from "./EFPSim";
+import KineticPenetratorSim from "./KineticPenetratorSim";
+import HypersonicTPSSim from "./HypersonicTPSSim";
+import PyrotechnicDelaySim from "./PyrotechnicDelaySim";
+import IMBulletImpactSim from "./IMBulletImpactSim";
+import BlastMitigationSim from "./BlastMitigationSim";
+import SympatheticDetonationSim from "./SympatheticDetonationSim";
 
 export const CATEGORIES = [
   { id: "all", label: "All", color: T.accent },
@@ -223,5 +234,115 @@ export const SIM_REGISTRY = [
     comp: WaterRamjetSim,
     tags: ["water ramjet", "underwater", "torpedo", "hydro-reactive", "Mg fuel", "Shkval", "supercavitation"],
     related: ["hybrid", "scramjet", "rocket"],
+  },
+  {
+    id: "fragmentation",
+    icon: "💥",
+    label: "Frag Warhead",
+    cat: "detonics",
+    color: T.red,
+    comp: FragmentationSim,
+    tags: ["fragmentation", "Gurney equation", "warhead", "terminal ballistics", "shrapnel", "TBRL"],
+    related: ["detonation", "shaped", "armor"],
+  },
+  {
+    id: "liquidbiprop",
+    icon: "🚀",
+    label: "Liquid BiProp",
+    cat: "propulsion",
+    color: T.cyan,
+    comp: LiquidBiPropellantSim,
+    tags: ["liquid propulsion", "bipropellant", "cryo", "Vikas", "SCE-200"],
+    related: ["rocket", "hybrid", "hallthruster"],
+  },
+  {
+    id: "etcgun",
+    icon: "⚡",
+    label: "ETC Gun",
+    cat: "propulsion",
+    color: T.purple,
+    comp: ETCGunSim,
+    tags: ["ETC", "electrothermal", "plasma", "artillery"],
+    related: ["gun", "rocket"],
+  },
+  {
+    id: "hallthruster",
+    icon: "🛰️",
+    label: "Hall Thruster",
+    cat: "propulsion",
+    color: T.cyan,
+    comp: HallThrusterSim,
+    tags: ["ion", "electric propulsion", "ExB drift", "xenon"],
+    related: ["liquidbiprop", "rocket"],
+  },
+  {
+    id: "efp",
+    icon: "🎯",
+    label: "EFP Warhead",
+    cat: "detonics",
+    color: T.orange,
+    comp: EFPSim,
+    tags: ["EFP", "Misznay-Schardin", "top attack", "slug"],
+    related: ["shaped", "fragmentation", "armor"],
+  },
+  {
+    id: "kineticpnt",
+    icon: "🏹",
+    label: "Kinetic Pen.",
+    cat: "detonics",
+    color: T.cyan,
+    comp: KineticPenetratorSim,
+    tags: ["APFSDS", "DU", "tungsten", "terminal ballistics"],
+    related: ["armor", "efp"],
+  },
+  {
+    id: "tps",
+    icon: "☄️",
+    label: "Hypersonic TPS",
+    cat: "materials",
+    color: T.red,
+    comp: HypersonicTPSSim,
+    tags: ["HGV", "hypersonic", "ablation", "carbon-carbon"],
+    related: ["scramjet", "am"],
+  },
+  {
+    id: "delay",
+    icon: "⏱️",
+    label: "Pyrotech Delay",
+    cat: "materials",
+    color: T.gold,
+    comp: PyrotechnicDelaySim,
+    tags: ["delay", "fuze", "gasless", "chromate"],
+    related: ["chemistry", "cookoff"],
+  },
+  {
+    id: "imbullet",
+    icon: "🛡️",
+    label: "IM Bullet Test",
+    cat: "safety",
+    color: T.red,
+    comp: IMBulletImpactSim,
+    tags: ["IM", "insensitive", "bullet impact", "STANAG"],
+    related: ["cookoff", "vessel", "cocrystal"],
+  },
+  {
+    id: "blastmitig",
+    icon: "🧱",
+    label: "Blast Mitig.",
+    cat: "safety",
+    color: T.green,
+    comp: BlastMitigationSim,
+    tags: ["QD", "quantity distance", "igloo", "hopkinson"],
+    related: ["detonation", "am"],
+  },
+  {
+    id: "sympdet",
+    icon: "💥",
+    label: "Gap Test",
+    cat: "safety",
+    color: T.purple,
+    comp: SympatheticDetonationSim,
+    tags: ["gap test", "sympathetic", "shock", "barrier"],
+    related: ["imbullet", "detonation", "cookoff"],
   },
 ];

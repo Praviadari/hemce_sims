@@ -4,13 +4,13 @@ import { MISSILE_DB } from "../../data/missileDB";
 import { HEMCE_SCHEDULE } from "../../data/hemceSchedule";
 
 describe("Registry completeness", () => {
-  it("has exactly 19 sims (including newly added Water Ramjet)", () => {
-    expect(SIM_REGISTRY.length).toBe(19);
+  it("has exactly 30 sims (including the new massive 10 array expansion)", () => {
+    expect(SIM_REGISTRY.length).toBe(30);
   });
 
   it("all IDs are unique", () => {
     const ids = SIM_REGISTRY.map(s => s.id);
-    expect(new Set(ids).size).toBe(19);
+    expect(new Set(ids).size).toBe(30);
   });
 
   it("all sims have comp function", () => {
