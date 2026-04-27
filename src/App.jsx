@@ -339,11 +339,12 @@ export default function App() {
           style={{
             fontSize: "clamp(18px, 5.5vw, 28px)",
             fontWeight: 900,
-            color: currentTheme.white,
+            color: "transparent",
             fontFamily: TECH_FONT,
             letterSpacing: 1,
             marginTop: 5,
-            background: `linear-gradient(to bottom, #fff, ${currentTheme.gray})`,
+            background: `linear-gradient(to bottom, ${currentTheme.white}, ${currentTheme.gray})`,
+            backgroundClip: "text",
             WebkitBackgroundClip: "text",
             WebkitTextFillColor: "transparent",
           }}
