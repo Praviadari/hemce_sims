@@ -1,5 +1,5 @@
 import { useState, useCallback } from "react";
-import { T, TECH_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ExportBtn } from "../components";
 import { AIInsight } from "../components/AIInsight";
 
@@ -230,7 +230,7 @@ export default function HypersonicTPSSim() {
       ctx.fillText(`Recession: ${recession} mm/s`, 10, 36);
       ctx.fillText(`Burn-thru: ${burnThrough} s`, 10, 54);
     },
-    [mach, altitude, current, surfaceTemp, shockTemp, heatFluxKwCm2, ablRate, recession, burnThrough, nano, sensitivity],
+    [mach, altitude, current, surfaceTemp, shockTemp, heatFluxKwCm2, ablRate, recession, burnThrough],
     { animate: true },
   );
 
