@@ -30,21 +30,26 @@ export default function IMBulletImpactSim() {
   const confinementFactor = casingThick * 0.5;
 
   let reactionScore = 0;
-  if(penetrationRisk > 0) {
+  if (penetrationRisk > 0) {
       reactionScore = current.sens * penetrationRisk * (1 + confinementFactor * 0.1);
   }
 
-  // Map to NATO standard IM types
-  let responseType = "Type VI";
-  let responseDesc = "No Reaction";
-  let responseColor = T.gray;
-  let severity = 0;
+  const bulletMass = 0.046; // kg for 12.7mm AP
+  const kineticEnergy = 0.5 * bulletMass * Math.pow(bulletVelocity, 2); // J
+  const armorPenetration = Math.max(0, (bulletVelocity - 650) * 0.012 + 8); // approximate mm RHA equivalent
+  const penetrationDepth = Math.min(1.0, penetrationRisk / 18);
+  const hasPenetrated = penetrationDepth > 0.12;
 
-  if (reactionScore > 80) { responseType = "Type I"; responseDesc = "Detonation"; responseColor = T.purple; severity = 5; }
+  // Map to NATO standard IM types I-V
+  let responseType = "Type V";
+  let responseDesc = "No Reaction";
+  let responseColor = T.green;
+  let severity = 1;
+
+  if (reactionScore > 80) { responseType = "Type I"; responseDesc = "Detonation"; responseColor = T.red; severity = 5; }
   else if (reactionScore > 60) { responseType = "Type II"; responseDesc = "Partial Detonation"; responseColor = T.red; severity = 4; }
-  else if (reactionScore > 40) { responseType = "Type III"; responseDesc = "Explosion"; responseColor = T.orange; severity = 3; }
+  else if (reactionScore > 40) { responseType = "Type III"; responseDesc = "Burn"; responseColor = T.orange; severity = 3; }
   else if (reactionScore > 20) { responseType = "Type IV"; responseDesc = "Deflagration"; responseColor = T.gold; severity = 2; }
-  else if (reactionScore > 5) { responseType = "Type V"; responseDesc = "Burning"; responseColor = T.cyan; severity = 1; }
 
   const fireBullet = () => {
       setFiring(true);
@@ -73,93 +78,238 @@ export default function IMBulletImpactSim() {
       ctx.fillStyle = theme.canvasBackground;
       ctx.fillRect(0, 0, W, H);
 
-      const cx = W / 2;
-      const cy = H / 2;
+      const shellX = W * 0.32;
+      const shellY = H * 0.5;
+      const shellL = 220;
+      const shellH = 84;
+      const casingPx = 4 + Math.min(10, casingThick * 0.4);
+      const shellLeft = shellX;
+      const shellRight = shellX + shellL;
+      const shellTop = shellY - shellH / 2;
+      const shellBottom = shellY + shellH / 2;
+      const bulletStart = 36;
+      const bulletTarget = shellLeft - 16;
+      const travelPhase = Math.min(1, reactionPhase / 0.4);
+      const bulletX = firing ? bulletStart + (bulletTarget - bulletStart) * travelPhase : bulletStart;
+      const impactPhase = Math.max(0, Math.min(1, (reactionPhase - 0.4) / 0.2));
+      const penetrationPhase = Math.max(0, Math.min(1, (reactionPhase - 0.6) / 0.4));
+      const reactionPhaseNormalized = Math.max(0, Math.min(1, (reactionPhase - 1.0) / 0.8));
+      const scoreLabels = [
+        { label: "I: Det", color: T.red },
+        { label: "II: Part Det", color: T.red },
+        { label: "III: Burn", color: T.orange },
+        { label: "IV: Deflag", color: T.gold },
+        { label: "V: No React", color: T.green },
+      ];
+      const selectedIndex = severity === 5 ? 0 : severity === 4 ? 1 : severity === 3 ? 2 : severity === 2 ? 3 : 4;
 
-      // Draw Bomb/Warhead profile
-      const bombW = 80;
-      const bombH = 100;
-      
-      if (reactionPhase < 1.1 || severity < 4) { // Survives structure intact somewhat
-          ctx.fillStyle = current.color;
-          ctx.fillRect(cx - bombW/2, cy - bombH/2, bombW, bombH);
-          
-          ctx.lineWidth = casingThick;
-          ctx.strokeStyle = "#4A5568";
-          ctx.strokeRect(cx - bombW/2, cy - bombH/2, bombW, bombH);
-          
-          ctx.font = `bold 10px ${TECH_FONT}`;
+      // Background floor shading
+      ctx.fillStyle = "rgba(255,255,255,0.04)";
+      ctx.fillRect(0, shellY + shellH / 2 + 14, W, 8);
+      ctx.fillStyle = "rgba(0,0,0,0.08)";
+      ctx.fillRect(0, shellY + shellH / 2 + 22, W, 4);
+
+      // Munition cylinder body
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(shellLeft + shellH/2, shellTop);
+      ctx.lineTo(shellRight - shellH/2, shellTop);
+      ctx.arc(shellRight - shellH/2, shellY, shellH/2, -Math.PI/2, Math.PI/2);
+      ctx.lineTo(shellLeft + shellH/2, shellBottom);
+      ctx.arc(shellLeft + shellH/2, shellY, shellH/2, Math.PI/2, -Math.PI/2);
+      ctx.closePath();
+      ctx.fillStyle = "#4A5568";
+      ctx.fill();
+      ctx.lineWidth = 1.5;
+      ctx.strokeStyle = "rgba(255,255,255,0.15)";
+      ctx.stroke();
+      ctx.restore();
+
+      // Explosive fill inside casing
+      ctx.save();
+      ctx.beginPath();
+      ctx.moveTo(shellLeft + shellH/2 + casingPx, shellTop + casingPx);
+      ctx.lineTo(shellRight - shellH/2 - casingPx, shellTop + casingPx);
+      ctx.arc(shellRight - shellH/2 - casingPx, shellY, shellH/2 - casingPx, -Math.PI/2, Math.PI/2);
+      ctx.lineTo(shellLeft + shellH/2 + casingPx, shellBottom - casingPx);
+      ctx.arc(shellLeft + shellH/2 + casingPx, shellY, shellH/2 - casingPx, Math.PI/2, -Math.PI/2);
+      ctx.closePath();
+      ctx.fillStyle = current.color;
+      ctx.fill();
+      ctx.restore();
+
+      // Bullet shape
+      ctx.save();
+      ctx.translate(bulletX, shellY);
+      ctx.fillStyle = "#E2E8F0";
+      ctx.beginPath();
+      ctx.moveTo(0, 0);
+      ctx.lineTo(24, -8);
+      ctx.lineTo(42, 0);
+      ctx.lineTo(24, 8);
+      ctx.closePath();
+      ctx.fill();
+      ctx.fillStyle = "#718096";
+      ctx.fillRect(16, -4, 28, 8);
+      ctx.fillStyle = "rgba(255,255,255,0.4)";
+      ctx.fillRect(22, -3, 10, 6);
+      ctx.restore();
+
+      // Bullet trail before firing
+      if (!firing) {
+        ctx.strokeStyle = "rgba(255,255,255,0.12)";
+        ctx.lineWidth = 1;
+        ctx.setLineDash([4, 6]);
+        ctx.beginPath();
+        ctx.moveTo(bulletStart + 46, shellY);
+        ctx.lineTo(shellLeft - 20, shellY);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+
+      // Impact crater and shock wave
+      if (impactPhase > 0) {
+        const impactX = shellLeft - 12;
+        const impactY = shellY;
+
+        // Crater
+        const craterRadius = 8 + impactPhase * 6;
+        ctx.fillStyle = "rgba(26, 32, 44, 0.95)";
+        ctx.beginPath();
+        ctx.arc(impactX, impactY, craterRadius, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Crack lines
+        ctx.strokeStyle = "rgba(255,255,255,0.65)";
+        ctx.lineWidth = 1;
+        for (let i = 0; i < 6; i += 1) {
+          const angle = (Math.PI * 2 / 6) * i + impactPhase * 0.6;
+          ctx.beginPath();
+          ctx.moveTo(impactX, impactY);
+          ctx.lineTo(impactX + Math.cos(angle) * (16 + impactPhase * 24), impactY + Math.sin(angle) * (12 + impactPhase * 16));
+          ctx.stroke();
+        }
+
+        // Shock ripples
+        ctx.strokeStyle = `rgba(237, 137, 54, ${1 - impactPhase})`;
+        ctx.lineWidth = 1.5;
+        ctx.beginPath();
+        ctx.arc(impactX, impactY, 18 + impactPhase * 16, 0, Math.PI * 2);
+        ctx.stroke();
+        ctx.beginPath();
+        ctx.arc(impactX, impactY, 28 + impactPhase * 20, 0, Math.PI * 2);
+        ctx.stroke();
+      }
+
+      // Penetration line and bullet entry
+      if (penetrationPhase > 0 && hasPenetrated) {
+        const startX = shellLeft - 12;
+        const entryLen = Math.min(shellL - casingPx * 5, penetrationPhase * (shellL * 0.55));
+        ctx.strokeStyle = "rgba(255, 99, 71, 0.9)";
+        ctx.lineWidth = 3;
+        ctx.beginPath();
+        ctx.moveTo(startX, shellY);
+        ctx.lineTo(startX + entryLen, shellY);
+        ctx.stroke();
+
+        ctx.fillStyle = "rgba(255, 255, 255, 0.7)";
+        ctx.beginPath();
+        ctx.arc(startX + entryLen, shellY, 4, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      // Penetration depth gauge
+      ctx.strokeStyle = "rgba(255,255,255,0.18)";
+      ctx.lineWidth = 1;
+      ctx.beginPath();
+      ctx.moveTo(shellLeft - 12, shellBottom + 18);
+      ctx.lineTo(shellLeft - 12 + shellL * 0.55, shellBottom + 18);
+      ctx.stroke();
+      ctx.fillStyle = T.white;
+      ctx.font = `600 10px ${TECH_FONT}`;
+      ctx.textAlign = "left";
+      ctx.fillText(`Penetration ${Math.round(penetrationDepth * 100)}%`, shellLeft - 12, shellBottom + 34);
+
+      // Blast/Reaction effects
+      if (reactionPhase > 0.6) {
+        const effectX = shellLeft + 24;
+        const effectR = reactionPhaseNormalized * 70;
+
+        if (severity === 5 || severity === 4) {
+          ctx.fillStyle = `rgba(255, 220, 128, ${0.9 - reactionPhaseNormalized * 0.6})`;
+          ctx.beginPath();
+          ctx.arc(effectX, shellY, effectR, 0, Math.PI * 2);
+          ctx.fill();
+          ctx.fillStyle = `rgba(255, 120, 120, ${0.55 - reactionPhaseNormalized * 0.35})`;
+          ctx.beginPath();
+          ctx.arc(effectX, shellY, effectR * 0.45, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (severity === 3) {
+          for (let i = 0; i < 5; i += 1) {
+            const flameX = effectX + Math.cos(i * 1.15 + frame * 0.03) * 12;
+            const flameY = shellY - 4 - i * 4 + Math.sin(frame * 0.04 + i) * 4;
+            ctx.fillStyle = `rgba(237, 137, 54, ${0.6 - i * 0.08})`;
+            ctx.beginPath();
+            ctx.ellipse(flameX, flameY, 10 - i, 18 - i * 2, Math.PI / 4, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+
+        if (severity === 2) {
+          ctx.fillStyle = `rgba(255, 186, 73, ${0.5 + reactionPhaseNormalized * 0.4})`;
+          ctx.beginPath();
+          ctx.ellipse(effectX, shellY, 12, 22, -Math.PI / 6, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        if (severity === 1) {
+          ctx.fillStyle = `rgba(66, 153, 225, ${0.85 - reactionPhaseNormalized * 0.45})`;
+          ctx.beginPath();
+          ctx.arc(shellLeft - 12, shellY, 6, 0, Math.PI * 2);
+          ctx.fill();
           ctx.fillStyle = T.white;
+          ctx.font = `700 14px ${TECH_FONT}`;
           ctx.textAlign = "center";
-          ctx.fillText("WARHEAD", cx, cy);
+          ctx.fillText("PASS ✓", shellLeft + shellL * 0.45, shellY - shellH - 6);
+        }
       }
 
-      if (firing) {
-         if (reactionPhase <= 1.0) {
-             // Bullet Approaching from left
-             const bx = cx - 150 + (reactionPhase * (150 - bombW/2));
-             ctx.fillStyle = T.orange;
-             ctx.fillRect(bx, cy - 3, 15, 6);
-             // motion blur
-             ctx.fillStyle = "rgba(237, 137, 54, 0.3)";
-             ctx.fillRect(bx - 30, cy - 2, 30, 4);
-         } else {
-             // Reaction!
-             const pT = reactionPhase - 1.0; // 0 to 1
-             
-             if (penetrationRisk > 0) {
-                 if (severity === 5 || severity === 4) {
-                     // Type I / II Detonation (Massive blast)
-                     const blastR = pT * W;
-                     ctx.fillStyle = `rgba(159, 122, 234, ${1 - pT})`;
-                     ctx.beginPath(); ctx.arc(cx, cy, blastR, 0, Math.PI*2); ctx.fill();
-                     ctx.fillStyle = `rgba(255, 255, 255, ${1 - pT*2})`;
-                     ctx.fillRect(0,0,W,H);
-                     
-                     // Fragments
-                     ctx.fillStyle = "#A0AEC0";
-                     for(let i=0; i<30; i++) {
-                         const fx = cx + Math.cos(i) * (blastR * 0.8 + Math.random()*20);
-                         const fy = cy + Math.sin(i*2) * (blastR * 0.8 + Math.random()*20);
-                         ctx.fillRect(fx, fy, 4, 4);
-                     }
-                 }
-                 else if (severity === 3) {
-                     // Type III Explosion (Casing bursts, pressure wave but not full detonation)
-                     const blastR = pT * W * 0.5;
-                     ctx.fillStyle = `rgba(237, 137, 54, ${1 - pT})`;
-                     ctx.beginPath(); ctx.arc(cx, cy, blastR, 0, Math.PI*2); ctx.fill();
-                     
-                     // Two big casing halves fly off
-                     ctx.fillStyle = "#4A5568";
-                     ctx.fillRect(cx - bombW/2 - pT*50, cy - bombH/2, 5, bombH);
-                     ctx.fillRect(cx + bombW/2 + pT*50, cy - bombH/2, 5, bombH);
-                 }
-                 else if (severity === 2 || severity === 1) {
-                     // Deflagration / Burn (Fire out of the bullet hole)
-                     const holeX = cx - bombW/2;
-                     
-                     ctx.fillStyle = "#1A202C"; // scorch
-                     ctx.beginPath(); ctx.arc(holeX, cy, 10, 0, Math.PI*2); ctx.fill();
-                     
-                     ctx.fillStyle = `rgba(246, 224, 94, ${1 - pT*0.5})`; // flame
-                     ctx.beginPath(); 
-                     ctx.arc(holeX - pT*40, cy, 8 + Math.random()*10, 0, Math.PI*2); 
-                     ctx.fill();
-                 }
-             } else {
-                 // Type VI No reaction (Bullet bounced or stuck)
-                 ctx.fillStyle = T.gray;
-                 ctx.beginPath(); ctx.arc(cx - bombW/2, cy, 4, 0, Math.PI*2); ctx.fill();
-                 ctx.fillStyle = T.white;
-                 ctx.font = `bold 10px ${TECH_FONT}`;
-                 ctx.fillText("BULLET DEFEATED", cx, cy - 65);
-             }
-         }
+      // Explosive label
+      ctx.fillStyle = T.white;
+      ctx.font = `600 10px ${TECH_FONT}`;
+      ctx.textAlign = "center";
+      ctx.fillText(current.label, shellLeft + shellL / 2, shellY + 4);
+
+      // Vertical scorecard
+      const chartX = W - 92;
+      const chartY = 30;
+      const labelWidth = 64;
+      ctx.textAlign = "left";
+      ctx.font = `600 10px ${TECH_FONT}`;
+      for (let i = 0; i < scoreLabels.length; i += 1) {
+        const y = chartY + i * 28;
+        ctx.fillStyle = scoreLabels[i].color;
+        ctx.fillRect(chartX, y, 16, 18);
+        if (i === selectedIndex) {
+          ctx.strokeStyle = T.white;
+          ctx.lineWidth = 2;
+          ctx.strokeRect(chartX - 2, y - 2, 20, 22);
+        }
+        ctx.fillStyle = T.white;
+        ctx.fillText(scoreLabels[i].label, chartX + 24, y + 13);
       }
 
+      // Labels and gauges
+      ctx.fillStyle = T.white;
+      ctx.font = `700 11px ${TECH_FONT}`;
+      ctx.fillText("Impact Scorecard", chartX, chartY - 12);
+      ctx.font = `600 10px ${TECH_FONT}`;
+      ctx.fillText(`KE ${Math.round(kineticEnergy)} J`, chartX, chartY + 160);
+      ctx.fillText(`Armor Pene ${Math.round(armorPenetration)} mm`, chartX, chartY + 176);
     },
-    [explosive, casingThick, bulletVelocity, current, firing, reactionPhase, severity, penetrationRisk],
+    [explosive, casingThick, bulletVelocity, current, firing, reactionPhase, severity, penetrationRisk, bulletMass, kineticEnergy, armorPenetration, penetrationDepth],
     { animate: firing },
   );
 

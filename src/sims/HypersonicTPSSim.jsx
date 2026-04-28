@@ -39,87 +39,198 @@ export default function HypersonicTPSSim() {
   const ablRate = heatFluxKwCm2 > 0 ? Math.round(((heatFluxKwCm2 * 10) / current.ablHeof) * 10) / 10 : 0;
   const isSurviving = shockTemp < current.limitT || ablRate < 5.0; // Fails if reciting too fast or melting
 
+  const surfaceTemp = shockTemp;
+  const recession = surfaceTemp > current.limitT ? Number(((surfaceTemp - current.limitT) / current.ablHeof * 0.01).toFixed(2)) : 0;
+  const tpsThickness = 25;
+  const burnThrough = recession > 0 ? (tpsThickness / recession).toFixed(0) : "∞";
+  const shockStandoff = 0.15 / (mach * 0.1);
+
   const canvasRef = useCanvas(
     (ctx, W, H, frame) => {
       const theme = getCanvasTheme();
       ctx.fillStyle = theme.canvasBackground;
       ctx.fillRect(0, 0, W, H);
 
-      const cx = 80;
-      const cy = H / 2;
-      const t = frame * 0.05;
+      const leftW = W * 0.5;
+      const rightX = W * 0.55;
+      const noseCenterY = H * 0.45;
+      const noseRadius = leftW * 0.22;
+      const tpsThicknessPx = 20;
+      const structureDepth = 18;
+      const ablateActive = surfaceTemp > current.limitT;
+      const waveX = 30 + shockStandoff * 24;
 
-      // Draw Airflow Shockwave
-      const shockDistance = cx - 20 - (mach - 5)*2; 
-
-      ctx.fillStyle = `rgba(237, 137, 54, ${Math.min(1, heatFluxKwCm2/10)})`;
+      // Bow shock standoff line
+      ctx.setLineDash([6, 4]);
+      ctx.strokeStyle = "rgba(255,220,150,0.75)";
+      ctx.lineWidth = 2;
       ctx.beginPath();
-      ctx.moveTo(shockDistance, cx - 60);
-      ctx.quadraticCurveTo(cx - 30, cy, shockDistance, cx + 60);
-      ctx.lineTo(W, cx + 60);
-      ctx.lineTo(W, cx - 60);
+      ctx.arc(waveX, noseCenterY, noseRadius + 18, Math.PI * 0.6, Math.PI * 1.4);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Nose cone and TPS cross-section
+      const noseLeft = 40;
+      const noseRight = noseLeft + noseRadius * 1.8;
+      const noseTop = noseCenterY - noseRadius;
+      const noseBottom = noseCenterY + noseRadius;
+
+      // Outer TPS gradient
+      const tpsOuter = noseRadius + tpsThicknessPx * 0.6;
+      const faceGrad = ctx.createLinearGradient(noseLeft, noseCenterY, noseRight, noseCenterY);
+      faceGrad.addColorStop(0, "rgba(255,255,255,0.95)");
+      faceGrad.addColorStop(0.4, "rgba(255,120,90,0.88)");
+      faceGrad.addColorStop(1, "rgba(20,120,200,0.3)");
+      ctx.fillStyle = faceGrad;
+      ctx.beginPath();
+      ctx.moveTo(noseLeft, noseCenterY);
+      ctx.quadraticCurveTo(noseLeft + noseRadius, noseTop, noseRight, noseCenterY);
+      ctx.quadraticCurveTo(noseLeft + noseRadius, noseBottom, noseLeft, noseCenterY);
       ctx.fill();
-      
-      // Plasma core glow at stagnation point
-      if (mach > 5) {
-          const plasma = ctx.createRadialGradient(cx-15, cy, 0, cx-15, cy, Math.min(60, mach*4));
-          plasma.addColorStop(0, T.white);
-          plasma.addColorStop(0.2, T.cyan);
-          plasma.addColorStop(1, "transparent");
-          ctx.fillStyle = plasma;
-          ctx.fillRect(cx-60, cy-60, 100, 120);
-      }
 
-      // Draw HGV Wedge Profile
-      ctx.fillStyle = isSurviving ? current.color : T.red;
+      // TPS layer band
+      const bandGradient = ctx.createLinearGradient(noseLeft, noseCenterY - noseRadius, noseLeft, noseCenterY + noseRadius);
+      bandGradient.addColorStop(0, "rgba(255,120,0,0.95)");
+      bandGradient.addColorStop(0.5, "rgba(245,140,80,0.85)");
+      bandGradient.addColorStop(1, "rgba(80,160,255,0.5)");
+      ctx.strokeStyle = bandGradient;
+      ctx.lineWidth = tpsThicknessPx;
       ctx.beginPath();
-      
-      // Erosion visual effect (nose becomes blunter and shorter as ablRate increases)
-      // Visual illusion loop
-      const erosionT = (frame * 0.02 * ablRate) % 5;
-      const noseX = cx - 10 + erosionT;
-      
-      ctx.moveTo(noseX, cy);
-      ctx.lineTo(noseX + 60, cy - 30);
-      ctx.lineTo(W, cy - 30);
-      ctx.lineTo(W, cy + 30);
-      ctx.lineTo(noseX + 60, cy + 30);
+      ctx.arc(noseLeft + noseRadius, noseCenterY, noseRadius + tpsThicknessPx / 2, Math.PI * 0.6, Math.PI * 1.4);
+      ctx.stroke();
+
+      // Structure layer
+      ctx.fillStyle = "rgba(120,128,145,0.95)";
+      ctx.beginPath();
+      ctx.arc(noseLeft + noseRadius, noseCenterY, noseRadius - structureDepth, Math.PI * 0.6, Math.PI * 1.4);
+      ctx.lineTo(noseLeft + noseRadius, noseCenterY + (noseRadius - structureDepth));
       ctx.closePath();
       ctx.fill();
 
-      // Striations/Debris coming off nose demonstrating ablation
-      if (ablRate > 0) {
-         ctx.fillStyle = "rgba(255,255,255,0.4)";
-         for(let i=0; i<10; i++) {
-             const dbX = noseX + ((t * 80 + i*15) % 80);
-             const dbY = cy + (Math.sin(dbX*0.2)*(noseX-dbX)*0.2) + (i%2 ? -1 : 1)*(i*2);
-             ctx.beginPath(); ctx.arc(dbX, dbY, 1, 0, Math.PI*2); ctx.fill();
-         }
-      }
+      // Stagnation point glow
+      const glow = ctx.createRadialGradient(noseLeft, noseCenterY, 0, noseLeft, noseCenterY, 26);
+      glow.addColorStop(0, "rgba(255,255,255,1)");
+      glow.addColorStop(0.2, "rgba(255,90,20,0.9)");
+      glow.addColorStop(1, "rgba(255,90,20,0)");
+      ctx.fillStyle = glow;
+      ctx.beginPath();
+      ctx.arc(noseLeft, noseCenterY, 30, 0, Math.PI * 2);
+      ctx.fill();
 
-      // Convective flow lines
-      ctx.strokeStyle = "rgba(0,0,0,0.2)";
-      ctx.lineWidth = 1;
-      for (let i = -1; i <= 1; i += 2) {
+      // Nose tip surface
+      ctx.fillStyle = ablateActive ? T.red : T.white;
+      ctx.beginPath();
+      ctx.arc(noseLeft, noseCenterY, 8, 0, Math.PI * 2);
+      ctx.fill();
+
+      // Ablation layer and particles
+      const ablated = ablateActive ? Math.min(12, frame * 0.08) : 0;
+      if (ablateActive) {
+        ctx.fillStyle = "rgba(180, 40, 30, 0.8)";
+        ctx.beginPath();
+        ctx.arc(noseLeft + ablated * 0.8, noseCenterY, noseRadius * 0.24, 0, Math.PI * 2);
+        ctx.fill();
+        for (let i = 0; i < 14; i += 1) {
+          const px = noseLeft + noseRadius + 10 + prng(frame, i) * 40 + (frame * 0.9 % 40);
+          const py = noseCenterY + (i - 7) * 3 + Math.sin(frame * 0.1 + i) * 2;
+          ctx.fillStyle = "rgba(255, 180, 120, 0.7)";
           ctx.beginPath();
-          ctx.moveTo(cx - 40, cy + i*10);
-          ctx.quadraticCurveTo(cx - 20, cy + i*15, cx, cy + i*25);
-          ctx.lineTo(W, cy + i*35);
-          ctx.stroke();
+          ctx.arc(px, py, 2 + prng(frame, i + 1), 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        ctx.strokeStyle = T.red;
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(noseLeft + noseRadius - 10, noseCenterY + noseRadius + 12);
+        ctx.lineTo(noseLeft + noseRadius - 18, noseCenterY + noseRadius + 12);
+        ctx.lineTo(noseLeft + noseRadius - 18, noseCenterY + noseRadius + 6);
+        ctx.stroke();
       }
 
-      // HUD Stats on Canvas
-      ctx.fillStyle = "#FFF";
-      ctx.font = `bold 10px ${TECH_FONT}`;
-      ctx.fillText(`STAGNATION: ${shockTemp} °K`, 10, 20);
-      
-      if (!isSurviving) {
-          ctx.fillStyle = T.red;
-          ctx.fillText(`⚠ THERMAL LIMIT EXCEEDED`, 10, 35);
-      }
+      // Material state label
+      ctx.font = `700 12px ${TECH_FONT}`;
+      ctx.fillStyle = ablateActive ? T.red : T.green;
+      ctx.textAlign = "center";
+      ctx.fillText(ablateActive ? "ABLATION ACTIVE" : "TPS INTACT", leftW * 0.5, H - 18);
 
+      // Temperature profile plot
+      const profileX = rightX;
+      const profileY = 24;
+      const profileW = W - rightX - 24;
+      const profileH = H * 0.6;
+      ctx.strokeStyle = "rgba(255,255,255,0.22)";
+      ctx.lineWidth = 1;
+      ctx.strokeRect(profileX, profileY, profileW, profileH);
+
+      const stagTemp = surfaceTemp;
+      ctx.beginPath();
+      for (let i = 0; i <= 40; i += 1) {
+        const depth = i / 40;
+        const temp = stagTemp * Math.exp(-depth * 2.8);
+        const x = profileX + (temp / stagTemp) * profileW;
+        const y = profileY + depth * profileH;
+        if (i === 0) ctx.moveTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = T.red;
+      ctx.lineWidth = 2;
+      ctx.stroke();
+
+      ctx.fillStyle = "rgba(220,38,38,0.2)";
+      ctx.beginPath();
+      ctx.moveTo(profileX, profileY);
+      for (let i = 0; i <= 40; i += 1) {
+        const depth = i / 40;
+        const temp = stagTemp * Math.exp(-depth * 2.8);
+        const x = profileX + (temp / stagTemp) * profileW;
+        const y = profileY + depth * profileH;
+        if (i === 0) ctx.lineTo(x, y);
+        else ctx.lineTo(x, y);
+      }
+      ctx.lineTo(profileX, profileY + profileH);
+      ctx.closePath();
+      ctx.fill();
+
+      const limitX = profileX + (current.limitT / stagTemp) * profileW;
+      const safeX = profileX + (150 + 273) / stagTemp * profileW;
+      ctx.strokeStyle = "rgba(255,255,255,0.5)";
+      ctx.setLineDash([4, 4]);
+      ctx.beginPath();
+      ctx.moveTo(limitX, profileY);
+      ctx.lineTo(limitX, profileY + profileH);
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(safeX, profileY);
+      ctx.lineTo(safeX, profileY + profileH);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      ctx.fillStyle = T.white;
+      ctx.font = `700 10px ${TECH_FONT}`;
+      ctx.textAlign = "left";
+      ctx.fillText("Temperature profile", profileX, profileY - 8);
+      ctx.fillText(`Limit ${current.limitT} K`, limitX + 4, profileY + 14);
+      ctx.fillText("Safe 150°C", safeX + 4, profileY + 28);
+
+      // Cross-section details
+      ctx.fillStyle = "rgba(255,255,255,0.18)";
+      ctx.fillRect(noseLeft - 4, noseCenterY + noseRadius + 18, noseRight - noseLeft + 4, 12);
+      ctx.fillStyle = "rgba(255,255,255,0.05)";
+      ctx.fillRect(noseLeft - 4, noseCenterY + noseRadius + 18, (noseRight - noseLeft + 4) * 0.5, 12);
+      ctx.fillStyle = T.white;
+      ctx.font = `600 9px ${TECH_FONT}`;
+      ctx.textAlign = "center";
+      ctx.fillText("TPS Cross-Section", noseLeft + noseRadius, noseCenterY + noseRadius + 12);
+
+      ctx.fillStyle = theme.canvasSurface;
+      ctx.font = `700 10px ${TECH_FONT}`;
+      ctx.textAlign = "left";
+      ctx.fillText(`Bow Shock: ${shockStandoff.toFixed(2)} m`, 10, 18);
+      ctx.fillText(`Recession: ${recession} mm/s`, 10, 36);
+      ctx.fillText(`Burn-thru: ${burnThrough} s`, 10, 54);
     },
-    [mach, altitude, current, isSurviving, shockTemp, heatFluxKwCm2, ablRate],
+    [mach, altitude, current, surfaceTemp, shockTemp, heatFluxKwCm2, ablRate, recession, burnThrough, nano, sensitivity],
     { animate: true },
   );
 
@@ -145,7 +256,7 @@ Part 3 — CARBON-CARBON: Why are 2D/3D Carbon-Carbon composites the gold standa
 
   return (
     <div>
-      <SimCanvas canvasRef={canvasRef} width={460} height={160} maxWidth={460} />
+      <SimCanvas canvasRef={canvasRef} width={520} height={260} maxWidth={520} />
       
       <PillRow>
         <Pill active={material === "c_c"} onClick={() => setMaterial("c_c")} color={T.gray}>Carbon-Carbon</Pill>
@@ -159,6 +270,10 @@ Part 3 — CARBON-CARBON: Why are 2D/3D Carbon-Carbon composites the gold standa
       <DataRow>
         <DataBox label="Heat Flux" value={heatFluxKwCm2} unit="kW/cm²" color={heatFluxKwCm2 > 10 ? T.red : T.orange} />
         <DataBox label="T_stag" value={shockTemp} unit="K" color={T.accent} />
+        <DataBox label="Recession" value={recession} unit="mm/s" color={recession > 0 ? T.red : T.green} />
+        <DataBox label="Burn-thru" value={burnThrough} unit="s" color={burnThrough !== "∞" && Number(burnThrough) < 60 ? T.red : T.green} />
+      </DataRow>
+      <DataRow>
         <DataBox label="Ablation" value={ablRate.toFixed(1)} unit="mm/s" color={ablRate > 2 ? T.red : T.cyan} />
         <DataBox label="V_flight" value={velocity} unit="m/s" color={T.purple} />
       </DataRow>

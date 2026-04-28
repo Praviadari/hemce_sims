@@ -1,5 +1,5 @@
-import { useState, useCallback } from "react";
-import { T, TECH_FONT, useCanvas, getCanvasTheme } from "../utils";
+import { useState, useCallback, useMemo } from "react";
+import { T, TECH_FONT, useCanvas, getCanvasTheme, prng } from "../utils";
 import { Pill, PillRow, Slider, DataBox, DataRow, InfoBox, SimCanvas, ExportBtn } from "../components";
 import { AIInsight } from "../components/AIInsight";
 
@@ -33,6 +33,10 @@ export default function FragmentationSim() {
   
   // Kinetic energy per fragment at launch
   const ke = Math.round(0.5 * (avgFragMass / 1000) * v0 * v0); // Joules (1/2 m v^2)
+
+  const lethalEnergy = 80; // J — incapacitation threshold
+  const fragEnergy = 0.5 * (avgFragMass / 1000) * v0 * v0;
+  const lethalRadius = Math.round(Math.sqrt(fragEnergy / lethalEnergy) * 5); // simplified meters
 
   const canvasRef = useCanvas(
     (ctx, W, H, frame) => {
@@ -136,7 +140,119 @@ export default function FragmentationSim() {
       ctx.textAlign = "left";
       ctx.textBaseline = "bottom";
       ctx.fillText(`V0: ${v0} m/s`, 10, H - 10);
-      
+
+      // Fragment spray pattern overlay
+      const topZoneH = H * 0.6;
+      const sprayCx = cx - 30;
+      const sprayCy = topZoneH * 0.55;
+      const numFrags = 40;
+      const waveX = (frame * 2) % (W + 120) - 120;
+
+      // Warhead body
+      ctx.fillStyle = cd.color;
+      ctx.beginPath();
+      ctx.roundRect(sprayCx - 28, sprayCy - 16, 56, 32, 16);
+      ctx.fill();
+      ctx.fillStyle = "rgba(0,0,0,0.12)";
+      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255,255,255,0.12)";
+      ctx.stroke();
+
+      // Detonation wave front
+      const waveGrad = ctx.createLinearGradient(waveX, sprayCy - 24, waveX + 80, sprayCy + 24);
+      waveGrad.addColorStop(0, "rgba(255, 120, 0, 0)");
+      waveGrad.addColorStop(0.3, "rgba(255, 140, 0, 0.55)");
+      waveGrad.addColorStop(1, "rgba(255, 200, 0, 0)");
+      ctx.fillStyle = waveGrad;
+      ctx.fillRect(waveX, sprayCy - 24, 80, 48);
+
+      // Fragments spray from casing
+      for (let i = 0; i < numFrags; i++) {
+        const angle = (i / numFrags) * Math.PI * 2;
+        const fragDist = (frame * 0.5 + prng(frame % 60, i) * 20) % (W * 0.4);
+        const fx = sprayCx + Math.cos(angle) * fragDist;
+        const fy = sprayCy + Math.sin(angle) * fragDist * 0.6;
+        const fragSize = 1 + prng(0, i) * 3;
+
+        ctx.fillStyle = cd.color;
+        ctx.globalAlpha = Math.max(0, 1 - fragDist / (W * 0.4));
+        ctx.fillRect(fx - fragSize / 2, fy - fragSize / 2, fragSize, fragSize);
+      }
+      ctx.globalAlpha = 1;
+
+      const lethalPx = Math.min(W * 0.4, lethalRadius * 5);
+      const safePx = Math.min(W * 0.4, lethalPx * 1.6);
+      ctx.strokeStyle = "rgba(255,80,80,0.9)";
+      ctx.setLineDash([6, 4]);
+      ctx.beginPath();
+      ctx.arc(sprayCx, sprayCy, lethalPx, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.strokeStyle = "rgba(80,255,120,0.9)";
+      ctx.beginPath();
+      ctx.arc(sprayCx, sprayCy, safePx, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.setLineDash([]);
+
+      // Velocity decay arrows
+      const arrowRadii = [lethalPx * 0.4, lethalPx * 0.8, safePx * 0.6, safePx * 0.95];
+      arrowRadii.forEach((radius, idx) => {
+        const speed = Math.max(8, 18 - radius / 12);
+        const ax = sprayCx + Math.cos(idx * 0.8) * radius;
+        const ay = sprayCy + Math.sin(idx * 0.8) * radius * 0.6;
+        ctx.strokeStyle = "rgba(255,255,255,0.75)";
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.moveTo(ax, ay);
+        const bx = ax + Math.cos(idx * 0.8) * speed;
+        const by = ay + Math.sin(idx * 0.8) * speed * 0.6;
+        ctx.lineTo(bx, by);
+        ctx.stroke();
+        ctx.beginPath();
+        const head = 4;
+        const angle = Math.atan2(by - ay, bx - ax);
+        ctx.lineTo(bx - Math.cos(angle - 0.4) * head, by - Math.sin(angle - 0.4) * head);
+        ctx.moveTo(bx, by);
+        ctx.lineTo(bx - Math.cos(angle + 0.4) * head, by - Math.sin(angle + 0.4) * head);
+        ctx.stroke();
+      });
+
+      // Mott distribution chart
+      const chartTop = H - 44;
+      const chartHeight = 34;
+      const bins = 10;
+      const mu = avgFragMass;
+      const N0 = 18;
+      const binWidth = (W - 48) / bins;
+      let maxCount = 0;
+      const counts = [];
+      for (let i = 0; i < bins; i++) {
+        const mass = (i + 0.5) * 2;
+        const count = N0 * Math.exp(-Math.sqrt(mass / mu));
+        counts.push(count);
+        maxCount = Math.max(maxCount, count);
+      }
+      ctx.fillStyle = "rgba(255,255,255,0.12)";
+      ctx.fillRect(20, chartTop, W - 40, chartHeight);
+      ctx.strokeStyle = "rgba(255,255,255,0.25)";
+      ctx.strokeRect(20, chartTop, W - 40, chartHeight);
+      counts.forEach((count, i) => {
+        const barH = (count / maxCount) * (chartHeight - 14);
+        ctx.fillStyle = "rgba(160, 100, 255, 0.75)";
+        ctx.fillRect(24 + i * binWidth, chartTop + chartHeight - barH - 8, binWidth - 4, barH);
+      });
+      const avgX = 20 + ((avgFragMass / 20) * (W - 40));
+      ctx.strokeStyle = "rgba(255,180,80,0.95)";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(avgX, chartTop + 4);
+      ctx.lineTo(avgX, chartTop + chartHeight - 4);
+      ctx.stroke();
+      ctx.fillStyle = T.white;
+      ctx.font = `700 10px ${TECH_FONT}`;
+      ctx.fillText("Mott Fragment Distribution", 24, chartTop + 12);
+      ctx.fillText("Avg mass", avgX + 6, chartTop + 20);
+
+      ctx.globalAlpha = 1;
     },
     [explosive, casing, cmRatio, v0, ed, cd, avgFragMass],
     { animate: true },
@@ -164,7 +280,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/TBRL fragmentati
 
   return (
     <div>
-      <SimCanvas canvasRef={canvasRef} width={460} height={240} maxWidth={460} />
+      <SimCanvas canvasRef={canvasRef} width={460} height={300} maxWidth={460} />
       
       <PillRow>
         <Pill active={explosive === "tnt"} onClick={() => setExplosive("tnt")} color={T.gold}>TNT</Pill>
@@ -185,7 +301,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/TBRL fragmentati
         <DataBox label="V0" value={v0} unit="m/s" color={v0 > 2500 ? T.red : v0 > 1500 ? T.orange : T.green} />
         <DataBox label="Mass/Frag" value={avgFragMass.toFixed(1)} unit="g" color={T.cyan} />
         <DataBox label="Frag KE" value={ke} unit="J" color={ke > 4000 ? T.purple : T.gold} />
-        <DataBox label="Gurney" value={ed.gurney} unit="m/s" color={T.red} />
+        <DataBox label="Lethal R" value={lethalRadius} unit="m" color={T.red} />
       </DataRow>
 
       <InfoBox color={T.red}>
@@ -193,7 +309,7 @@ Part 3 — INDIA-SPECIFIC CONTEXT: How does this relate to DRDO/TBRL fragmentati
       </InfoBox>
 
       <AIInsight buildPrompt={buildPrompt} color={T.red} />
-      <ExportBtn simId="fragmentation" getData={() => ({ explosive, casing, cmRatio, v0, avgFragMass, ke })} color={T.red} />
+      <ExportBtn simId="fragmentation" getData={() => ({ explosive, casing, cmRatio, v0, avgFragMass, ke, lethalRadius })} color={T.red} />
     </div>
   );
 }

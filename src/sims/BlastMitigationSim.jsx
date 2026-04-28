@@ -7,34 +7,44 @@ export default function BlastMitigationSim() {
   const [netExplosiveWeight, setNew] = useState(500); // kg TNT equivalent
   const [distance, setDistance] = useState(50); // meters
   const [barrier, setBarrier] = useState("none");
+  const [storageClass, setStorageClass] = useState("1.1");
 
   const barrierData = {
-    none:    { reduction: 1.0, label: "Open Air", color: "#A0AEC0" },
-    wall:    { reduction: 0.6, label: "Concrete Blast Wall", color: "#F6AD55" },
-    earth:   { reduction: 0.3, label: "Earth Berm / Igloo", color: "#9AE6B4" },
+    none:            { reduction: 1.0, label: "Open Air", color: "#A0AEC0" },
+    wall:            { reduction: 0.6, label: "Concrete Blast Wall", color: "#F6AD55" },
+    earth:           { reduction: 0.3, label: "Earth Berm / Igloo", color: "#9AE6B4" },
+    aqueous_foam:    { reduction: 0.25, label: "Aqueous Foam", color: T.cyan },
+    steel_container: { reduction: 0.15, label: "Steel ISO Container", color: T.gray },
   };
 
   const currentBarrier = barrierData[barrier];
+  const qdMultiplier = { "1.1": 1.0, "1.2": 0.7, "1.3": 0.45, "1.4": 0.2 };
+  const qdFactor = qdMultiplier[storageClass] ?? 1.0;
 
   // Quantity-Distance (Q-D) Scaling Law (Hopkinson-Cranz)
   // Scaled Distance: Z = R / (W ^ (1/3))
-  const Z = distance / Math.pow(netExplosiveWeight, 1/3);
-  
+  const Z = distance / Math.pow(netExplosiveWeight, 1 / 3);
+
   // Incident Overpressure (rough empirical formula for TNT, output in kPa)
   let overpressure = 0;
   if (Z > 0) {
-      // Simplified Kingery-Bulmash curve
       const pBar = (6.7 / Math.pow(Z, 3)) + (2 / Math.pow(Z, 2)) + (0.5 / Z);
       overpressure = Math.round(pBar * 100 * currentBarrier.reduction); // kPa
   }
 
-  // Damage thresholds based on overpressure (kPa)
-  let damageLevel = "Safe";
+  const ibd = Math.round(22.2 * Math.pow(netExplosiveWeight * qdFactor, 1 / 3));
+  const imd = Math.round(9.7 * Math.pow(netExplosiveWeight * qdFactor, 1 / 3));
+  const fragRange = storageClass === "1.1" || storageClass === "1.2"
+    ? Math.round(45 * Math.pow(netExplosiveWeight, 0.4))
+    : 0;
+  const impulse = Math.round(overpressure * 3.5 * currentBarrier.reduction);
+
+  let damageLevel = "SAFE ZONE";
   let damageColor = T.green;
-  if (overpressure > 100) { damageLevel = "Total Destruction"; damageColor = T.purple; }
-  else if (overpressure > 35) { damageLevel = "Severe (Lethal)"; damageColor = T.red; }
-  else if (overpressure > 15) { damageLevel = "Moderate (Eardrums)"; damageColor = T.orange; }
-  else if (overpressure > 5)  { damageLevel = "Minor (Glass Break)"; damageColor = T.gold; }
+  if (overpressure > 200) { damageLevel = "TOTAL DESTRUCTION"; damageColor = T.purple; }
+  else if (overpressure > 70) { damageLevel = "SEVERE STRUCTURAL"; damageColor = T.red; }
+  else if (overpressure > 35) { damageLevel = "MODERATE DAMAGE"; damageColor = T.orange; }
+  else if (overpressure > 7)  { damageLevel = "WINDOW BREAKAGE"; damageColor = T.gold; }
 
   const canvasRef = useCanvas(
     (ctx, W, H, frame) => {
