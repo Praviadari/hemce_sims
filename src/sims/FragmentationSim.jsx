@@ -145,7 +145,7 @@ export default function FragmentationSim() {
       const topZoneH = H * 0.6;
       const sprayCx = cx - 30;
       const sprayCy = topZoneH * 0.55;
-      const numFrags = 40;
+      const sprayFrags = 40;
       const waveX = (frame * 2) % (W + 120) - 120;
 
       // Warhead body
@@ -167,8 +167,8 @@ export default function FragmentationSim() {
       ctx.fillRect(waveX, sprayCy - 24, 80, 48);
 
       // Fragments spray from casing
-      for (let i = 0; i < numFrags; i++) {
-        const angle = (i / numFrags) * Math.PI * 2;
+      for (let i = 0; i < sprayFrags; i++) {
+        const angle = (i / sprayFrags) * Math.PI * 2;
         const fragDist = (frame * 0.5 + prng(frame % 60, i) * 20) % (W * 0.4);
         const fx = sprayCx + Math.cos(angle) * fragDist;
         const fy = sprayCy + Math.sin(angle) * fragDist * 0.6;
