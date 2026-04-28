@@ -4,3 +4,18 @@ dist
 build_full_log.txt
 .DS_Store
 .env
+
+# Leftover debug/scratch files
+eslint-*.json
+eslint-*.txt
+eslint.json
+lint.txt
+extract.cjs
+extract.js
+fix-unused.cjs
+injector.cjs
+injector.js
+setup.txt
+
+# Vite temp files
+*.timestamp-*.mjs

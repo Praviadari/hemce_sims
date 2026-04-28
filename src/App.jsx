@@ -3,7 +3,7 @@ import { THEMES, FONT, TECH_FONT } from "./utils";
 import { SIM_REGISTRY, CATEGORIES } from "./sims";
 import MissilePanel from "./components/MissilePanel";
 import SchedulePanel from "./components/SchedulePanel";
-import { Pill, ErrorBoundary, Analytics, RelatedSims } from "./components";
+import { Pill, ErrorBoundary, RelatedSims } from "./components";
 import "./styles/global.css";
 
 /* Skeleton loader for lazy-loaded simulations */
@@ -97,16 +97,23 @@ export default function App() {
 
   useEffect(() => {
     if (kioskMode) return;
-    const timer = setTimeout(() => setKioskMode(true), 60000);
-    const reset = () => { clearTimeout(timer); };
+    let timer = setTimeout(() => setKioskMode(true), 60000);
+    const reset = () => {
+      clearTimeout(timer);
+      timer = setTimeout(() => setKioskMode(true), 60000);
+    };
     window.addEventListener("touchstart", reset);
     window.addEventListener("mousemove", reset);
+    window.addEventListener("click", reset);
+    window.addEventListener("keydown", reset);
     return () => {
       clearTimeout(timer);
       window.removeEventListener("touchstart", reset);
       window.removeEventListener("mousemove", reset);
+      window.removeEventListener("click", reset);
+      window.removeEventListener("keydown", reset);
     };
-  }, [kioskMode, activeSim]);
+  }, [kioskMode]);
 
   useEffect(() => {
     if (sessionStorage.getItem("hemce_splash_seen")) setShowSplash(false);
@@ -813,7 +820,7 @@ export default function App() {
           WWW.HEMSINDIA.CO.IN/HEMCE2026
         </a>
       </div>
-      <Analytics />
+
         </>
       )}
 
@@ -856,7 +863,7 @@ export default function App() {
             <div style={{ fontSize: 10, color: currentTheme.gray, lineHeight: 1.6, marginBottom: 16, fontFamily: currentTheme.font || "Inter, sans-serif" }}>
               Interactive defence & aerospace simulations covering solid rockets, scramjets, detonics, gun propellants, hybrid motors, and more.
               <br/><br/>
-              <strong style={{ color: currentTheme.accent }}>16 simulations</strong> •
+              <strong style={{ color: currentTheme.accent }}>{SIM_REGISTRY.length} simulations</strong> •
               <strong style={{ color: currentTheme.accent }}> Indian Missile Database</strong> •
               <strong style={{ color: currentTheme.accent }}> Live Conference Schedule</strong>
             </div>
